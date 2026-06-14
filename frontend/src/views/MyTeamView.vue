@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import TicketTypeIcon from '@/components/common/TicketTypeIcon.vue'
-import TicketModal from '@/components/tickets/TicketModal.vue'
+import TicketDetail from '@/components/tickets/TicketDetail.vue'
 import { useUsers } from '@/composables/useUsers'
 
 const ticketsStore = useTicketsStore()
@@ -73,7 +73,17 @@ const ticketsByStatus = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <!-- Ticket detail view (replaces board/list) -->
+  <TicketDetail
+    v-if="selectedTicket"
+    :ticket="selectedTicket"
+    @back="selectedTicket = null"
+    @saved="loadTickets()"
+    @deleted="selectedTicket = null; loadTickets()"
+  />
+
+  <!-- Normal team board / list -->
+  <div v-else class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Mein Team</h1>
@@ -166,9 +176,5 @@ const ticketsByStatus = computed(() => {
       </div>
     </div>
 
-    <TicketModal v-if="selectedTicket" :ticket="selectedTicket"
-      @close="selectedTicket = null"
-      @saved="selectedTicket = null; loadTickets()"
-      @deleted="selectedTicket = null; loadTickets()" />
   </div>
 </template>
