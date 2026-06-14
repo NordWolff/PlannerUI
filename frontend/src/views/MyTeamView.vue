@@ -6,6 +6,7 @@ import { useSprintsStore } from '@/stores/sprints'
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
+import TicketTypeIcon from '@/components/common/TicketTypeIcon.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 import { useUsers } from '@/composables/useUsers'
 
@@ -154,7 +155,11 @@ const ticketsByStatus = computed(() => {
               </template>
               <div v-else class="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500 shrink-0 mt-0.5" title="Nicht zugewiesen" />
             </div>
-            <PriorityBadge v-if="ticket.priority" :priority="ticket.priority" class="mt-2" />
+            <div class="flex items-center justify-between mt-2">
+              <PriorityBadge v-if="ticket.priority" :priority="ticket.priority" />
+              <span v-else />
+              <TicketTypeIcon :type="ticket.type || 'task'" />
+            </div>
           </div>
           <div v-if="!ticketsByStatus[status]?.length" class="py-4 text-center text-xs text-gray-400">Leer</div>
         </div>
