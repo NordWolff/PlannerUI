@@ -166,9 +166,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - Hinweis wenn kein Product Owner vorhanden
 
 ### Chat
-- Zentraler Team-Chat mit Echtzeit-Polling (5 s)
+- Direktnachrichten zwischen Benutzern (zwei-Panel-Layout: Kontaktliste + Chatfenster)
+- Echtzeit-Polling (5 s), Konversationen nach letzter Nachricht sortiert
 - `@username` hebt Erwähnungen hervor
-- `#TKT-0001` verlinkt auf das entsprechende Ticket
+- `#TKT-0001` — existierende Tickets werden als klickbares Badge gerendert und öffnen das TicketModal per Klick; nicht-existierende Nummern erscheinen als grauer Monospace-Text
 
 ### Admin-Bereich (`/admin` — nur Admins)
 - Route ist durch Router-Guard gesichert — Nicht-Admins werden zu `/dashboard` weitergeleitet
@@ -217,7 +218,9 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | GET/POST | `/api/tickets/:id/comments` | Kommentare abrufen / erstellen |
 | POST | `/api/tickets/:id/comments/:cid/reactions` | Reaktion setzen / entfernen (Toggle) |
 | GET | `/api/tickets/:id/history` | Verlauf |
-| GET/POST | `/api/chat/messages` | Chat-Nachrichten |
+| GET | `/api/chat/conversations` | Eigene Konversationspartner mit letzter Nachricht |
+| GET | `/api/chat/messages?partnerId=` | Nachrichten einer Direktkonversation |
+| POST | `/api/chat/messages` | Direktnachricht senden (inkl. Ticket-Referenzauflösung) |
 | GET | `/api/settings` | Ticket-Einstellungen |
 | PUT | `/api/settings/ticket-prefix` | Präfix setzen (Admin) |
 | PUT | `/api/settings/ticket-counter` | Zähler setzen (Admin) |
@@ -230,6 +233,13 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v0.8.0 — Chat-Ticket-Links & Direktnachrichten
+- Chat als Direktnachrichten-System: links Kontaktliste mit Vorschau, rechts Chatfenster
+- `#XXX-NNNN` in Nachrichten wird beim Senden gegen den Ticket-Store abgeglichen
+- Existierende Tickets: klickbares Indigo-Badge mit Titel-Tooltip → öffnet TicketModal
+- Nicht-existierende Nummern: grauer Monospace-Text (kein Link)
+- Backend: neue Endpunkte `/chat/conversations` und `/chat/messages?partnerId=`; `ticketRefs`-Array auf Nachrichten
 
 ### v0.7.0 — Admin-Page, Router-Guard, Benutzeranfragen
 - `/admin` durch Router-Guard gesichert (Nicht-Admins → Redirect)
