@@ -85,6 +85,12 @@ router.post('/messages', (req, res) => {
     .filter(Boolean)
     .map((u) => u.id);
 
+  const ticketMatches = [...text.matchAll(/#([A-Z]+-\d+)/g)];
+  const ticketRefs = ticketMatches
+    .map((m) => store.tickets.find((t) => t.ticketNumber === m[1]))
+    .filter(Boolean)
+    .map((t) => ({ ticketId: t.id, ticketNumber: t.ticketNumber, title: t.title }));
+
   const now = new Date().toISOString();
   const message = {
     id: uuidv4(),
@@ -93,6 +99,7 @@ router.post('/messages', (req, res) => {
     text,
     createdAt: now,
     mentions,
+    ticketRefs,
   };
 
   store.messages.push(message);
