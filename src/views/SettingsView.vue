@@ -1,21 +1,25 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import BaseCard from '@/components/common/BaseCard.vue'
 
 const authStore = useAuthStore()
+const toast = useToast()
 
 const darkMode = ref(localStorage.getItem('darkMode') === 'true')
 function toggleDarkMode() {
   darkMode.value = !darkMode.value
   localStorage.setItem('darkMode', darkMode.value)
   document.documentElement.classList.toggle('dark', darkMode.value)
+  toast.info(darkMode.value ? 'Dark Mode aktiviert' : 'Light Mode aktiviert')
 }
 
 const language = ref(localStorage.getItem('language') || 'de')
 function setLanguage(lang) {
   language.value = lang
   localStorage.setItem('language', lang)
+  toast.success('Sprache gespeichert')
 }
 
 const avatarStyles = [
@@ -31,8 +35,6 @@ const avatarSeed = ref(authStore.user?.username || 'user')
 const avatarUrl = (style) => `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(avatarSeed.value)}`
 
 const profileForm = ref({ username: '', email: '' })
-const saved = ref(false)
-const profileError = ref('')
 
 onMounted(() => {
   profileForm.value.username = authStore.user?.username || ''
@@ -40,16 +42,15 @@ onMounted(() => {
 })
 
 async function saveAvatar() {
-  await authStore.updateProfile({ avatar: avatarUrl(selectedStyle.value) })
-  saved.value = true
-  setTimeout(() => saved.value = false, 2000)
+  const ok = await authStore.updateProfile({ avatar: avatarUrl(selectedStyle.value) })
+  if (ok) toast.success('Avatar gespeichert')
+  else toast.error(authStore.error || 'Fehler beim Speichern des Avatars')
 }
 
 async function saveProfile() {
-  profileError.value = ''
   const ok = await authStore.updateProfile(profileForm.value)
-  if (ok) { saved.value = true; setTimeout(() => saved.value = false, 2000) }
-  else profileError.value = authStore.error || 'Fehler beim Speichern'
+  if (ok) toast.success('Profil gespeichert')
+  else toast.error(authStore.error || 'Fehler beim Speichern')
 }
 </script>
 
@@ -58,10 +59,6 @@ async function saveProfile() {
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Einstellungen</h1>
       <p class="text-gray-500 dark:text-gray-400 mt-1">App-Einstellungen und Profil</p>
-    </div>
-
-    <div v-if="saved" class="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3">
-      <p class="text-sm text-green-600 dark:text-green-400">Einstellungen gespeichert</p>
     </div>
 
     <BaseCard title="Erscheinungsbild">
@@ -111,9 +108,6 @@ async function saveProfile() {
 
     <BaseCard title="Profil">
       <form @submit.prevent="saveProfile" class="space-y-4">
-        <div v-if="profileError" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-          <p class="text-sm text-red-600 dark:text-red-400">{{ profileError }}</p>
-        </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Benutzername</label>
           <input v-model="profileForm.username" type="text" class="input-field" />

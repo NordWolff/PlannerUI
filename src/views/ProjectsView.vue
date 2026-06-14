@@ -3,11 +3,13 @@ import { onMounted, ref, computed, reactive } from 'vue'
 import { useProjectsStore } from '@/stores/projects'
 import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/common/BaseModal.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 
 const projectsStore = useProjectsStore()
+const toast = useToast()
 const teamsStore = useTeamsStore()
 const sprintsStore = useSprintsStore()
 
@@ -43,8 +45,10 @@ function openEdit(project) {
 async function saveProject() {
   if (editingProject.value) {
     await projectsStore.updateProject(editingProject.value.id, projectForm)
+    toast.success('Projekt aktualisiert')
   } else {
     await projectsStore.createProject(projectForm)
+    toast.success('Projekt erstellt')
   }
   showModal.value = false
 }
@@ -52,6 +56,7 @@ async function saveProject() {
 async function deleteProject(id) {
   if (!confirm('Projekt wirklich löschen?')) return
   await projectsStore.deleteProject(id)
+  toast.info('Projekt gelöscht')
 }
 
 async function updateSprint(project, sprintId) {

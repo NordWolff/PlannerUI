@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -8,15 +8,19 @@ const router = useRouter()
 const route = useRoute()
 const showDropdown = ref(false)
 
-const navLinks = [
+const baseLinks = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/my-team', label: 'Mein Team' },
   { to: '/teams', label: 'Teams' },
   { to: '/projects', label: 'Projekte' },
   { to: '/kanban', label: 'Kanban' },
   { to: '/reports', label: 'Reports' },
-  { to: '/settings', label: 'Einstellungen' },
+  { to: '/chat', label: 'Chat' },
 ]
+
+const navLinks = computed(() =>
+  authStore.isAdmin ? [...baseLinks, { to: '/admin', label: 'Admin' }] : baseLinks
+)
 
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
@@ -65,6 +69,9 @@ const avatarUrl = (user) =>
       <div v-if="showDropdown" class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
         <router-link to="/settings" @click="showDropdown = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
           Einstellungen
+        </router-link>
+        <router-link v-if="authStore.isAdmin" to="/admin" @click="showDropdown = false" class="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+          Admin-Bereich
         </router-link>
         <hr class="border-gray-200 dark:border-gray-700 my-1" />
         <button @click="logout" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">

@@ -83,7 +83,16 @@ const checklistProgress = computed(() => {
 </script>
 
 <template>
-  <BaseModal :title="ticket.id" size="lg" @close="emit('close')">
+  <BaseModal size="lg" @close="emit('close')">
+    <!-- Header mit Ticketnummer + Titel -->
+    <div class="flex items-start justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div>
+        <span v-if="ticket.ticketNumber" class="inline-block font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded mb-1">{{ ticket.ticketNumber }}</span>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white leading-snug max-w-xl">{{ ticket.title }}</h2>
+      </div>
+      <button @click="emit('close')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none ml-4 shrink-0">&times;</button>
+    </div>
+
     <!-- Tabs -->
     <div class="flex border-b border-gray-200 dark:border-gray-700 px-6">
       <button

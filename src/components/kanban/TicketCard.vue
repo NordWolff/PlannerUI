@@ -17,6 +17,7 @@ function onDragStart(e) {
     @dragstart="onDragStart"
     @click="emit('click', ticket)"
   >
+    <span v-if="ticket.ticketNumber" class="inline-block font-mono text-xs text-indigo-500 dark:text-indigo-400 mb-1">{{ ticket.ticketNumber }}</span>
     <p class="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-2">{{ ticket.title }}</p>
     <div class="flex items-center justify-between">
       <PriorityBadge v-if="ticket.priority" :priority="ticket.priority" />
