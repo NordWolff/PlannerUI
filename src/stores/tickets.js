@@ -75,5 +75,23 @@ export const useTicketsStore = defineStore('tickets', () => {
     return data
   }
 
-  return { tickets, loading, fetchTickets, createTicket, updateTicket, deleteTicket, updateStatus, toggleChecklist, addChecklistItem, fetchHistory, fetchComments, addComment, toggleReaction }
+  async function fetchAttachments(ticketId) {
+    const { data } = await api.get(`/tickets/${ticketId}/attachments`)
+    return data
+  }
+
+  async function uploadAttachment(ticketId, file, onProgress) {
+    const form = new FormData()
+    form.append('file', file)
+    const { data } = await api.post(`/tickets/${ticketId}/attachments`, form, {
+      onUploadProgress: e => onProgress && onProgress(Math.round((e.loaded * 100) / e.total)),
+    })
+    return data
+  }
+
+  async function deleteAttachment(ticketId, attachmentId) {
+    await api.delete(`/tickets/${ticketId}/attachments/${attachmentId}`)
+  }
+
+  return { tickets, loading, fetchTickets, createTicket, updateTicket, deleteTicket, updateStatus, toggleChecklist, addChecklistItem, fetchHistory, fetchComments, addComment, toggleReaction, fetchAttachments, uploadAttachment, deleteAttachment }
 })
