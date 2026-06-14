@@ -2,11 +2,42 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { store } from '../data/store.js';
 import { authenticateToken } from '../middleware/auth.js';
+import multer from 'multer';
+import path from 'path';
 
 const router = Router();
 router.use(authenticateToken);
 
 const VALID_STATUSES = ['draft', 'planned', 'in_progress', 'review', 'done'];
+const VALID_TYPES = ['task', 'bug', 'feature', 'improvement', 'question', 'epic'];
+
+const ALLOWED_MIME = [
+  'image/png', 'image/jpeg',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+];
+
+const storage = multer.diskStorage({
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Dateityp nicht erlaubt'));
+  },
+});
 
 router.get('/', (req, res) => {
   let tickets = store.tickets;
@@ -38,7 +69,7 @@ router.get('/recent', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { title, description, status, priority, assigneeId, projectId, boardId, sprintId, teamId, checklist, dependencies } = req.body;
+  const { title, description, status, priority, type, assigneeId, projectId, boardId, sprintId, teamId, checklist, dependencies } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'title is required' });
@@ -56,6 +87,7 @@ router.post('/', (req, res) => {
     description: description || '',
     status: status || 'draft',
     priority: priority || 'medium',
+    type: VALID_TYPES.includes(type) ? type : 'task',
     assigneeId: assigneeId || null,
     createdBy: req.user.id,
     projectId: projectId || null,
@@ -64,6 +96,7 @@ router.post('/', (req, res) => {
     teamId: teamId || null,
     checklist: checklist || [],
     dependencies: dependencies || [],
+    attachments: [],
     history: [],
     createdAt: now,
     updatedAt: now,
@@ -88,7 +121,7 @@ router.put('/:id', (req, res) => {
   }
 
   const ticket = store.tickets[index];
-  const { title, description, status, priority, assigneeId, projectId, boardId, sprintId, teamId, checklist, dependencies } = req.body;
+  const { title, description, status, priority, type, assigneeId, projectId, boardId, sprintId, teamId, checklist, dependencies } = req.body;
   const now = new Date().toISOString();
 
   if (status && status !== ticket.status) {
@@ -109,6 +142,7 @@ router.put('/:id', (req, res) => {
   if (title) ticket.title = title;
   if (description !== undefined) ticket.description = description;
   if (priority) ticket.priority = priority;
+  if (type && VALID_TYPES.includes(type)) ticket.type = type;
   if (assigneeId !== undefined) ticket.assigneeId = assigneeId;
   if (projectId !== undefined) ticket.projectId = projectId;
   if (boardId !== undefined) ticket.boardId = boardId;
@@ -273,6 +307,47 @@ router.post('/:id/comments/:commentId/reactions', (req, res) => {
   }
 
   return res.json(comment.reactions);
+});
+
+router.get('/:id/attachments', (req, res) => {
+  const ticket = store.tickets.find((t) => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+  return res.json(ticket.attachments || []);
+});
+
+router.post('/:id/attachments', upload.single('file'), (req, res) => {
+  const ticket = store.tickets.find((t) => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+  if (!req.file) return res.status(400).json({ error: 'Keine Datei hochgeladen' });
+
+  const attachment = {
+    id: uuidv4(),
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    mimeType: req.file.mimetype,
+    size: req.file.size,
+    url: `/uploads/${req.file.filename}`,
+    uploadedBy: req.user.id,
+    uploadedAt: new Date().toISOString(),
+  };
+
+  ticket.attachments = ticket.attachments || [];
+  ticket.attachments.push(attachment);
+  ticket.updatedAt = new Date().toISOString();
+
+  return res.status(201).json(attachment);
+});
+
+router.delete('/:id/attachments/:attachmentId', (req, res) => {
+  const ticket = store.tickets.find((t) => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+  const idx = (ticket.attachments || []).findIndex((a) => a.id === req.params.attachmentId);
+  if (idx === -1) return res.status(404).json({ error: 'Attachment not found' });
+
+  ticket.attachments.splice(idx, 1);
+  ticket.updatedAt = new Date().toISOString();
+  return res.json({ ok: true });
 });
 
 router.post('/:id/clone', (req, res) => {

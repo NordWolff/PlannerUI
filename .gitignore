@@ -6,3 +6,5 @@ dist/
 .vscode/
 .claude/settings.local.json
 agents/
+backend/uploads/*
+!backend/uploads/.gitkeep

@@ -20,7 +20,7 @@ const selectedTeamId = ref(null)
 const selectedProjectId = ref(null)
 const selectedTicket = ref(null)
 const showNewTicketModal = ref(false)
-const newTicketForm = reactive({ title: '', description: '', priority: 'medium', assigneeId: null })
+const newTicketForm = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null })
 
 onMounted(async () => {
   await Promise.all([
@@ -50,6 +50,8 @@ async function createTicket() {
   showNewTicketModal.value = false
   newTicketForm.title = ''
   newTicketForm.description = ''
+  newTicketForm.priority = 'medium'
+  newTicketForm.type = 'task'
   newTicketForm.assigneeId = null
 }
 </script>
@@ -108,7 +110,18 @@ async function createTicket() {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
           <textarea v-model="newTicketForm.description" rows="3" class="input-field resize-none" placeholder="Optionale Beschreibung..." />
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Art</label>
+            <select v-model="newTicketForm.type" class="input-field">
+              <option value="task">Aufgabe</option>
+              <option value="bug">Bug</option>
+              <option value="feature">Feature</option>
+              <option value="improvement">Verbesserung</option>
+              <option value="question">Frage</option>
+              <option value="epic">Epic</option>
+            </select>
+          </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorität</label>
             <select v-model="newTicketForm.priority" class="input-field">

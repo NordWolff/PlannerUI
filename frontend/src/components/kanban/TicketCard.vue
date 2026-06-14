@@ -7,6 +7,15 @@ const emit = defineEmits(['click'])
 
 const { getUser, avatarUrl } = useUsers()
 
+const TYPE_CONFIG = {
+  bug:         { label: 'Bug',          cls: 'text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400' },
+  feature:     { label: 'Feature',      cls: 'text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400' },
+  improvement: { label: 'Verbesserung', cls: 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400' },
+  question:    { label: 'Frage',        cls: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  epic:        { label: 'Epic',         cls: 'text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400' },
+  task:        { label: 'Aufgabe',      cls: 'text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-300' },
+}
+
 function onDragStart(e) {
   e.dataTransfer.effectAllowed = 'move'
   e.dataTransfer.setData('ticketId', props.ticket.id)
@@ -20,7 +29,14 @@ function onDragStart(e) {
     @dragstart="onDragStart"
     @click="emit('click', ticket)"
   >
-    <span v-if="ticket.ticketNumber" class="inline-block font-mono text-xs text-indigo-500 dark:text-indigo-400 mb-1">{{ ticket.ticketNumber }}</span>
+    <div class="flex items-center gap-1.5 mb-1">
+      <span v-if="ticket.ticketNumber" class="font-mono text-xs text-indigo-500 dark:text-indigo-400">{{ ticket.ticketNumber }}</span>
+      <span
+        v-if="ticket.type && ticket.type !== 'task'"
+        class="text-xs font-medium px-1.5 py-0.5 rounded"
+        :class="TYPE_CONFIG[ticket.type]?.cls || TYPE_CONFIG.task.cls"
+      >{{ TYPE_CONFIG[ticket.type]?.label }}</span>
+    </div>
     <p class="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-2">{{ ticket.title }}</p>
 
     <div class="flex items-center justify-between gap-2">
