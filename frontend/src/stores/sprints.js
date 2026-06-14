@@ -46,5 +46,19 @@ export const useSprintsStore = defineStore('sprints', () => {
     sprints.value = sprints.value.filter(s => s.id !== id)
   }
 
-  return { sprints, currentSprint, loading, fetchSprints, fetchCurrentSprint, createSprint, updateSprint, deleteSprint }
+  async function startSprint(id) {
+    const { data } = await api.post(`/sprints/${id}/start`)
+    const idx = sprints.value.findIndex(s => s.id === id)
+    if (idx !== -1) sprints.value[idx] = data
+    return data
+  }
+
+  async function completeSprint(id) {
+    const { data } = await api.post(`/sprints/${id}/complete`)
+    const idx = sprints.value.findIndex(s => s.id === id)
+    if (idx !== -1) sprints.value[idx] = data
+    return data
+  }
+
+  return { sprints, currentSprint, loading, fetchSprints, fetchCurrentSprint, createSprint, updateSprint, deleteSprint, startSprint, completeSprint }
 })

@@ -342,6 +342,7 @@ export async function seedData() {
     id: sprintId,
     name: 'Sprint 1',
     description: 'Erster Sprint des Projekts',
+    status: 'active',
     startDate: sprintStart.toISOString(),
     endDate: sprintEnd.toISOString(),
     projectIds: [project1Id, project2Id],
