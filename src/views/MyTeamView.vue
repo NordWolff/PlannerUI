@@ -7,11 +7,13 @@ import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
+import { useUsers } from '@/composables/useUsers'
 
 const ticketsStore = useTicketsStore()
 const teamsStore = useTeamsStore()
 const sprintsStore = useSprintsStore()
 const authStore = useAuthStore()
+const { getUser, avatarUrl, fetchUsers } = useUsers()
 
 const selectedTeamId = ref(null)
 const selectedSprintId = ref(null)
@@ -39,7 +41,7 @@ watch(
 )
 
 onMounted(async () => {
-  await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints()])
+  await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints(), fetchUsers()])
   const current = await sprintsStore.fetchCurrentSprint()
   if (current) selectedSprintId.value = current.id
   await loadTickets()
@@ -105,6 +107,7 @@ const ticketsByStatus = computed(() => {
               <th class="px-6 py-3">Titel</th>
               <th class="px-6 py-3">Status</th>
               <th class="px-6 py-3">Priorität</th>
+              <th class="px-6 py-3">Zugewiesen</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -112,9 +115,20 @@ const ticketsByStatus = computed(() => {
               <td class="px-6 py-3 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">{{ ticket.title }}</td>
               <td class="px-6 py-3"><StatusBadge :status="ticket.status" /></td>
               <td class="px-6 py-3"><PriorityBadge v-if="ticket.priority" :priority="ticket.priority" /></td>
+              <td class="px-6 py-3">
+                <template v-if="ticket.assigneeId">
+                  <img
+                    :src="avatarUrl(ticket.assigneeId)"
+                    :title="getUser(ticket.assigneeId)?.username"
+                    class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600"
+                    :alt="getUser(ticket.assigneeId)?.username"
+                  />
+                </template>
+                <div v-else class="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500" title="Nicht zugewiesen" />
+              </td>
             </tr>
             <tr v-if="!myTickets.length">
-              <td colspan="3" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets zugewiesen</td>
+              <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets zugewiesen</td>
             </tr>
           </tbody>
         </table>
@@ -128,7 +142,18 @@ const ticketsByStatus = computed(() => {
         <div class="space-y-2">
           <div v-for="ticket in ticketsByStatus[status]" :key="ticket.id" @click="selectedTicket = ticket"
             class="bg-white dark:bg-gray-700 rounded-lg p-3 text-sm cursor-pointer hover:shadow-md border border-gray-200 dark:border-gray-600 transition-shadow">
-            <p class="font-medium text-gray-900 dark:text-white line-clamp-2">{{ ticket.title }}</p>
+            <div class="flex items-start justify-between gap-2">
+              <p class="font-medium text-gray-900 dark:text-white line-clamp-2 flex-1">{{ ticket.title }}</p>
+              <template v-if="ticket.assigneeId">
+                <img
+                  :src="avatarUrl(ticket.assigneeId)"
+                  :title="getUser(ticket.assigneeId)?.username"
+                  class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
+                  :alt="getUser(ticket.assigneeId)?.username"
+                />
+              </template>
+              <div v-else class="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500 shrink-0 mt-0.5" title="Nicht zugewiesen" />
+            </div>
             <PriorityBadge v-if="ticket.priority" :priority="ticket.priority" class="mt-2" />
           </div>
           <div v-if="!ticketsByStatus[status]?.length" class="py-4 text-center text-xs text-gray-400">Leer</div>
