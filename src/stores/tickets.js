@@ -60,5 +60,20 @@ export const useTicketsStore = defineStore('tickets', () => {
     return data
   }
 
-  return { tickets, loading, fetchTickets, createTicket, updateTicket, deleteTicket, updateStatus, toggleChecklist, addChecklistItem, fetchHistory }
+  async function fetchComments(ticketId) {
+    const { data } = await api.get(`/tickets/${ticketId}/comments`)
+    return data
+  }
+
+  async function addComment(ticketId, text) {
+    const { data } = await api.post(`/tickets/${ticketId}/comments`, { text })
+    return data
+  }
+
+  async function toggleReaction(ticketId, commentId, emoji) {
+    const { data } = await api.post(`/tickets/${ticketId}/comments/${commentId}/reactions`, { emoji })
+    return data
+  }
+
+  return { tickets, loading, fetchTickets, createTicket, updateTicket, deleteTicket, updateStatus, toggleChecklist, addChecklistItem, fetchHistory, fetchComments, addComment, toggleReaction }
 })
