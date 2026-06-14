@@ -27,9 +27,14 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'title is required' });
   }
 
+  const { ticketPrefix, ticketCounter } = store.settings;
+  const ticketNumber = `${ticketPrefix}-${String(ticketCounter).padStart(4, '0')}`;
+  store.settings.ticketCounter += 1;
+
   const now = new Date().toISOString();
   const newTicket = {
     id: uuidv4(),
+    ticketNumber,
     title,
     description: description || '',
     status: status || 'draft',
@@ -193,6 +198,53 @@ router.get('/:id/history', (req, res) => {
     return res.status(404).json({ error: 'Ticket not found' });
   }
   return res.json(ticket.history);
+});
+
+router.get('/:id/comments', (req, res) => {
+  const ticket = store.tickets.find((t) => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+  const comments = (ticket.comments || []).map((c) => {
+    const author = store.users.find((u) => u.id === c.authorId);
+    return { ...c, author: author ? { id: author.id, username: author.username, avatar: author.avatar } : null };
+  });
+  return res.json(comments);
+});
+
+router.post('/:id/comments', (req, res) => {
+  const ticket = store.tickets.find((t) => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: 'text is required' });
+
+  const mentionMatches = [...text.matchAll(/@(\w+)/g)];
+  const mentions = mentionMatches
+    .map((m) => store.users.find((u) => u.username === m[1]))
+    .filter(Boolean)
+    .map((u) => u.id);
+
+  const now = new Date().toISOString();
+  const comment = { id: uuidv4(), ticketId: ticket.id, authorId: req.user.id, text, createdAt: now, mentions };
+
+  ticket.comments = ticket.comments || [];
+  ticket.comments.push(comment);
+  ticket.history.push({ id: uuidv4(), changedAt: now, field: 'comment', from: null, to: comment.id, changedBy: req.user.id });
+  ticket.updatedAt = now;
+
+  return res.status(201).json(comment);
+});
+
+router.post('/:id/clone', (req, res) => {
+  const original = store.tickets.find((t) => t.id === req.params.id);
+  if (!original) return res.status(404).json({ error: 'Ticket not found' });
+
+  const { ticketPrefix, ticketCounter } = store.settings;
+  const ticketNumber = `${ticketPrefix}-${String(ticketCounter).padStart(4, '0')}`;
+  store.settings.ticketCounter += 1;
+
+  const now = new Date().toISOString();
+  const cloned = { ...original, id: uuidv4(), ticketNumber, title: original.title + ' (Kopie)', status: 'draft', history: [], comments: [], chatRefs: [], createdAt: now, updatedAt: now };
+  store.tickets.push(cloned);
+  return res.status(201).json(cloned);
 });
 
 export default router;

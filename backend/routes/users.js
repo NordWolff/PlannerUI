@@ -1,9 +1,21 @@
 import { Router } from 'express';
 import { store, sanitizeUser } from '../data/store.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+
+const VALID_ROLES = ['admin', 'owner', 'user'];
 
 const router = Router();
 router.use(authenticateToken);
+
+router.get('/search', (req, res) => {
+  const q = (req.query.q || '').toLowerCase();
+  if (q.length < 2) return res.json([]);
+  const results = store.users
+    .filter((u) => u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+    .slice(0, 10)
+    .map(sanitizeUser);
+  return res.json(results);
+});
 
 router.get('/', (req, res) => {
   return res.json(store.users.map(sanitizeUser));
@@ -14,6 +26,17 @@ router.get('/:id', (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
+  return res.json(sanitizeUser(user));
+});
+
+router.put('/:id/role', requireAdmin, (req, res) => {
+  const { role } = req.body;
+  if (!role || !VALID_ROLES.includes(role)) {
+    return res.status(400).json({ error: `Ungültige Rolle. Erlaubt: ${VALID_ROLES.join(', ')}` });
+  }
+  const user = store.users.find((u) => u.id === req.params.id);
+  if (!user) return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+  user.role = role;
   return res.json(sanitizeUser(user));
 });
 

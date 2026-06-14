@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { store } from '../data/store.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 router.use(authenticateToken);
@@ -10,7 +10,7 @@ router.get('/', (req, res) => {
   return res.json(store.boards);
 });
 
-router.post('/', (req, res) => {
+router.post('/', requireAdmin, (req, res) => {
   const { name, description, startDate, endDate, teamIds, projectIds } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'name is required' });
@@ -59,7 +59,7 @@ router.put('/:id', (req, res) => {
   return res.json(board);
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireAdmin, (req, res) => {
   const index = store.boards.findIndex((b) => b.id === req.params.id);
   if (index === -1) {
     return res.status(404).json({ error: 'Board not found' });

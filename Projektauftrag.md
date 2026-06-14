@@ -11,7 +11,27 @@ Planner ist eine deutsch- und englischsprachige Planungsanwendung. Standard ist 
 - zentrale Navigation: Dashboard, Mein Team, Teams, Projekte, Kanban, Reports, Einstellungen
 - Standard-Ansicht nach Login: Mein Team
 
+## Menu ohne Admin Rechte
+
+- Einstellungen nur unter Profil sichtbar, wenn Benutzer kein Administrator ist
+
+## Menu mit Admin Rechte (Administrator)
+
+- Admin hat separate Einstellungen sichtbar: 
+    - Teams verwalten
+    - wer gehört zu welchem Team
+    - welches Team gehört zu diesem Kanban-Board
+- nur Benutzer mit Admin Rechten kann Teams anlegen, verwalten und löschen
+- Admin verwaltet dabei die Sichtbarkeiten und Rechte der Benutzer
+
 ## Kernfunktionen
+
+### Chatfunktion
+
+- es soll ein zentraler Chat geben
+- so das alle Benutzer untereinander schreiben/chatten können
+- wird eine Ticketnummer im Chat erwähnt ist der Chat auch im Ticket zu sehen
+
 
 ### Benutzer & Authentifizierung
 
@@ -24,9 +44,10 @@ Planner ist eine deutsch- und englischsprachige Planungsanwendung. Standard ist 
 ### Teams
 
 - Teamverwaltung mit Teamliste und Suche
-- Team-Mitglieder hinzufügen/rollen
+- Team Mitglieder hinzufügen per Mitglied-Namen nicht per ID 
+- Mitglieder kündigen
 - Team-Favoriten
-- Teams können einem Board zugewiesen sein
+- Teams können nur einem Kanban-Board zugewiesen sein
 
 ### Projekte
 
@@ -37,9 +58,10 @@ Planner ist eine deutsch- und englischsprachige Planungsanwendung. Standard ist 
 
 ### Kanban-Boards
 
-- mehrere Boards verwaltbar
-- Board-Management im Dashboard: Board anlegen, bearbeiten, Name, Beschreibung, Zeitraum
-- Boards haben eigene Timeline, Teams und Projekte
+- mehrere Boards verwaltbar - nur Admin
+- Board anlegen nur Admin
+- Board-Management im Dashboard: bearbeiten, Name, Beschreibung, Zeitraum - nur Admin und Owner
+- Boards haben eigene Timeline's, Teams und Projekte
 - im Kanban-Board: Board-Auswahl, Team-Filter, Projekt-Filter
 - Tickets werden in Status-Spalten (Draft, Geplant, In Arbeit, Review, Abschluss) dargestellt
 - Tickets können gezogen und per Status aktualisiert werden
@@ -63,8 +85,18 @@ Planner ist eine deutsch- und englischsprachige Planungsanwendung. Standard ist 
 
 - Frontend: Vue 3 + Vite
 - Backend: Express.js
-- Datenhaltung derzeit: In-Memory-Modelle
+- Datenhaltung: In-Memory-Modelle
 - API: Auth, Benutzer, Teams, Boards, Sprints, Projekte, Tickets, Kanban
+
+## Tickets
+
+- jedes Ticket kann Sprints zugewiesen werden
+- Ticket Historie (Statusänderungen, Kommentare, Dauer, erstellt Datum, Fertigstellung)
+- Kommentare mit Benutzererwähnung
+- Kommentare mit Smileys ermöglichen
+- Tickets Klonen ermöglichen
+- Datei Anhänge (PNG, JPEG, PDF, Word, Excel, Powerpoint) ermöglichen
+- PNG, JPEG als Miniaturvorschau im Kommentar
 
 ## Aktueller Projektstand
 
@@ -84,3 +116,7 @@ Planner ist eine deutsch- und englischsprachige Planungsanwendung. Standard ist 
 6. Einstellungen: Darkmode, Sprache, Favoriten
 7. Reports & Dashboard weiter ausbauen
 8. Tests: Unit-, Integrations- und einfache E2E-Tests
+9. Tickets Funktionen erweitern
+10. Admin Zugang zur Verwaltung von Boards
+11. Benutzer Rollen - Admin, Owner, User
+12. Chatfunktion
