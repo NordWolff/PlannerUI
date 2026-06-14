@@ -3,6 +3,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
+import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
 import ChecklistItem from './ChecklistItem.vue'
 import { useUsers } from '@/composables/useUsers'
@@ -13,11 +14,17 @@ const emit = defineEmits(['close', 'saved', 'deleted'])
 const ticketsStore = useTicketsStore()
 const projectsStore = useProjectsStore()
 const sprintsStore = useSprintsStore()
+const authStore = useAuthStore()
 const { users: allUsers, fetchUsers, getUser, avatarUrl } = useUsers()
 
 const activeTab = ref('details')
 const newChecklistText = ref('')
 const history = ref([])
+const comments = ref([])
+const newCommentText = ref('')
+const submittingComment = ref(false)
+
+const REACTIONS = ['👍', '👎', '❤️']
 
 const form = reactive({
   title: props.ticket.title,
@@ -48,8 +55,47 @@ const priorities = [
 
 onMounted(async () => {
   await Promise.all([projectsStore.fetchProjects(), sprintsStore.fetchSprints(), fetchUsers()])
-  history.value = await ticketsStore.fetchHistory(props.ticket.id)
+  const [hist, cmts] = await Promise.all([
+    ticketsStore.fetchHistory(props.ticket.id),
+    ticketsStore.fetchComments(props.ticket.id),
+  ])
+  history.value = hist
+  comments.value = cmts
 })
+
+async function submitComment() {
+  if (!newCommentText.value.trim() || submittingComment.value) return
+  submittingComment.value = true
+  try {
+    const comment = await ticketsStore.addComment(props.ticket.id, newCommentText.value.trim())
+    comments.value.push(comment)
+    newCommentText.value = ''
+  } finally {
+    submittingComment.value = false
+  }
+}
+
+async function handleReaction(comment, emoji) {
+  const reactions = await ticketsStore.toggleReaction(props.ticket.id, comment.id, emoji)
+  comment.reactions = reactions
+}
+
+function reactionCount(comment, emoji) {
+  return (comment.reactions || []).filter(r => r.emoji === emoji).length
+}
+
+function myReaction(comment, emoji) {
+  return (comment.reactions || []).some(r => r.emoji === emoji && r.userId === authStore.user?.id)
+}
+
+function formatCommentDate(iso) {
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000)
+  if (diff < 60) return 'gerade eben'
+  if (diff < 3600) return `vor ${Math.floor(diff / 60)} Min.`
+  if (diff < 86400) return `vor ${Math.floor(diff / 3600)} Std.`
+  if (diff < 172800) return 'gestern'
+  return `vor ${Math.floor(diff / 86400)} Tagen`
+}
 
 async function save() {
   await ticketsStore.updateTicket(props.ticket.id, { ...form, checklist: localChecklist.value })
@@ -98,15 +144,21 @@ const checklistProgress = computed(() => {
     <!-- Tabs -->
     <div class="flex border-b border-gray-200 dark:border-gray-700 px-6">
       <button
-        v-for="tab in ['details', 'checklist', 'history']"
+        v-for="tab in ['details', 'checklist', 'comments', 'history']"
         :key="tab"
         @click="activeTab = tab"
-        class="px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize"
+        class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
         :class="activeTab === tab
           ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
           : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'"
       >
-        {{ tab === 'details' ? 'Details' : tab === 'checklist' ? 'Checkliste' : 'Verlauf' }}
+        <span v-if="tab === 'details'">Details</span>
+        <span v-else-if="tab === 'checklist'">Checkliste</span>
+        <span v-else-if="tab === 'comments'">
+          Kommentare
+          <span v-if="comments.length" class="ml-1 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-full px-1.5 py-0.5">{{ comments.length }}</span>
+        </span>
+        <span v-else>Verlauf</span>
       </button>
     </div>
 
@@ -201,6 +253,71 @@ const checklistProgress = computed(() => {
             placeholder="Neues Element hinzufügen..."
           />
           <button @click="addChecklistItem" class="btn-primary">+</button>
+        </div>
+      </div>
+
+      <!-- Kommentare Tab -->
+      <div v-else-if="activeTab === 'comments'" class="space-y-4">
+        <!-- Kommentar-Liste -->
+        <div v-if="!comments.length" class="py-8 text-center text-sm text-gray-400">Noch keine Kommentare</div>
+        <div v-for="comment in comments" :key="comment.id" class="flex gap-3">
+          <img
+            :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(comment.author?.username || '?')}`"
+            class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
+            :title="comment.author?.username"
+            alt=""
+          />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline gap-2 mb-1">
+              <span class="text-sm font-medium text-gray-900 dark:text-white">{{ comment.author?.username || 'Unbekannt' }}</span>
+              <span class="text-xs text-gray-400">{{ formatCommentDate(comment.createdAt) }}</span>
+            </div>
+            <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">{{ comment.text }}</p>
+            <!-- Reaktionen -->
+            <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+              <button
+                v-for="emoji in REACTIONS"
+                :key="emoji"
+                @click="handleReaction(comment, emoji)"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors"
+                :class="myReaction(comment, emoji)
+                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+                  : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-600'"
+              >
+                <span>{{ emoji }}</span>
+                <span v-if="reactionCount(comment, emoji) > 0" class="font-medium">{{ reactionCount(comment, emoji) }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Neuer Kommentar -->
+        <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
+          <div class="flex gap-3 items-start">
+            <img
+              :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(authStore.user?.username || '?')}`"
+              class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
+              alt=""
+            />
+            <div class="flex-1">
+              <textarea
+                v-model="newCommentText"
+                @keydown.ctrl.enter="submitComment"
+                rows="3"
+                class="input-field resize-none text-sm"
+                placeholder="Kommentar schreiben… (@Erwähnung möglich, Strg+Enter zum Senden)"
+              />
+              <div class="flex justify-end mt-2">
+                <button
+                  @click="submitComment"
+                  :disabled="!newCommentText.trim() || submittingComment"
+                  class="btn-primary text-sm disabled:opacity-40"
+                >
+                  Senden
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

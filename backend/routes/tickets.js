@@ -241,14 +241,38 @@ router.post('/:id/comments', (req, res) => {
     .map((u) => u.id);
 
   const now = new Date().toISOString();
-  const comment = { id: uuidv4(), ticketId: ticket.id, authorId: req.user.id, text, createdAt: now, mentions };
+  const comment = { id: uuidv4(), ticketId: ticket.id, authorId: req.user.id, text, createdAt: now, mentions, reactions: [] };
 
   ticket.comments = ticket.comments || [];
   ticket.comments.push(comment);
   ticket.history.push({ id: uuidv4(), changedAt: now, field: 'comment', from: null, to: comment.id, changedBy: req.user.id });
   ticket.updatedAt = now;
 
-  return res.status(201).json(comment);
+  const author = store.users.find((u) => u.id === req.user.id);
+  return res.status(201).json({ ...comment, author: author ? { id: author.id, username: author.username } : null });
+});
+
+const ALLOWED_REACTIONS = ['👍', '👎', '❤️'];
+
+router.post('/:id/comments/:commentId/reactions', (req, res) => {
+  const ticket = store.tickets.find((t) => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+  const comment = (ticket.comments || []).find((c) => c.id === req.params.commentId);
+  if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+  const { emoji } = req.body;
+  if (!ALLOWED_REACTIONS.includes(emoji)) return res.status(400).json({ error: 'Invalid reaction' });
+
+  comment.reactions = comment.reactions || [];
+  const existing = comment.reactions.find((r) => r.emoji === emoji && r.userId === req.user.id);
+  if (existing) {
+    comment.reactions = comment.reactions.filter((r) => !(r.emoji === emoji && r.userId === req.user.id));
+  } else {
+    comment.reactions.push({ emoji, userId: req.user.id });
+  }
+
+  return res.json(comment.reactions);
 });
 
 router.post('/:id/clone', (req, res) => {
