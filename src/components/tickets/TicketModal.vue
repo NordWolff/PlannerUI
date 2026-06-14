@@ -5,7 +5,7 @@ import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
 import BaseModal from '@/components/common/BaseModal.vue'
 import ChecklistItem from './ChecklistItem.vue'
-import api from '@/services/api'
+import { useUsers } from '@/composables/useUsers'
 
 const props = defineProps({ ticket: { type: Object, required: true } })
 const emit = defineEmits(['close', 'saved', 'deleted'])
@@ -13,11 +13,11 @@ const emit = defineEmits(['close', 'saved', 'deleted'])
 const ticketsStore = useTicketsStore()
 const projectsStore = useProjectsStore()
 const sprintsStore = useSprintsStore()
+const { users: allUsers, fetchUsers, getUser, avatarUrl } = useUsers()
 
 const activeTab = ref('details')
 const newChecklistText = ref('')
 const history = ref([])
-const allUsers = ref([])
 
 const form = reactive({
   title: props.ticket.title,
@@ -47,12 +47,7 @@ const priorities = [
 ]
 
 onMounted(async () => {
-  const [, , users] = await Promise.all([
-    projectsStore.fetchProjects(),
-    sprintsStore.fetchSprints(),
-    api.get('/users'),
-  ])
-  allUsers.value = users.data
+  await Promise.all([projectsStore.fetchProjects(), sprintsStore.fetchSprints(), fetchUsers()])
   history.value = await ticketsStore.fetchHistory(props.ticket.id)
 })
 
@@ -147,12 +142,8 @@ const checklistProgress = computed(() => {
           </select>
           <!-- Vorschau des zugewiesenen Benutzers -->
           <div v-if="form.assigneeId" class="flex items-center gap-2 mt-1.5">
-            <img
-              :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(allUsers.find(u => u.id === form.assigneeId)?.username || '')}`"
-              class="w-5 h-5 rounded-full bg-gray-200" alt="" />
-            <span class="text-xs text-gray-500 dark:text-gray-400">
-              {{ allUsers.find(u => u.id === form.assigneeId)?.username }}
-            </span>
+            <img :src="avatarUrl(form.assigneeId)" class="w-5 h-5 rounded-full bg-gray-200" alt="" />
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ getUser(form.assigneeId)?.username }}</span>
           </div>
         </div>
 
