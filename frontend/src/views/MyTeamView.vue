@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
+import api from '@/services/api'
 
 const ticketsStore = useTicketsStore()
 const teamsStore = useTeamsStore()
@@ -17,6 +18,30 @@ const selectedTeamId = ref(null)
 const selectedSprintId = ref(null)
 const selectedTicket = ref(null)
 const viewMode = ref('table')
+
+const recentTickets = ref([])
+
+async function loadRecentTickets() {
+  try {
+    const { data } = await api.get('/tickets/recent', { params: { limit: 10 } })
+    recentTickets.value = data
+  } catch { /* nicht kritisch */ }
+}
+
+function formatDate(iso) {
+  const d = new Date(iso)
+  const now = new Date()
+  const diffMs = now - d
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffH = Math.floor(diffMin / 60)
+  const diffD = Math.floor(diffH / 24)
+  if (diffMin < 1) return 'gerade eben'
+  if (diffMin < 60) return `vor ${diffMin} Min.`
+  if (diffH < 24) return `vor ${diffH} Std.`
+  if (diffD === 1) return 'gestern'
+  if (diffD < 7) return `vor ${diffD} Tagen`
+  return d.toLocaleDateString('de-DE')
+}
 
 // Sobald User und Teams verfügbar sind, das eigene Team vorbelegen.
 // watch mit immediate:true deckt beide Fälle ab:
@@ -40,7 +65,7 @@ onMounted(async () => {
   await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints()])
   const current = await sprintsStore.fetchCurrentSprint()
   if (current) selectedSprintId.value = current.id
-  await loadTickets()
+  await Promise.all([loadTickets(), loadRecentTickets()])
 })
 
 async function loadTickets() {
@@ -92,6 +117,45 @@ const ticketsByStatus = computed(() => {
       </div>
     </div>
 
+    <!-- Zuletzt bearbeitet -->
+    <div v-if="recentTickets.length" class="card p-0 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Zuletzt bearbeitet
+        </h2>
+        <span class="text-xs text-gray-400">{{ recentTickets.length }} Ticket{{ recentTickets.length !== 1 ? 's' : '' }}</span>
+      </div>
+      <ul class="divide-y divide-gray-100 dark:divide-gray-700/50">
+        <li
+          v-for="ticket in recentTickets"
+          :key="ticket.id"
+          @click="selectedTicket = ticket; loadRecentTickets()"
+          class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer transition-colors group"
+        >
+          <!-- Ticketnummer -->
+          <span class="font-mono text-xs text-indigo-500 dark:text-indigo-400 w-20 shrink-0">
+            {{ ticket.ticketNumber || '—' }}
+          </span>
+
+          <!-- Titel -->
+          <span class="flex-1 text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            {{ ticket.title }}
+          </span>
+
+          <!-- Status -->
+          <StatusBadge :status="ticket.status" class="shrink-0" />
+
+          <!-- Zeitstempel -->
+          <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0 w-24 text-right">
+            {{ formatDate(ticket.updatedAt) }}
+          </span>
+        </li>
+      </ul>
+    </div>
+
     <div v-if="ticketsStore.loading" class="card py-12 text-center text-gray-400">Laden...</div>
 
     <!-- Tabellen-Ansicht -->
@@ -134,6 +198,9 @@ const ticketsByStatus = computed(() => {
       </div>
     </div>
 
-    <TicketModal v-if="selectedTicket" :ticket="selectedTicket" @close="selectedTicket = null" @saved="selectedTicket = null; loadTickets()" @deleted="selectedTicket = null; loadTickets()" />
+    <TicketModal v-if="selectedTicket" :ticket="selectedTicket"
+      @close="selectedTicket = null"
+      @saved="selectedTicket = null; loadTickets(); loadRecentTickets()"
+      @deleted="selectedTicket = null; loadTickets(); loadRecentTickets()" />
   </div>
 </template>

@@ -20,6 +20,23 @@ router.get('/', (req, res) => {
   return res.json(tickets);
 });
 
+// Zuletzt erstellte oder bearbeitete Tickets des aktuellen Benutzers
+router.get('/recent', (req, res) => {
+  const userId = req.user.id;
+  const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+
+  const recent = store.tickets
+    .filter((t) =>
+      t.createdBy === userId ||
+      t.assigneeId === userId ||
+      (t.history || []).some((h) => h.changedBy === userId)
+    )
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .slice(0, limit);
+
+  return res.json(recent);
+});
+
 router.post('/', (req, res) => {
   const { title, description, status, priority, assigneeId, projectId, boardId, sprintId, teamId, checklist, dependencies } = req.body;
 
@@ -40,6 +57,7 @@ router.post('/', (req, res) => {
     status: status || 'draft',
     priority: priority || 'medium',
     assigneeId: assigneeId || null,
+    createdBy: req.user.id,
     projectId: projectId || null,
     boardId: boardId || null,
     sprintId: sprintId || null,
@@ -242,7 +260,7 @@ router.post('/:id/clone', (req, res) => {
   store.settings.ticketCounter += 1;
 
   const now = new Date().toISOString();
-  const cloned = { ...original, id: uuidv4(), ticketNumber, title: original.title + ' (Kopie)', status: 'draft', history: [], comments: [], chatRefs: [], createdAt: now, updatedAt: now };
+  const cloned = { ...original, id: uuidv4(), ticketNumber, title: original.title + ' (Kopie)', status: 'draft', createdBy: req.user.id, history: [], comments: [], chatRefs: [], createdAt: now, updatedAt: now };
   store.tickets.push(cloned);
   return res.status(201).json(cloned);
 });
