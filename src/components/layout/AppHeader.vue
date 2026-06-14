@@ -36,9 +36,17 @@ const projectForm = reactive({ name: '', description: '', status: 'active', team
 async function openCreate(tab) {
   createTab.value = tab
   showCreateDropdown.value = false
+  showDropdown.value = false
+  if (tab === 'request') {
+    requestForm.title = ''
+    requestForm.description = ''
+    requestForm.type = 'feature'
+  }
   showCreateModal.value = true
-  await Promise.all([fetchUsers(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), sprintsStore.fetchSprints()])
-  if (!ticketForm.boardId && boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
+  if (tab !== 'request') {
+    await Promise.all([fetchUsers(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), sprintsStore.fetchSprints()])
+    if (!ticketForm.boardId && boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
+  }
 }
 
 function resetTicketForm() {
@@ -71,7 +79,6 @@ async function submitProject() {
 }
 
 const showDropdown = ref(false)
-const showRequestModal = ref(false)
 const submittingRequest = ref(false)
 
 // Mein-Team-Dropdown
@@ -141,21 +148,13 @@ function logout() {
   router.push('/login')
 }
 
-function openRequestModal() {
-  showDropdown.value = false
-  requestForm.title = ''
-  requestForm.description = ''
-  requestForm.type = 'feature'
-  showRequestModal.value = true
-}
-
 async function submitRequest() {
   if (!requestForm.title.trim() || submittingRequest.value) return
   submittingRequest.value = true
   try {
     await api.post('/admin-requests', { ...requestForm })
     toast.success('Anfrage erfolgreich gesendet')
-    showRequestModal.value = false
+    showCreateModal.value = false
   } catch {
     toast.error('Anfrage konnte nicht gesendet werden')
   } finally {
@@ -274,20 +273,14 @@ const avatarUrl = (user) =>
           <span class="text-base">📁</span>
           Projekt
         </button>
+        <hr class="border-gray-100 dark:border-gray-700 my-1" />
+        <button @click="openCreate('request')"
+          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+          <span class="text-base">📨</span>
+          Anfrage
+        </button>
       </div>
     </div>
-
-    <!-- Anfrage-Button (alle Benutzer) -->
-    <button
-      @click="openRequestModal"
-      class="hidden sm:flex items-center gap-1.5 mr-3 px-3 py-1.5 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-      title="Feature oder Bug an Admin melden"
-    >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
-      Anfrage
-    </button>
 
     <!-- User-Profil -->
     <div class="flex-none relative">
@@ -297,10 +290,6 @@ const avatarUrl = (user) =>
       </button>
 
       <div v-if="showDropdown" class="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-        <button @click="openRequestModal" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 sm:hidden">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          Anfrage senden
-        </button>
         <router-link to="/settings" @click="showDropdown = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
           Einstellungen
         </router-link>
@@ -338,10 +327,10 @@ const avatarUrl = (user) =>
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
           <div class="flex gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
             <button
-              v-for="tab in [{ id: 'ticket', label: '🎟 Ticket' }, { id: 'project', label: '📁 Projekt' }]"
+              v-for="tab in [{ id: 'ticket', label: '🎟 Ticket' }, { id: 'project', label: '📁 Projekt' }, { id: 'request', label: '📨 Anfrage' }]"
               :key="tab.id"
               @click="createTab = tab.id"
-              class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors"
+              class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
               :class="createTab === tab.id
                 ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
@@ -403,7 +392,7 @@ const avatarUrl = (user) =>
         </div>
 
         <!-- Projekt-Formular -->
-        <div v-else class="p-6 space-y-4 overflow-y-auto">
+        <div v-else-if="createTab === 'project'" class="p-6 space-y-4 overflow-y-auto">
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Name *</label>
             <input v-model="projectForm.name" type="text" class="input-field" placeholder="Projektname…" @keydown.enter="submitProject" />
@@ -438,96 +427,43 @@ const avatarUrl = (user) =>
           </div>
         </div>
 
-        <!-- Modal-Footer -->
-        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
-          <button @click="showCreateModal = false" class="btn-secondary">Abbrechen</button>
-          <button
-            v-if="createTab === 'ticket'"
-            @click="submitTicket"
-            :disabled="!ticketForm.title.trim() || creatingItem"
-            class="btn-primary"
-          >{{ creatingItem ? 'Erstellen…' : 'Ticket erstellen' }}</button>
-          <button
-            v-else
-            @click="submitProject"
-            :disabled="!projectForm.name.trim() || creatingItem"
-            class="btn-primary"
-          >{{ creatingItem ? 'Erstellen…' : 'Projekt erstellen' }}</button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
-
-  <!-- Anfrage-Modal -->
-  <Teleport to="body">
-    <div v-if="showRequestModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50" @click="showRequestModal = false" />
-      <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl">
-        <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h2 class="text-base font-semibold text-gray-900 dark:text-white">Anfrage an Admin</h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Feature-Wunsch oder Bug melden</p>
-          </div>
-          <button @click="showRequestModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none">&times;</button>
-        </div>
-
-        <!-- Formular -->
-        <div class="p-6 space-y-4">
-          <!-- Typ -->
+        <!-- Anfrage-Formular -->
+        <div v-else class="p-6 space-y-4 overflow-y-auto">
+          <p class="text-xs text-gray-500 dark:text-gray-400">Feature-Wunsch oder Bug direkt an den Admin melden.</p>
           <div class="flex gap-3">
             <button
               v-for="t in [{ id: 'feature', label: '✨ Feature', cls: 'border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' }, { id: 'bug', label: '🐛 Bug', cls: 'border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' }]"
               :key="t.id"
               @click="requestForm.type = t.id"
               class="flex-1 py-2.5 text-sm font-medium rounded-lg border-2 transition-colors"
-              :class="requestForm.type === t.id
-                ? t.cls
-                : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300'"
-            >
-              {{ t.label }}
-            </button>
+              :class="requestForm.type === t.id ? t.cls : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300'"
+            >{{ t.label }}</button>
           </div>
-
-          <!-- Titel -->
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Titel *</label>
-            <input
-              v-model="requestForm.title"
-              type="text"
-              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Kurze Beschreibung…"
-              maxlength="120"
-              @keydown.enter="submitRequest"
-            />
+            <input v-model="requestForm.title" type="text" class="input-field" placeholder="Kurze Beschreibung…" maxlength="120" @keydown.enter="submitRequest" />
           </div>
-
-          <!-- Beschreibung -->
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Details</label>
-            <textarea
-              v-model="requestForm.description"
-              rows="4"
-              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-              placeholder="Was genau soll passieren? Wie reproduzierst du den Bug?"
-            />
+            <textarea v-model="requestForm.description" rows="4" class="input-field resize-none" placeholder="Was genau soll passieren? Wie reproduzierst du den Bug?" />
           </div>
         </div>
 
-        <!-- Footer -->
-        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <button @click="showRequestModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
-            Abbrechen
+        <!-- Modal-Footer -->
+        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+          <button @click="showCreateModal = false" class="btn-secondary">Abbrechen</button>
+          <button v-if="createTab === 'ticket'" @click="submitTicket" :disabled="!ticketForm.title.trim() || creatingItem" class="btn-primary">
+            {{ creatingItem ? 'Erstellen…' : 'Ticket erstellen' }}
           </button>
-          <button
-            @click="submitRequest"
-            :disabled="!requestForm.title.trim() || submittingRequest"
-            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 rounded-lg transition-colors"
-          >
+          <button v-else-if="createTab === 'project'" @click="submitProject" :disabled="!projectForm.name.trim() || creatingItem" class="btn-primary">
+            {{ creatingItem ? 'Erstellen…' : 'Projekt erstellen' }}
+          </button>
+          <button v-else @click="submitRequest" :disabled="!requestForm.title.trim() || submittingRequest" class="btn-primary">
             {{ submittingRequest ? 'Senden…' : 'Anfrage senden' }}
           </button>
         </div>
       </div>
     </div>
   </Teleport>
+
 </template>
