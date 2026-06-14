@@ -34,6 +34,14 @@ const selectedStyle = ref('initials')
 const avatarSeed = ref(authStore.user?.username || 'user')
 const avatarUrl = (style) => `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(avatarSeed.value)}`
 
+// Mein Team - Standard-Ansicht
+const myTeamViewMode = ref(localStorage.getItem('myTeamViewMode') || 'table')
+function setMyTeamViewMode(mode) {
+  myTeamViewMode.value = mode
+  localStorage.setItem('myTeamViewMode', mode)
+  toast.success('Standard-Ansicht gespeichert')
+}
+
 const profileForm = ref({ username: '', email: '' })
 
 onMounted(() => {
@@ -73,6 +81,41 @@ async function saveProfile() {
           <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform"
             :class="darkMode ? 'translate-x-6' : 'translate-x-1'" />
         </button>
+      </div>
+    </BaseCard>
+
+    <BaseCard title="Mein Team">
+      <div class="space-y-2">
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white mb-1">Standard-Ansicht</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Legt fest, welche Ansicht beim Öffnen von „Mein Team" aktiv ist</p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            @click="setMyTeamViewMode('table')"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-colors"
+            :class="myTeamViewMode === 'table'
+              ? 'bg-indigo-600 text-white border-indigo-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-transparent'"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+            Liste
+          </button>
+          <button
+            @click="setMyTeamViewMode('kanban')"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-colors"
+            :class="myTeamViewMode === 'kanban'
+              ? 'bg-indigo-600 text-white border-indigo-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-transparent'"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+            Board
+          </button>
+        </div>
       </div>
     </BaseCard>
 

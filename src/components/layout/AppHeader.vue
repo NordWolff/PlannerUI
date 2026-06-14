@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
+import TicketModal from '@/components/tickets/TicketModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -12,6 +13,48 @@ const toast = useToast()
 const showDropdown = ref(false)
 const showRequestModal = ref(false)
 const submittingRequest = ref(false)
+
+// Mein-Team-Dropdown
+const showTeamDropdown = ref(false)
+const recentTickets    = ref([])
+const loadingRecent    = ref(false)
+const headerTicket     = ref(null)
+
+async function toggleTeamDropdown() {
+  showTeamDropdown.value = !showTeamDropdown.value
+  if (showTeamDropdown.value) {
+    loadingRecent.value = true
+    try {
+      const { data } = await api.get('/tickets/recent', { params: { limit: 8 } })
+      recentTickets.value = data
+    } catch { /* */ } finally {
+      loadingRecent.value = false
+    }
+  }
+}
+
+function formatRecent(iso) {
+  if (!iso) return ''
+  const ms = Date.now() - new Date(iso)
+  const min = Math.floor(ms / 60000)
+  const h   = Math.floor(min / 60)
+  const d   = Math.floor(h / 24)
+  if (min < 1)  return 'gerade eben'
+  if (min < 60) return `vor ${min} Min.`
+  if (h < 24)   return `vor ${h} Std.`
+  if (d === 1)  return 'gestern'
+  return `vor ${d} Tagen`
+}
+
+function openHeaderTicket(ticket) {
+  headerTicket.value = ticket
+  showTeamDropdown.value = false
+}
+
+function goToMyTeam() {
+  showTeamDropdown.value = false
+  router.push('/my-team')
+}
 
 const requestForm = reactive({ title: '', description: '', type: 'feature' })
 
@@ -74,17 +117,73 @@ const avatarUrl = (user) =>
     <!-- Navigation -->
     <nav class="flex-1 flex justify-center">
       <div class="flex gap-1">
-        <router-link
-          v-for="link in navLinks"
-          :key="link.to"
-          :to="link.to"
-          class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
-          :class="isActive(link.to)
-            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'"
-        >
-          {{ link.label }}
-        </router-link>
+        <template v-for="link in navLinks" :key="link.to">
+
+          <!-- Mein Team: Dropdown -->
+          <div v-if="link.to === '/my-team'" class="relative">
+            <button
+              @click="toggleTeamDropdown"
+              class="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+              :class="isActive('/my-team') || showTeamDropdown
+                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'"
+            >
+              Mein Team
+              <svg class="w-3.5 h-3.5 transition-transform" :class="showTeamDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Team-Dropdown-Panel -->
+            <div v-if="showTeamDropdown"
+              class="absolute left-0 top-full mt-1 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+
+              <!-- Header -->
+              <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Zuletzt bearbeitet</span>
+                <button @click="goToMyTeam" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+                  Alle anzeigen →
+                </button>
+              </div>
+
+              <!-- Ticket-Liste -->
+              <div v-if="loadingRecent" class="py-6 text-center text-xs text-gray-400">Laden…</div>
+              <div v-else-if="!recentTickets.length" class="py-6 text-center text-xs text-gray-400">Keine kürzlich bearbeiteten Tickets</div>
+              <ul v-else class="divide-y divide-gray-100 dark:divide-gray-700/50 max-h-72 overflow-y-auto">
+                <li
+                  v-for="ticket in recentTickets"
+                  :key="ticket.id"
+                  @click="openHeaderTicket(ticket)"
+                  class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer group transition-colors"
+                >
+                  <span class="font-mono text-xs text-indigo-500 dark:text-indigo-400 w-20 shrink-0">{{ ticket.ticketNumber || '—' }}</span>
+                  <span class="flex-1 text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ ticket.title }}</span>
+                  <span class="text-xs text-gray-400 shrink-0">{{ formatRecent(ticket.updatedAt) }}</span>
+                </li>
+              </ul>
+
+              <!-- Footer -->
+              <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-700">
+                <button @click="goToMyTeam" class="w-full text-center text-xs text-indigo-600 dark:text-indigo-400 hover:underline py-0.5">
+                  Mein-Team-Seite öffnen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alle anderen Links -->
+          <router-link
+            v-else
+            :to="link.to"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            :class="isActive(link.to)
+              ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'"
+          >
+            {{ link.label }}
+          </router-link>
+
+        </template>
       </div>
     </nav>
 
@@ -126,7 +225,17 @@ const avatarUrl = (user) =>
     </div>
 
     <div v-if="showDropdown" class="fixed inset-0 z-30" @click="showDropdown = false" />
+    <div v-if="showTeamDropdown" class="fixed inset-0 z-30" @click="showTeamDropdown = false" />
   </header>
+
+  <!-- Ticket-Modal aus Header-Dropdown -->
+  <TicketModal
+    v-if="headerTicket"
+    :ticket="headerTicket"
+    @close="headerTicket = null"
+    @saved="headerTicket = null; recentTickets = []"
+    @deleted="headerTicket = null; recentTickets = []"
+  />
 
   <!-- Anfrage-Modal -->
   <Teleport to="body">
