@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, reactive } from 'vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useBoardsStore } from '@/stores/boards'
 import { useTeamsStore } from '@/stores/teams'
@@ -7,7 +7,7 @@ import { useProjectsStore } from '@/stores/projects'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
-import { reactive } from 'vue'
+import api from '@/services/api'
 
 const ticketsStore = useTicketsStore()
 const boardsStore = useBoardsStore()
@@ -19,10 +19,17 @@ const selectedTeamId = ref(null)
 const selectedProjectId = ref(null)
 const selectedTicket = ref(null)
 const showNewTicketModal = ref(false)
-const newTicketForm = reactive({ title: '', description: '', priority: 'medium' })
+const allUsers = ref([])
+const newTicketForm = reactive({ title: '', description: '', priority: 'medium', assigneeId: null })
 
 onMounted(async () => {
-  await Promise.all([boardsStore.fetchBoards(), teamsStore.fetchTeams(), projectsStore.fetchProjects()])
+  const [, , , users] = await Promise.all([
+    boardsStore.fetchBoards(),
+    teamsStore.fetchTeams(),
+    projectsStore.fetchProjects(),
+    api.get('/users'),
+  ])
+  allUsers.value = users.data
   if (boardsStore.boards.length) selectedBoardId.value = boardsStore.boards[0].id
   await loadTickets()
 })
@@ -44,6 +51,7 @@ async function createTicket() {
   showNewTicketModal.value = false
   newTicketForm.title = ''
   newTicketForm.description = ''
+  newTicketForm.assigneeId = null
 }
 </script>
 
@@ -95,20 +103,29 @@ async function createTicket() {
       <div class="p-6 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel</label>
-          <input v-model="newTicketForm.title" type="text" class="input-field" />
+          <input v-model="newTicketForm.title" type="text" class="input-field" placeholder="Titel des Tickets..." />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
-          <textarea v-model="newTicketForm.description" rows="3" class="input-field resize-none" />
+          <textarea v-model="newTicketForm.description" rows="3" class="input-field resize-none" placeholder="Optionale Beschreibung..." />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorität</label>
-          <select v-model="newTicketForm.priority" class="input-field">
-            <option value="low">Niedrig</option>
-            <option value="medium">Mittel</option>
-            <option value="high">Hoch</option>
-            <option value="critical">Kritisch</option>
-          </select>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorität</label>
+            <select v-model="newTicketForm.priority" class="input-field">
+              <option value="low">Niedrig</option>
+              <option value="medium">Mittel</option>
+              <option value="high">Hoch</option>
+              <option value="critical">Kritisch</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zugewiesen an</label>
+            <select v-model="newTicketForm.assigneeId" class="input-field">
+              <option :value="null">— Nicht zugewiesen —</option>
+              <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">

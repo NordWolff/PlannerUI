@@ -5,6 +5,7 @@ import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
 import BaseModal from '@/components/common/BaseModal.vue'
 import ChecklistItem from './ChecklistItem.vue'
+import api from '@/services/api'
 
 const props = defineProps({ ticket: { type: Object, required: true } })
 const emit = defineEmits(['close', 'saved', 'deleted'])
@@ -16,13 +17,14 @@ const sprintsStore = useSprintsStore()
 const activeTab = ref('details')
 const newChecklistText = ref('')
 const history = ref([])
+const allUsers = ref([])
 
 const form = reactive({
   title: props.ticket.title,
   description: props.ticket.description || '',
   status: props.ticket.status || 'draft',
   priority: props.ticket.priority || 'medium',
-  assigneeId: props.ticket.assigneeId || null,
+  assigneeId: props.ticket.assigneeId ?? null,
   projectId: props.ticket.projectId || null,
   sprintId: props.ticket.sprintId || null,
 })
@@ -45,7 +47,12 @@ const priorities = [
 ]
 
 onMounted(async () => {
-  await Promise.all([projectsStore.fetchProjects(), sprintsStore.fetchSprints()])
+  const [, , users] = await Promise.all([
+    projectsStore.fetchProjects(),
+    sprintsStore.fetchSprints(),
+    api.get('/users'),
+  ])
+  allUsers.value = users.data
   history.value = await ticketsStore.fetchHistory(props.ticket.id)
 })
 
@@ -129,17 +136,38 @@ const checklistProgress = computed(() => {
               <option v-for="p in priorities" :key="p.id" :value="p.id">{{ p.label }}</option>
             </select>
           </div>
+        </div>
+
+        <!-- Zugewiesen an -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Zugewiesen an</label>
+          <select v-model="form.assigneeId" class="input-field">
+            <option :value="null">— Nicht zugewiesen —</option>
+            <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
+          </select>
+          <!-- Vorschau des zugewiesenen Benutzers -->
+          <div v-if="form.assigneeId" class="flex items-center gap-2 mt-1.5">
+            <img
+              :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(allUsers.find(u => u.id === form.assigneeId)?.username || '')}`"
+              class="w-5 h-5 rounded-full bg-gray-200" alt="" />
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ allUsers.find(u => u.id === form.assigneeId)?.username }}
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Projekt</label>
             <select v-model="form.projectId" class="input-field">
-              <option :value="null">-- Kein Projekt --</option>
+              <option :value="null">— Kein Projekt —</option>
               <option v-for="p in projectsStore.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Sprint</label>
             <select v-model="form.sprintId" class="input-field">
-              <option :value="null">-- Kein Sprint --</option>
+              <option :value="null">— Kein Sprint —</option>
               <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
