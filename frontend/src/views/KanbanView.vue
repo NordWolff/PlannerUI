@@ -7,29 +7,28 @@ import { useProjectsStore } from '@/stores/projects'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
-import api from '@/services/api'
+import { useUsers } from '@/composables/useUsers'
 
 const ticketsStore = useTicketsStore()
 const boardsStore = useBoardsStore()
 const teamsStore = useTeamsStore()
 const projectsStore = useProjectsStore()
+const { users: allUsers, fetchUsers } = useUsers()
 
 const selectedBoardId = ref(null)
 const selectedTeamId = ref(null)
 const selectedProjectId = ref(null)
 const selectedTicket = ref(null)
 const showNewTicketModal = ref(false)
-const allUsers = ref([])
 const newTicketForm = reactive({ title: '', description: '', priority: 'medium', assigneeId: null })
 
 onMounted(async () => {
-  const [, , , users] = await Promise.all([
+  await Promise.all([
     boardsStore.fetchBoards(),
     teamsStore.fetchTeams(),
     projectsStore.fetchProjects(),
-    api.get('/users'),
+    fetchUsers(),
   ])
-  allUsers.value = users.data
   if (boardsStore.boards.length) selectedBoardId.value = boardsStore.boards[0].id
   await loadTickets()
 })
