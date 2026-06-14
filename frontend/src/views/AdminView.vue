@@ -5,6 +5,7 @@ import { useTeamsStore } from '@/stores/teams'
 import { useBoardsStore } from '@/stores/boards'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
+import { generateAvatar } from '@/utils/avatar'
 
 const authStore = useAuthStore()
 const teamsStore = useTeamsStore()
@@ -310,7 +311,7 @@ function formatDate(iso) {
             <!-- Avatar -->
             <img
               v-if="req.submittedByUser"
-              :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.submittedByUser.username)}`"
+              :src="generateAvatar(req.submittedByUser.username)"
               class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
               :title="req.submittedByUser.username"
               alt=""
@@ -400,7 +401,7 @@ function formatDate(iso) {
             <tr v-for="u in users" :key="u.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
-                  <img :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.username)}`"
+                  <img :src="generateAvatar(u.username)"
                     class="w-7 h-7 rounded-full bg-gray-200" alt="" />
                   <span class="text-sm font-medium text-gray-900 dark:text-white">{{ u.username }}</span>
                 </div>
