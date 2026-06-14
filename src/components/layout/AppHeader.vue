@@ -132,6 +132,7 @@ const baseLinks = [
   { to: '/teams', label: 'Teams' },
   { to: '/projects', label: 'Projekte' },
   { to: '/kanban', label: 'Kanban' },
+  { to: '/gantt', label: 'Zeitstrahl' },
   { to: '/reports', label: 'Reports' },
   { to: '/chat', label: 'Chat' },
 ]
