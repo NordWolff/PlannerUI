@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
@@ -17,6 +17,24 @@ const selectedTeamId = ref(null)
 const selectedSprintId = ref(null)
 const selectedTicket = ref(null)
 const viewMode = ref('table')
+
+// Sobald User und Teams verfügbar sind, das eigene Team vorbelegen.
+// watch mit immediate:true deckt beide Fälle ab:
+// - direkt nach Login (user schon gesetzt, teams kommen nach fetch)
+// - nach Seiten-Reload (user kommt via fetchMe async nach)
+watch(
+  [() => authStore.user, () => teamsStore.teams],
+  ([user, teams]) => {
+    if (user && teams.length && selectedTeamId.value === null) {
+      const myTeam = teams.find(t => t.members?.some(m => m.userId === user.id))
+      if (myTeam) {
+        selectedTeamId.value = myTeam.id
+        loadTickets()
+      }
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints()])
