@@ -1,33 +1,27 @@
 <script setup>
-import { onMounted, ref, computed, reactive } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useBoardsStore } from '@/stores/boards'
 import { useTeamsStore } from '@/stores/teams'
 import { useProjectsStore } from '@/stores/projects'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
-import BaseModal from '@/components/common/BaseModal.vue'
-import { useUsers } from '@/composables/useUsers'
 
 const ticketsStore = useTicketsStore()
 const boardsStore = useBoardsStore()
 const teamsStore = useTeamsStore()
 const projectsStore = useProjectsStore()
-const { users: allUsers, fetchUsers } = useUsers()
 
 const selectedBoardId = ref(null)
 const selectedTeamId = ref(null)
 const selectedProjectId = ref(null)
 const selectedTicket = ref(null)
-const showNewTicketModal = ref(false)
-const newTicketForm = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null })
 
 onMounted(async () => {
   await Promise.all([
     boardsStore.fetchBoards(),
     teamsStore.fetchTeams(),
     projectsStore.fetchProjects(),
-    fetchUsers(),
   ])
   if (boardsStore.boards.length) selectedBoardId.value = boardsStore.boards[0].id
   await loadTickets()
@@ -44,16 +38,6 @@ async function loadTickets() {
 async function handleStatusChange({ ticketId, status }) {
   await ticketsStore.updateStatus(ticketId, status)
 }
-
-async function createTicket() {
-  await ticketsStore.createTicket({ ...newTicketForm, boardId: selectedBoardId.value })
-  showNewTicketModal.value = false
-  newTicketForm.title = ''
-  newTicketForm.description = ''
-  newTicketForm.priority = 'medium'
-  newTicketForm.type = 'task'
-  newTicketForm.assigneeId = null
-}
 </script>
 
 <template>
@@ -63,7 +47,6 @@ async function createTicket() {
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kanban</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">Tickets per Drag & Drop verschieben</p>
       </div>
-      <button @click="showNewTicketModal = true" class="btn-primary">+ Ticket erstellen</button>
     </div>
 
     <!-- Filter -->
@@ -100,50 +83,5 @@ async function createTicket() {
 
     <TicketModal v-if="selectedTicket" :ticket="selectedTicket" @close="selectedTicket = null" @saved="selectedTicket = null; loadTickets()" @deleted="selectedTicket = null; loadTickets()" />
 
-    <BaseModal v-if="showNewTicketModal" title="Neues Ticket" @close="showNewTicketModal = false">
-      <div class="p-6 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel</label>
-          <input v-model="newTicketForm.title" type="text" class="input-field" placeholder="Titel des Tickets..." />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
-          <textarea v-model="newTicketForm.description" rows="3" class="input-field resize-none" placeholder="Optionale Beschreibung..." />
-        </div>
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Art</label>
-            <select v-model="newTicketForm.type" class="input-field">
-              <option value="task">Aufgabe</option>
-              <option value="bug">Bug</option>
-              <option value="feature">Feature</option>
-              <option value="improvement">Verbesserung</option>
-              <option value="question">Frage</option>
-              <option value="epic">Epic</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorität</label>
-            <select v-model="newTicketForm.priority" class="input-field">
-              <option value="low">Niedrig</option>
-              <option value="medium">Mittel</option>
-              <option value="high">Hoch</option>
-              <option value="critical">Kritisch</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zugewiesen an</label>
-            <select v-model="newTicketForm.assigneeId" class="input-field">
-              <option :value="null">— Nicht zugewiesen —</option>
-              <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-        <button @click="showNewTicketModal = false" class="btn-secondary">Abbrechen</button>
-        <button @click="createTicket" :disabled="!newTicketForm.title" class="btn-primary">Erstellen</button>
-      </div>
-    </BaseModal>
   </div>
 </template>
