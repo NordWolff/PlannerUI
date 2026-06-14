@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTeamsStore } from '@/stores/teams'
 import { useBoardsStore } from '@/stores/boards'
@@ -80,12 +80,17 @@ async function loadRequests() {
   try {
     const { data } = await api.get('/admin-requests')
     adminRequests.value = data
-  } catch {
+  } catch (e) {
+    console.error('loadRequests:', e)
     toast.error('Anfragen konnten nicht geladen werden')
   } finally {
     loadingRequests.value = false
   }
 }
+
+watch(activeTab, (tab) => {
+  if (tab === 'requests') loadRequests()
+})
 
 async function loadSettings() {
   try {
@@ -277,9 +282,21 @@ function formatDate(iso) {
 
     <!-- ── Anfragen ─────────────────────────────────────────────────────────── -->
     <div v-if="activeTab === 'requests'">
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-        Benutzer können Feature-Wünsche und Bugs an den Admin melden. Hier siehst du alle eingegangenen Anfragen.
-      </p>
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Benutzer können Feature-Wünsche und Bugs an den Admin melden.
+        </p>
+        <button
+          @click="loadRequests"
+          :disabled="loadingRequests"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': loadingRequests }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Aktualisieren
+        </button>
+      </div>
       <p v-if="loadingRequests" class="text-gray-400 text-sm">Lade Anfragen…</p>
       <div v-else-if="!adminRequests.length" class="py-12 text-center">
         <div class="text-4xl mb-3">📬</div>
