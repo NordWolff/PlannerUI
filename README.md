@@ -177,12 +177,16 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
   - Felder: Titel, Status, Priorität, Art (mit Icon), Projekt, Sprint, Beschreibung
   - Tabs: Checkliste, Kommentare, Anhänge, Verlauf
 
-### Teams
+### Teams & Sprints
 - Pro Team genau **ein Product Owner**
 - Ownership per Knopfdruck übertragen (bisheriger Owner wird Mitglied)
 - Admin kann kein Team-Mitglied sein (Einzelrolle)
 - Mitglieder-Suche mit Debounce; Admins und bereits vorhandene Mitglieder werden ausgefiltert
 - Hinweis wenn kein Product Owner vorhanden
+- **Sprint-Verwaltung** direkt auf der Teams-Seite (unterhalb der Team-Karten):
+  - Sprints erstellen, bearbeiten, starten, abschließen und löschen
+  - Status-Flow: Planung → Aktiv → Abgeschlossen
+  - Nur Admin und Owner haben Schreibzugriff
 
 ### Chat
 - Direktnachrichten zwischen Benutzern (zwei-Panel-Layout: Kontaktliste + Chatfenster)
@@ -257,6 +261,8 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | PUT | `/api/settings/ticket-prefix` | Präfix setzen (Admin) |
 | PUT | `/api/settings/ticket-counter` | Zähler setzen (Admin) |
 | GET | `/api/dashboard/stats` | Statistiken |
+| POST | `/api/sprints/:id/start` | Sprint starten (Admin / Owner) |
+| POST | `/api/sprints/:id/complete` | Sprint abschließen (Admin / Owner) |
 | GET/POST | `/api/projects` | Projekte abrufen / erstellen (inkl. `startDate`, `endDate`, `sprintIds`) |
 | PUT | `/api/projects/:id` | Projekt aktualisieren (inkl. `startDate`, `endDate`, `sprintIds`) |
 | DELETE | `/api/projects/:id` | Projekt löschen |
@@ -271,6 +277,16 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v1.3.0 — Sprint-Verwaltung im Team-Bereich
+- **Sprints-Sektion** auf der Teams-Seite: Erstellen, Bearbeiten, Starten, Abschließen und Löschen von Sprints
+- **Status-Flow:** Planung → Aktiv → Abgeschlossen (mit farbigem Status-Badge und Status-Ikon)
+- Starten setzt `startDate` automatisch auf heute, falls noch leer; Abschließen setzt `endDate`
+- Aktive Sprints können nicht gelöscht werden (API-Schutz + UI-Ausblendung)
+- Abgeschlossene Sprints können nicht bearbeitet werden
+- Alle schreibenden Sprint-Routen durch `requireAdminOrOwner`-Middleware gesichert — normale Benutzer erhalten HTTP 403
+- Neues Feld `status` (`planning | active | completed`) auf Sprints; Seed-Sprint startet als `active`
+- `startSprint()` und `completeSprint()` im Pinia-Sprints-Store ergänzt
 
 ### v1.2.0 — Projekt über mehrere Sprints
 - Projekte können beliebig vielen Sprints zugewiesen werden (`sprintIds`-Array statt einzelnem `sprintId`)
