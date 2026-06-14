@@ -2,7 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { store, sanitizeUser } from '../data/store.js';
+import { store, sanitizeUser, setUserOnline, setUserOffline } from '../data/store.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -66,11 +66,22 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    setUserOnline(user.id);
     const token = generateToken(user.id);
     return res.json({ token, user: sanitizeUser(user) });
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+router.post('/logout', authenticateToken, (req, res) => {
+  setUserOffline(req.user.id);
+  return res.json({ ok: true });
+});
+
+router.post('/heartbeat', authenticateToken, (req, res) => {
+  setUserOnline(req.user.id);
+  return res.json({ ok: true });
 });
 
 router.get('/me', authenticateToken, (req, res) => {
@@ -102,6 +113,15 @@ router.put('/me', authenticateToken, async (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+router.put('/me/privacy', authenticateToken, (req, res) => {
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  if (typeof req.body.privacyHideOnline === 'boolean') {
+    user.privacyHideOnline = req.body.privacyHideOnline;
+  }
+  return res.json(sanitizeUser(user));
 });
 
 export default router;

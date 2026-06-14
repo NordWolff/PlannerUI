@@ -1,6 +1,9 @@
 <script setup>
 import AppHeader from './AppHeader.vue'
 import ToastContainer from '@/components/common/ToastContainer.vue'
+import { useHeartbeat } from '@/composables/useHeartbeat'
+
+useHeartbeat()
 </script>
 
 <template>

@@ -14,7 +14,31 @@ export const store = {
     ticketPrefix: 'TKT',
     ticketCounter: 1,
   },
+  onlineStatus: {}, // { [userId]: { online: bool, lastSeen: number (ms) } }
 };
+
+// Online-Status: lastSeen älter als 2 Minuten → offline
+const ONLINE_THRESHOLD_MS = 2 * 60 * 1000;
+
+export function setUserOnline(userId) {
+  store.onlineStatus[userId] = { online: true, lastSeen: Date.now() };
+}
+
+export function setUserOffline(userId) {
+  if (store.onlineStatus[userId]) {
+    store.onlineStatus[userId].online = false;
+  }
+}
+
+export function getUserOnlineStatus(userId, requestingUserId) {
+  const user = store.users.find(u => u.id === userId);
+  const entry = store.onlineStatus[userId];
+  if (!entry || !entry.online) return 'offline';
+  if (Date.now() - entry.lastSeen > ONLINE_THRESHOLD_MS) return 'offline';
+  // Datenschutz: eigener Status immer sichtbar, für andere ggf. verborgen
+  if (user?.privacyHideOnline && userId !== requestingUserId) return 'hidden';
+  return 'online';
+}
 
 export function sanitizeUser(user) {
   const { passwordHash, ...rest } = user;
@@ -54,6 +78,7 @@ export async function seedData() {
     avatar: null,
     language: 'de',
     theme: 'light',
+    privacyHideOnline: false,
     favorites: { teamId: null, projectId: null, boardId: null },
     createdAt: now,
   });

@@ -4,6 +4,8 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 import { generateAvatar } from '@/utils/avatar'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import { useUsers } from '@/composables/useUsers'
 
 const authStore = useAuthStore()
 
@@ -106,10 +108,14 @@ async function scrollBottom() {
 }
 
 // ─── Laden ────────────────────────────────────────────────────────────────────
+const { fetchUsers: fetchUsersComposable } = useUsers()
+
 async function loadUsers() {
   try {
     const { data } = await api.get('/users')
     allUsers.value = data
+    // useUsers-Singleton auch befüllen, damit UserAvatar-Status korrekt ist
+    await fetchUsersComposable()
   } finally {
     loadingUsers.value = false
   }
@@ -239,9 +245,9 @@ onUnmounted(() => clearInterval(pollingInterval))
           class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left"
           :class="selectedUser?.id === user.id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-r-2 border-indigo-500' : ''"
         >
-          <!-- Avatar -->
+          <!-- Avatar mit Status-Ampel (unten rechts) + Unread-Badge (oben rechts) -->
           <div class="relative shrink-0">
-            <img :src="avatarUrl(user.username)" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600" :alt="user.username" />
+            <UserAvatar :user-id="user.id" size="xl" dot-position="bottom-right" />
             <span v-if="unread[user.id]"
               class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
               {{ unread[user.id] > 9 ? '9+' : unread[user.id] }}
@@ -281,10 +287,14 @@ onUnmounted(() => clearInterval(pollingInterval))
       <template v-else>
         <!-- Chat-Header -->
         <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <img :src="avatarUrl(selectedUser.username)" class="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600" :alt="selectedUser.username" />
+          <UserAvatar :user-id="selectedUser.id" size="lg" />
           <div>
             <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.username }}</p>
-            <p class="text-xs text-gray-400">{{ selectedUser.email }}</p>
+            <p class="text-xs text-gray-400">
+              <span v-if="selectedUser.onlineStatus === 'online'" class="text-green-500">● Online</span>
+              <span v-else-if="selectedUser.onlineStatus === 'hidden'" class="text-yellow-500">● Status verborgen</span>
+              <span v-else class="text-gray-400">● Offline</span>
+            </p>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { store, sanitizeUser } from '../data/store.js';
+import { store, sanitizeUser, getUserOnlineStatus } from '../data/store.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const VALID_ROLES = ['admin', 'owner', 'user'];
@@ -7,18 +7,22 @@ const VALID_ROLES = ['admin', 'owner', 'user'];
 const router = Router();
 router.use(authenticateToken);
 
+function withStatus(user, requestingUserId) {
+  return { ...sanitizeUser(user), onlineStatus: getUserOnlineStatus(user.id, requestingUserId) };
+}
+
 router.get('/search', (req, res) => {
   const q = (req.query.q || '').toLowerCase();
   if (q.length < 2) return res.json([]);
   const results = store.users
     .filter((u) => u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
     .slice(0, 10)
-    .map(sanitizeUser);
+    .map(u => withStatus(u, req.user.id));
   return res.json(results);
 });
 
 router.get('/', (req, res) => {
-  return res.json(store.users.map(sanitizeUser));
+  return res.json(store.users.map(u => withStatus(u, req.user.id)));
 });
 
 router.get('/:id', (req, res) => {
@@ -26,7 +30,7 @@ router.get('/:id', (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
-  return res.json(sanitizeUser(user));
+  return res.json(withStatus(user, req.user.id));
 });
 
 router.put('/:id/role', requireAdmin, (req, res) => {
