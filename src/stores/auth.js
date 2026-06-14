@@ -75,6 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function logout() {
+    api.post('/auth/logout').catch(() => {}) // fire-and-forget, Token noch gültig
     token.value = null
     user.value  = null
     deleteCookie(COOKIE_NAME)

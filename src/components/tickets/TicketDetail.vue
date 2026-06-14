@@ -9,6 +9,7 @@ import { generateAvatar } from '@/utils/avatar'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import TicketTypeIcon from '@/components/common/TicketTypeIcon.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 import ChecklistItem from './ChecklistItem.vue'
 
 const props = defineProps({ ticket: { type: Object, required: true } })
@@ -278,11 +279,7 @@ onMounted(async () => {
             @click="startEdit('assigneeId')"
             class="flex items-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            <img
-              :src="avatarUrl(form.assigneeId)"
-              class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0"
-              alt=""
-            />
+            <UserAvatar :user-id="form.assigneeId" size="lg" />
             <div class="text-right hidden sm:block">
               <p class="text-[10px] font-medium text-gray-400 uppercase tracking-wide leading-none mb-0.5">Zugewiesen an</p>
               <p class="text-sm font-medium text-gray-800 dark:text-gray-200 leading-tight">

@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseCard from '@/components/common/BaseCard.vue'
 import { generateAvatar } from '@/utils/avatar'
+import api from '@/services/api'
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -24,6 +25,20 @@ function setLanguage(lang) {
 }
 
 const myAvatar = computed(() => generateAvatar(authStore.user?.username))
+
+// Online-Datenschutz
+const privacyHideOnline = ref(authStore.user?.privacyHideOnline ?? false)
+async function togglePrivacyHideOnline() {
+  privacyHideOnline.value = !privacyHideOnline.value
+  try {
+    const { data } = await api.put('/auth/me/privacy', { privacyHideOnline: privacyHideOnline.value })
+    authStore.user = data
+    toast.success(privacyHideOnline.value ? 'Online-Status wird verborgen' : 'Online-Status ist sichtbar')
+  } catch {
+    privacyHideOnline.value = !privacyHideOnline.value // revert
+    toast.error('Einstellung konnte nicht gespeichert werden')
+  }
+}
 
 // Mein Team - Standard-Ansicht
 const myTeamViewMode = ref(localStorage.getItem('myTeamViewMode') || 'table')
@@ -101,6 +116,31 @@ async function saveProfile() {
             Board
           </button>
         </div>
+      </div>
+    </BaseCard>
+
+    <BaseCard title="Datenschutz">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Online-Status verbergen</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Andere Benutzer sehen dich als
+            <span class="inline-flex items-center gap-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span>gelbe Ampel
+            </span>
+            statt online oder offline
+          </p>
+        </div>
+        <button
+          @click="togglePrivacyHideOnline"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          :class="privacyHideOnline ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'"
+        >
+          <span
+            class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform"
+            :class="privacyHideOnline ? 'translate-x-6' : 'translate-x-1'"
+          />
+        </button>
       </div>
     </BaseCard>
 

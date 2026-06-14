@@ -6,13 +6,17 @@ const users = ref([])
 let fetched = false
 
 export function useUsers() {
-  async function fetchUsers() {
-    if (fetched) return
+  async function fetchUsers(force = false) {
+    if (fetched && !force) return
     try {
       const { data } = await api.get('/users')
       users.value = data
       fetched = true
     } catch { /* silent */ }
+  }
+
+  async function refreshUsers() {
+    await fetchUsers(true)
   }
 
   function getUser(id) {
@@ -24,5 +28,9 @@ export function useUsers() {
     return generateAvatar(u?.username)
   }
 
-  return { users, fetchUsers, getUser, avatarUrl }
+  function getOnlineStatus(id) {
+    return getUser(id)?.onlineStatus ?? 'offline'
+  }
+
+  return { users, fetchUsers, refreshUsers, getUser, avatarUrl, getOnlineStatus }
 }

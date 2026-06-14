@@ -8,13 +8,14 @@ import StatusBadge from '@/components/common/StatusBadge.vue'
 import PriorityBadge from '@/components/common/PriorityBadge.vue'
 import TicketTypeIcon from '@/components/common/TicketTypeIcon.vue'
 import TicketDetail from '@/components/tickets/TicketDetail.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 import { useUsers } from '@/composables/useUsers'
 
 const ticketsStore = useTicketsStore()
 const teamsStore = useTeamsStore()
 const sprintsStore = useSprintsStore()
 const authStore = useAuthStore()
-const { getUser, avatarUrl, fetchUsers } = useUsers()
+const { fetchUsers } = useUsers()
 
 const selectedTeamId = ref(null)
 const selectedSprintId = ref(null)
@@ -127,14 +128,7 @@ const ticketsByStatus = computed(() => {
               <td class="px-6 py-3"><StatusBadge :status="ticket.status" /></td>
               <td class="px-6 py-3"><PriorityBadge v-if="ticket.priority" :priority="ticket.priority" /></td>
               <td class="px-6 py-3">
-                <template v-if="ticket.assigneeId">
-                  <img
-                    :src="avatarUrl(ticket.assigneeId)"
-                    :title="getUser(ticket.assigneeId)?.username"
-                    class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600"
-                    :alt="getUser(ticket.assigneeId)?.username"
-                  />
-                </template>
+                <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="md" />
                 <div v-else class="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500" title="Nicht zugewiesen" />
               </td>
             </tr>
@@ -155,14 +149,7 @@ const ticketsByStatus = computed(() => {
             class="bg-white dark:bg-gray-700 rounded-lg p-3 text-sm cursor-pointer hover:shadow-md border border-gray-200 dark:border-gray-600 transition-shadow">
             <div class="flex items-start justify-between gap-2">
               <p class="font-medium text-gray-900 dark:text-white line-clamp-2 flex-1">{{ ticket.title }}</p>
-              <template v-if="ticket.assigneeId">
-                <img
-                  :src="avatarUrl(ticket.assigneeId)"
-                  :title="getUser(ticket.assigneeId)?.username"
-                  class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
-                  :alt="getUser(ticket.assigneeId)?.username"
-                />
-              </template>
+              <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="sm" class="mt-0.5" />
               <div v-else class="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500 shrink-0 mt-0.5" title="Nicht zugewiesen" />
             </div>
             <div class="flex items-center justify-between mt-2">
