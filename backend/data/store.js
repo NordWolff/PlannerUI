@@ -9,6 +9,7 @@ export const store = {
   boards: [],
   sprints: [],
   messages: [],
+  adminRequests: [],
   settings: {
     ticketPrefix: 'TKT',
     ticketCounter: 1,
