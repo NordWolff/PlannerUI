@@ -40,10 +40,10 @@ PlannerUI/
 ├── frontend/
 │   └── src/
 │       ├── components/
-│       │   ├── common/           # BaseModal, ToastContainer, PriorityBadge …
+│       │   ├── common/           # BaseModal, ToastContainer, PriorityBadge, TicketTypeIcon …
 │       │   ├── kanban/           # KanbanBoard, KanbanColumn, TicketCard
 │       │   ├── layout/           # AppHeader, AppLayout
-│       │   └── tickets/          # TicketModal, ChecklistItem
+│       │   └── tickets/          # TicketModal, TicketDetail, ChecklistItem
 │       ├── composables/
 │       │   ├── useToast.js       # Toast-Singleton
 │       │   └── useUsers.js       # Benutzer-Cache (Singleton, einmalig geladen)
@@ -52,6 +52,8 @@ PlannerUI/
 │       ├── services/
 │       │   └── api.js            # Axios-Instanz mit Token-Interceptor
 │       ├── stores/               # Pinia Stores (auth, teams, boards, tickets …)
+│       ├── utils/
+│       │   └── avatar.js         # Lokale Avataaars-Generierung (@dicebear/avataaars@9)
 │       └── views/                # Alle Seiten-Komponenten
 └── .gitignore
 ```
@@ -131,9 +133,9 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
   - Ticketnummer (z. B. `TKT-0001`)
   - Titel (bis 2 Zeilen)
   - Prioritäts-Badge
+  - **Ticket-Art-Icon** unten rechts (Bootstrap Icons SVGs — Bug, Feature, Verbesserung, Frage, Epic, Aufgabe)
   - Checklisten-Fortschritt (z. B. `1/3`)
   - **Avatar des zugewiesenen Benutzers** (oder gestrichelter Kreis wenn nicht zugewiesen)
-- Neues Ticket erstellen mit Titel, Beschreibung, Priorität und **Zuweisung**
 
 ### Tickets
 - Automatisch aufsteigende Ticketnummer (Präfix konfigurierbar, z. B. `TKT-0001`, `FEED-0042`)
@@ -152,11 +154,14 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ### Mein Team
 - **Eigenes Team automatisch vorausgewählt** im Dropdown (auch nach Seiten-Reload)
-- **„Zuletzt bearbeitet"** — Liste der letzten 10 Tickets die der Benutzer erstellt, bearbeitet oder in denen er History-Einträge hat
-  - Sortierung: neuestes zuerst
-  - Anzeige: Ticketnummer · Titel · Status · relativer Zeitstempel (z. B. „vor 5 Min.", „gestern")
-  - Klick öffnet Ticket-Modal, Liste aktualisiert sich nach jeder Änderung
-- Eigene zugewiesene Tickets als Tabelle oder Mini-Kanban-Board
+- **Header-Dropdown „Mein Team"**: zeigt die letzten 8 bearbeiteten Tickets mit Status-Badge — Klick öffnet direkt das TicketModal
+- **Konfigurierbare Standard-Ansicht** in den Einstellungen (Liste oder Board) — wird in localStorage gespeichert
+- Eigene zugewiesene Tickets als **Tabelle** (mit Avatar-Spalte) oder **Mini-Kanban-Board** (mit Avatar oben rechts auf der Karte)
+- **Vollseiten-Detailansicht** — Klick auf ein Ticket öffnet keine Modal mehr, sondern eine vollseitige Ansicht:
+  - Klebende Kopfzeile: ← Zurück, Ticketnummer + Typ-Icon, Assignee-Avatar rechts (klickbar zum Ändern)
+  - **Hover-to-Edit** für alle Felder: Im Lesemode als normaler Text dargestellt; Hover zeigt Stift-Icon + Hintergrundfarbe; Klick aktiviert Inline-Editor (kein Speichern-Button nötig — speichert automatisch beim Verlassen)
+  - Felder: Titel, Status, Priorität, Art (mit Icon), Projekt, Sprint, Beschreibung
+  - Tabs: Checkliste, Kommentare, Anhänge, Verlauf
 
 ### Teams
 - Pro Team genau **ein Product Owner**
@@ -184,11 +189,17 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - **Boards:** erstellen (mit Datum), bearbeiten und löschen
 - **Einstellungen:** Ticket-Präfix (z. B. `FEED`, `TKG`) und Startzähler anpassen, Vorschau der nächsten Nummer
 
-### Anfrage senden (alle Benutzer)
-- **„Anfrage"-Button** im Header — sichtbar für alle eingeloggten Benutzer
-- Modal mit Typ-Auswahl: `✨ Feature` oder `🐛 Bug`
-- Titel (Pflichtfeld) und optionale Beschreibung
-- Anfragen landen direkt in der Admin-Inbox
+### „Erstellen"-Button im Header
+- **Dropdown-Menü** mit drei Optionen: 🎟 Ticket, 📁 Projekt, 📨 Anfrage
+- Öffnet ein Modal mit den entsprechenden Tabs — alle drei Erstellformulare an einem Ort
+- **Ticket erstellen:** Titel, Beschreibung, Priorität, Art, Zuweisung, Board
+- **Projekt erstellen:** Name, Beschreibung, Status, Team, Sprint
+- **Anfrage senden:** Typ (`✨ Feature` / `🐛 Bug`), Titel, Beschreibung → landet in der Admin-Inbox
+
+### Avatare
+- Lokal generiert via `@dicebear/avataaars@9` (npm) — kein CDN, keine HTTP-Anfragen
+- Seed = Benutzername → deterministisch und konsistent in allen Komponenten
+- Sichtbar in: Header-Dropdown, Mein-Team-Liste, Mein-Team-Board, Ticket-Detailansicht, Kommentare, Teams-Seite, Admin-Anfragen
 
 ### Weitere
 - Dark / Light Mode
@@ -233,6 +244,19 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v0.9.0 — Vollseiten-Detailansicht & Header-Überarbeitung
+- **Ticket-Detailansicht als Vollseite** in Mein Team (kein Modal mehr)
+  - Klebende Kopfzeile: ← Zurück, Ticketnummer + Typ-Icon, Assignee rechts
+  - Hover-to-Edit für alle Felder: Titel, Beschreibung, Status, Priorität, Art (mit Icon), Projekt, Sprint, Zugewiesen
+  - Felder speichern automatisch beim Verlassen (kein Speichern-Button)
+  - Alle Tabs erhalten: Checkliste, Kommentare (mit Reaktionen), Anhänge, Verlauf
+- **„Erstellen"-Button im Header** fasst Ticket-, Projekt- und Anfrageformular in einem Dropdown-Modal zusammen; separater Anfrage-Button entfernt
+- **„Mein Team"-Dropdown** im Header zeigt letzte 8 bearbeitete Tickets; Klick öffnet TicketModal direkt aus dem Header
+- **Konfigurierbare Standard-Ansicht** für Mein Team in den Einstellungen (Liste / Board)
+- **Assignee-Avatar** auf Karten und in der Zugewiesen-Spalte der Tabellenansicht
+- **Ticket-Art-Icon** (Bootstrap Icons SVG, inline) unten rechts auf Board-Karten
+- **Avataaars via npm** — `@dicebear/core@9` + `@dicebear/avataaars@9` ersetzen alle CDN-URLs; lokal generiert als Data-URI
 
 ### v0.8.0 — Chat-Ticket-Links & Direktnachrichten
 - Chat als Direktnachrichten-System: links Kontaktliste mit Vorschau, rechts Chatfenster
@@ -293,5 +317,5 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ## Bekannte Einschränkungen (MVP)
 
 - Daten liegen **im Arbeitsspeicher** — nach Backend-Neustart werden die Seed-Daten neu geladen
-- Kein Datei-Upload für Avatare (DiceBear-Initialen-Avatare)
 - Chat ohne WebSocket (Polling alle 5 Sekunden)
+- Keine Datei-Uploads für benutzerdefinierte Avatare (Avatare werden automatisch aus dem Benutzernamen generiert)
