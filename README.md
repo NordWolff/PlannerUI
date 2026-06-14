@@ -173,6 +173,7 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ### Chat
 - Direktnachrichten zwischen Benutzern (zwei-Panel-Layout: Kontaktliste + Chatfenster)
 - Echtzeit-Polling (5 s), Konversationen nach letzter Nachricht sortiert
+- **Online-Status** in der Kontaktliste (farbiger Punkt unten rechts am Avatar) und im Chat-Header mit Textanzeige
 - `@username` hebt Erwähnungen hervor
 - `#TKT-0001` — existierende Tickets werden als klickbares Badge gerendert und öffnen das TicketModal per Klick; nicht-existierende Nummern erscheinen als grauer Monospace-Text
 
@@ -196,10 +197,16 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - **Projekt erstellen:** Name, Beschreibung, Status, Team, Sprint
 - **Anfrage senden:** Typ (`✨ Feature` / `🐛 Bug`), Titel, Beschreibung → landet in der Admin-Inbox
 
-### Avatare
+### Avatare & Online-Status
 - Lokal generiert via `@dicebear/avataaars@9` (npm) — kein CDN, keine HTTP-Anfragen
 - Seed = Benutzername → deterministisch und konsistent in allen Komponenten
-- Sichtbar in: Header-Dropdown, Mein-Team-Liste, Mein-Team-Board, Ticket-Detailansicht, Kommentare, Teams-Seite, Admin-Anfragen
+- **Status-Ampel** als runder Kreis rechts oben am Avatar:
+  - 🟢 **Grün** — Benutzer ist online (Heartbeat < 2 Minuten)
+  - 🔴 **Rot** — Benutzer ist offline / nicht eingeloggt
+  - 🟡 **Gelb** — Benutzer hat Online-Status aus Datenschutzgründen verborgen
+- Heartbeat alle 60 Sekunden; Logout markiert sofort offline
+- **Einstellung „Online-Status verbergen"** in den Datenschutz-Einstellungen (Standard: deaktiviert)
+- Sichtbar in: Chat-Kontaktliste, Chat-Header, Ticket-Detailansicht (Assignee), Mein-Team-Liste und Board
 
 ### Weitere
 - Dark / Light Mode
@@ -236,6 +243,9 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | PUT | `/api/settings/ticket-prefix` | Präfix setzen (Admin) |
 | PUT | `/api/settings/ticket-counter` | Zähler setzen (Admin) |
 | GET | `/api/dashboard/stats` | Statistiken |
+| POST | `/api/auth/heartbeat` | Online-Status auffrischen (alle 60 s) |
+| POST | `/api/auth/logout` | Benutzer als offline markieren |
+| PUT | `/api/auth/me/privacy` | `privacyHideOnline` setzen |
 | POST | `/api/admin-requests` | Anfrage erstellen (alle Benutzer) |
 | GET | `/api/admin-requests` | Alle Anfragen abrufen (Admin) |
 | PUT | `/api/admin-requests/:id` | Status / Notiz aktualisieren (Admin) |
@@ -244,6 +254,16 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v1.0.0 — Online-Status-Anzeige
+- **Status-Ampel** rechts oben am Avatar: 🟢 Online · 🔴 Offline · 🟡 Status verborgen
+- Heartbeat alle 60 s; Logout markiert Benutzer sofort offline; kein Heartbeat > 2 min → automatisch offline
+- `GET /users` liefert `onlineStatus` pro Benutzer — Datenschutz-Flag wird serverseitig ausgewertet
+- `POST /auth/heartbeat`, `POST /auth/logout`, `PUT /auth/me/privacy` als neue Endpunkte
+- Neue Komponente `UserAvatar.vue` — universeller Drop-in mit Status-Dot (Größen xs–xl, Position top-right / bottom-right)
+- `useHeartbeat.js` — Composable startet Heartbeat-Zyklus und aktualisiert User-Cache
+- **Einstellungen → Datenschutz**: Toggle „Online-Status verbergen" (andere sehen gelbe Ampel)
+- Chat-Kontaktliste und -Header zeigen Online-Status; Statustext im Chat-Header
 
 ### v0.9.0 — Vollseiten-Detailansicht & Header-Überarbeitung
 - **Ticket-Detailansicht als Vollseite** in Mein Team (kein Modal mehr)
