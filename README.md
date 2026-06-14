@@ -34,6 +34,7 @@ PlannerUI/
 │   │   ├── sprints.js            # Sprints
 │   │   ├── chat.js               # Zentraler Chat mit @mentions
 │   │   ├── settings.js           # Ticket-Präfix & Zähler
+│   │   ├── admin-requests.js     # Benutzeranfragen (Feature/Bug an Admin)
 │   │   └── dashboard.js          # Statistiken
 │   └── server.js
 ├── frontend/
@@ -47,7 +48,7 @@ PlannerUI/
 │       │   ├── useToast.js       # Toast-Singleton
 │       │   └── useUsers.js       # Benutzer-Cache (Singleton, einmalig geladen)
 │       ├── router/
-│       │   └── index.js          # Vue Router mit Auth-Guard (Cookie/Session)
+│       │   └── index.js          # Vue Router mit Auth-Guard + Admin-Guard (/admin)
 │       ├── services/
 │       │   └── api.js            # Axios-Instanz mit Token-Interceptor
 │       ├── stores/               # Pinia Stores (auth, teams, boards, tickets …)
@@ -169,11 +170,24 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - `@username` hebt Erwähnungen hervor
 - `#TKT-0001` verlinkt auf das entsprechende Ticket
 
-### Admin-Bereich (nur Admins)
+### Admin-Bereich (`/admin` — nur Admins)
+- Route ist durch Router-Guard gesichert — Nicht-Admins werden zu `/dashboard` weitergeleitet
+- Startet auf Tab **„Anfragen"** mit rotem Badge-Zähler für offene Anfragen
+- **Anfragen:** alle eingegangenen Feature-/Bug-Anfragen aller Benutzer
+  - Typ-Badge (`✨ Feature` / `🐛 Bug`), Avatar und Zeitstempel des Absenders
+  - Status-Dropdown pro Anfrage: Offen → In Arbeit → Erledigt → Abgelehnt
+  - Admin-Notiz-Feld (interne Kommentare)
+  - Anfrage löschen
 - **Benutzer:** Rollen (admin / owner / user) per Dropdown vergeben
 - **Teams:** alle Teams einsehen und löschen
-- **Boards:** alle Boards einsehen und löschen
+- **Boards:** erstellen (mit Datum), bearbeiten und löschen
 - **Einstellungen:** Ticket-Präfix (z. B. `FEED`, `TKG`) und Startzähler anpassen, Vorschau der nächsten Nummer
+
+### Anfrage senden (alle Benutzer)
+- **„Anfrage"-Button** im Header — sichtbar für alle eingeloggten Benutzer
+- Modal mit Typ-Auswahl: `✨ Feature` oder `🐛 Bug`
+- Titel (Pflichtfeld) und optionale Beschreibung
+- Anfragen landen direkt in der Admin-Inbox
 
 ### Weitere
 - Dark / Light Mode
@@ -208,10 +222,22 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | PUT | `/api/settings/ticket-prefix` | Präfix setzen (Admin) |
 | PUT | `/api/settings/ticket-counter` | Zähler setzen (Admin) |
 | GET | `/api/dashboard/stats` | Statistiken |
+| POST | `/api/admin-requests` | Anfrage erstellen (alle Benutzer) |
+| GET | `/api/admin-requests` | Alle Anfragen abrufen (Admin) |
+| PUT | `/api/admin-requests/:id` | Status / Notiz aktualisieren (Admin) |
+| DELETE | `/api/admin-requests/:id` | Anfrage löschen (Admin) |
 
 ---
 
 ## Changelog
+
+### v0.7.0 — Admin-Page, Router-Guard, Benutzeranfragen
+- `/admin` durch Router-Guard gesichert (Nicht-Admins → Redirect)
+- Admin-Page startet auf Tab „Anfragen" mit Echtzeit-Badge-Zähler
+- Neuer „Anfrage"-Button im Header für alle Benutzer (Feature / Bug melden)
+- Admin-Inbox mit Status-Management (Offen / In Arbeit / Erledigt / Abgelehnt) und Admin-Notizen
+- Board-Management vollständig in Admin verlagert (erstellen, bearbeiten, löschen)
+- Backend: neue Route `/api/admin-requests` (POST für alle, GET/PUT/DELETE nur Admin)
 
 ### v0.6.0 — Kommentare mit Reaktionen
 - Neuer Tab „Kommentare" im TicketModal mit Badge-Zähler
