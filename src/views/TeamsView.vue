@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import api from '@/services/api'
+import { generateAvatar } from '@/utils/avatar'
 
 const teamsStore = useTeamsStore()
 const authStore = useAuthStore()
@@ -274,7 +275,7 @@ async function confirmTransfer() {
                 ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
                 : 'bg-gray-50 dark:bg-gray-700/50'">
               <div class="flex items-center gap-3">
-                <img :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getUser(member.userId)?.username || member.userId)}`"
+                <img :src="generateAvatar(getUser(member.userId)?.username || member.userId)"
                   class="w-9 h-9 rounded-full bg-gray-200 shrink-0" alt="Avatar" />
                 <div>
                   <div class="flex items-center gap-2">
@@ -338,7 +339,7 @@ async function confirmTransfer() {
                 <li v-for="u in memberSearchResults" :key="u.id"
                   class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
                   @mousedown.prevent="selectUser(u)">
-                  <img :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.username)}`"
+                  <img :src="generateAvatar(u.username)"
                     class="w-6 h-6 rounded-full" alt="" />
                   <span class="font-medium text-gray-900 dark:text-white">{{ u.username }}</span>
                   <span class="text-gray-400 text-xs ml-auto">{{ u.email }}</span>

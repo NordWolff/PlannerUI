@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
 import ChecklistItem from './ChecklistItem.vue'
 import { useUsers } from '@/composables/useUsers'
+import { generateAvatar } from '@/utils/avatar'
 
 const props = defineProps({ ticket: { type: Object, required: true } })
 const emit = defineEmits(['close', 'saved', 'deleted'])
@@ -392,7 +393,7 @@ const checklistProgress = computed(() => {
         <div v-if="!comments.length" class="py-8 text-center text-sm text-gray-400">Noch keine Kommentare</div>
         <div v-for="comment in comments" :key="comment.id" class="flex gap-3">
           <img
-            :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(comment.author?.username || '?')}`"
+            :src="generateAvatar(comment.author?.username)"
             class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
             :title="comment.author?.username"
             alt=""
@@ -425,7 +426,7 @@ const checklistProgress = computed(() => {
         <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
           <div class="flex gap-3 items-start">
             <img
-              :src="`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(authStore.user?.username || '?')}`"
+              :src="generateAvatar(authStore.user?.username)"
               class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 shrink-0 mt-0.5"
               alt=""
             />

@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseCard from '@/components/common/BaseCard.vue'
+import { generateAvatar } from '@/utils/avatar'
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -22,17 +23,7 @@ function setLanguage(lang) {
   toast.success('Sprache gespeichert')
 }
 
-const avatarStyles = [
-  { id: 'initials', label: 'Initialen' },
-  { id: 'avataaars', label: 'Avataaars' },
-  { id: 'bottts', label: 'Bottts' },
-  { id: 'identicon', label: 'Identicon' },
-  { id: 'pixel-art', label: 'Pixel Art' },
-  { id: 'lorelei', label: 'Lorelei' }
-]
-const selectedStyle = ref('initials')
-const avatarSeed = ref(authStore.user?.username || 'user')
-const avatarUrl = (style) => `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(avatarSeed.value)}`
+const myAvatar = computed(() => generateAvatar(authStore.user?.username))
 
 // Mein Team - Standard-Ansicht
 const myTeamViewMode = ref(localStorage.getItem('myTeamViewMode') || 'table')
@@ -48,12 +39,6 @@ onMounted(() => {
   profileForm.value.username = authStore.user?.username || ''
   profileForm.value.email = authStore.user?.email || ''
 })
-
-async function saveAvatar() {
-  const ok = await authStore.updateProfile({ avatar: avatarUrl(selectedStyle.value) })
-  if (ok) toast.success('Avatar gespeichert')
-  else toast.error(authStore.error || 'Fehler beim Speichern des Avatars')
-}
 
 async function saveProfile() {
   const ok = await authStore.updateProfile(profileForm.value)
@@ -133,18 +118,13 @@ async function saveProfile() {
     </BaseCard>
 
     <BaseCard title="Avatar">
-      <div class="space-y-4">
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
-          <button v-for="style in avatarStyles" :key="style.id" @click="selectedStyle = style.id"
-            class="flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all"
-            :class="selectedStyle === style.id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600'">
-            <img :src="avatarUrl(style.id)" :alt="style.label" class="w-12 h-12 rounded-full" />
-            <span class="text-xs text-gray-600 dark:text-gray-400">{{ style.label }}</span>
-          </button>
-        </div>
-        <div class="flex items-center gap-3">
-          <img :src="avatarUrl(selectedStyle)" class="w-16 h-16 rounded-full bg-gray-100" alt="Vorschau" />
-          <button @click="saveAvatar" class="btn-primary">Avatar speichern</button>
+      <div class="flex items-center gap-4">
+        <img :src="myAvatar" class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 shrink-0" alt="Mein Avatar" />
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Avataaars</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Wird automatisch aus deinem Benutzernamen generiert.
+          </p>
         </div>
       </div>
     </BaseCard>

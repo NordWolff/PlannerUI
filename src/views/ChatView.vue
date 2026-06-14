@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import TicketModal from '@/components/tickets/TicketModal.vue'
+import { generateAvatar } from '@/utils/avatar'
 
 const authStore = useAuthStore()
 
@@ -49,7 +50,7 @@ function lastMsg(userId) {
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
 function avatarUrl(username) {
-  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username || '?')}`
+  return generateAvatar(username)
 }
 
 function isOwn(msg) {

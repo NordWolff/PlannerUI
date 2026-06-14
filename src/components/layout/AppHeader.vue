@@ -11,6 +11,7 @@ import { useBoardsStore } from '@/stores/boards'
 import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
 import { useUsers } from '@/composables/useUsers'
+import { generateAvatar } from '@/utils/avatar'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -162,8 +163,7 @@ async function submitRequest() {
   }
 }
 
-const avatarUrl = (user) =>
-  user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.username || 'U')}`
+const avatarUrl = (user) => generateAvatar(user?.username)
 </script>
 
 <template>

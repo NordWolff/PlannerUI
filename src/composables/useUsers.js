@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import api from '@/services/api'
+import { generateAvatar } from '@/utils/avatar'
 
 const users = ref([])
 let fetched = false
@@ -20,8 +21,7 @@ export function useUsers() {
 
   function avatarUrl(id) {
     const u = getUser(id)
-    if (!u) return null
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.username)}`
+    return generateAvatar(u?.username)
   }
 
   return { users, fetchUsers, getUser, avatarUrl }
