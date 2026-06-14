@@ -173,6 +173,14 @@ export async function seedData() {
   const project2Id = uuidv4();
   const project3Id = uuidv4();
 
+  // Projektdaten relativ zu heute
+  const p1Start = new Date(today); p1Start.setDate(p1Start.getDate() - 30);
+  const p1End   = new Date(today); p1End.setDate(p1End.getDate() + 90);
+  const p2Start = new Date(today); p2Start.setDate(p2Start.getDate() - 14);
+  const p2End   = new Date(today); p2End.setDate(p2End.getDate() + 45);
+  const p3Start = new Date(today); p3Start.setDate(p3Start.getDate() + 14);
+  // p3 hat kein festes Enddatum (offenes Ende)
+
   store.projects.push(
     {
       id: project1Id,
@@ -181,6 +189,8 @@ export async function seedData() {
       status: 'active',
       sprintId,
       teamId: team1Id,
+      startDate: p1Start.toISOString(),
+      endDate: p1End.toISOString(),
       createdAt: now,
     },
     {
@@ -190,6 +200,8 @@ export async function seedData() {
       status: 'active',
       sprintId,
       teamId: team2Id,
+      startDate: p2Start.toISOString(),
+      endDate: p2End.toISOString(),
       createdAt: now,
     },
     {
@@ -199,6 +211,8 @@ export async function seedData() {
       status: 'active',
       sprintId: null,
       teamId: team1Id,
+      startDate: p3Start.toISOString(),
+      endDate: null,
       createdAt: now,
     },
   );
@@ -258,7 +272,7 @@ export async function seedData() {
       description: 'KPI-Karten auf dem Dashboard anzeigen',
       status: 'planned', priority: 'medium',
       assigneeId: mircoId, createdBy: miladId, projectId: project1Id, boardId, sprintId, teamId: team1Id,
-      checklist: [], dependencies: [], comments: [], chatRefs: [], history: [],
+      checklist: [], dependencies: [ids[1]], comments: [], chatRefs: [], history: [],
       createdAt: now, updatedAt: now,
     },
     {
@@ -282,7 +296,7 @@ export async function seedData() {
       description: 'Alle Endpunkte dokumentieren',
       status: 'draft', priority: 'low',
       assigneeId: null, createdBy: adminId, projectId: project3Id, boardId: null, sprintId: null, teamId: team1Id,
-      checklist: [], dependencies: [], comments: [], chatRefs: [], history: [],
+      checklist: [], dependencies: [ids[0]], comments: [], chatRefs: [], history: [],
       createdAt: now, updatedAt: now,
     },
     {
@@ -295,7 +309,7 @@ export async function seedData() {
         { id: uuidv4(), text: 'Vitest konfigurieren', done: false },
         { id: uuidv4(), text: 'Erste Tests schreiben', done: false },
       ],
-      dependencies: [], comments: [], chatRefs: [], history: [],
+      dependencies: [ids[0], ids[1]], comments: [], chatRefs: [], history: [],
       createdAt: now, updatedAt: now,
     },
     {
@@ -308,7 +322,7 @@ export async function seedData() {
         { id: uuidv4(), text: 'Wireframes erstellen', done: true  },
         { id: uuidv4(), text: 'Prototyp bauen',       done: false },
       ],
-      dependencies: [], comments: [], chatRefs: [],
+      dependencies: [ids[3]], comments: [], chatRefs: [],
       history: [{ id: uuidv4(), changedAt: now, field: 'status', from: 'draft', to: 'in_progress', changedBy: lisaId }],
       createdAt: now, updatedAt: now,
     },
@@ -318,7 +332,7 @@ export async function seedData() {
       description: 'Ladezeiten messen und Engpässe identifizieren',
       status: 'draft', priority: 'medium',
       assigneeId: kevinId, createdBy: torstenKloseId, projectId: project3Id, boardId: null, sprintId: null, teamId: team4Id,
-      checklist: [], dependencies: [], comments: [], chatRefs: [], history: [],
+      checklist: [], dependencies: [ids[5]], comments: [], chatRefs: [], history: [],
       createdAt: now, updatedAt: now,
     },
   );

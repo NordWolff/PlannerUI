@@ -1,11 +1,14 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useTicketsStore } from '@/stores/tickets'
 import { useBoardsStore } from '@/stores/boards'
 import { useTeamsStore } from '@/stores/teams'
 import { useProjectsStore } from '@/stores/projects'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
+
+const router = useRouter()
 
 const ticketsStore = useTicketsStore()
 const boardsStore = useBoardsStore()
@@ -47,6 +50,14 @@ async function handleStatusChange({ ticketId, status }) {
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kanban</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">Tickets per Drag & Drop verschieben</p>
       </div>
+      <button @click="router.push('/gantt')"
+        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 hover:border-indigo-400 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Zeitstrahl
+      </button>
     </div>
 
     <!-- Filter -->

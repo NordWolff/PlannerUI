@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, description, status, sprintId, teamId } = req.body;
+  const { name, description, status, sprintId, teamId, startDate, endDate } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'name is required' });
   }
@@ -32,6 +32,8 @@ router.post('/', (req, res) => {
     status: status || 'active',
     sprintId: sprintId || null,
     teamId: teamId || null,
+    startDate: startDate || null,
+    endDate: endDate || null,
     createdAt: new Date().toISOString(),
   };
 
@@ -53,7 +55,7 @@ router.put('/:id', (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
 
-  const { name, description, status, sprintId, teamId } = req.body;
+  const { name, description, status, sprintId, teamId, startDate, endDate } = req.body;
   const project = store.projects[index];
 
   if (name) project.name = name;
@@ -61,6 +63,8 @@ router.put('/:id', (req, res) => {
   if (status) project.status = status;
   if (sprintId !== undefined) project.sprintId = sprintId;
   if (teamId !== undefined) project.teamId = teamId;
+  if (startDate !== undefined) project.startDate = startDate;
+  if (endDate !== undefined) project.endDate = endDate;
 
   store.projects[index] = project;
   return res.json(project);
