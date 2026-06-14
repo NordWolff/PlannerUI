@@ -16,7 +16,10 @@ const sprintsStore = useSprintsStore()
 const search = ref('')
 const showModal = ref(false)
 const editingProject = ref(null)
-const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintId: null })
+const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
+
+// Sprint-Dropdown pro Tabellenzeile
+const openSprintDropdown = ref(null)
 
 onMounted(() => Promise.all([projectsStore.fetchProjects(), teamsStore.fetchTeams(), sprintsStore.fetchSprints()]))
 
@@ -26,7 +29,7 @@ const filtered = computed(() =>
 
 function openCreate() {
   editingProject.value = null
-  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintId: null })
+  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
   showModal.value = true
 }
 
@@ -37,17 +40,17 @@ function openEdit(project) {
     description: project.description || '',
     status: project.status || 'active',
     teamId: project.teamId || null,
-    sprintId: project.sprintId || null,
+    sprintIds: Array.isArray(project.sprintIds) ? [...project.sprintIds] : [],
   })
   showModal.value = true
 }
 
 async function saveProject() {
   if (editingProject.value) {
-    await projectsStore.updateProject(editingProject.value.id, projectForm)
+    await projectsStore.updateProject(editingProject.value.id, { ...projectForm })
     toast.success('Projekt aktualisiert')
   } else {
-    await projectsStore.createProject(projectForm)
+    await projectsStore.createProject({ ...projectForm })
     toast.success('Projekt erstellt')
   }
   showModal.value = false
@@ -59,16 +62,30 @@ async function deleteProject(id) {
   toast.info('Projekt gelöscht')
 }
 
-async function updateSprint(project, sprintId) {
-  await projectsStore.updateProject(project.id, { sprintId: sprintId || null })
+async function toggleSprintInRow(project, sprintId) {
+  const current = Array.isArray(project.sprintIds) ? [...project.sprintIds] : []
+  const next = current.includes(sprintId)
+    ? current.filter(id => id !== sprintId)
+    : [...current, sprintId]
+  await projectsStore.updateProject(project.id, { sprintIds: next })
+}
+
+function sprintNames(project) {
+  const ids = Array.isArray(project.sprintIds) ? project.sprintIds : []
+  return ids.map(id => sprintsStore.sprints.find(s => s.id === id)?.name).filter(Boolean)
 }
 
 const teamName = (teamId) => teamsStore.teams.find(t => t.id === teamId)?.name || '-'
-const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintId)?.name || null
+
+function toggleFormSprint(sprintId) {
+  const idx = projectForm.sprintIds.indexOf(sprintId)
+  if (idx === -1) projectForm.sprintIds.push(sprintId)
+  else projectForm.sprintIds.splice(idx, 1)
+}
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6" @click="openSprintDropdown = null">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Projekte</h1>
@@ -86,7 +103,7 @@ const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintI
               <th class="px-6 py-3">Name</th>
               <th class="px-6 py-3">Status</th>
               <th class="px-6 py-3">Team</th>
-              <th class="px-6 py-3">Sprint</th>
+              <th class="px-6 py-3">Sprints</th>
               <th class="px-6 py-3">Favorit</th>
               <th class="px-6 py-3">Aktionen</th>
             </tr>
@@ -104,13 +121,41 @@ const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintI
               </td>
               <td class="px-6 py-4"><StatusBadge :status="project.status" /></td>
               <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ teamName(project.teamId) }}</td>
-              <td class="px-6 py-4">
-                <select :value="project.sprintId || ''" @change="updateSprint(project, $event.target.value)"
-                  class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
-                  <option value="">-- Kein Sprint --</option>
-                  <option v-for="sprint in sprintsStore.sprints" :key="sprint.id" :value="sprint.id">{{ sprint.name }}</option>
-                </select>
+
+              <!-- Sprint-Spalte: Badges + Dropdown -->
+              <td class="px-6 py-4" @click.stop>
+                <div class="relative">
+                  <button
+                    @click="openSprintDropdown = openSprintDropdown === project.id ? null : project.id"
+                    class="flex flex-wrap gap-1 items-center min-w-[120px] min-h-[28px] text-left"
+                  >
+                    <span v-if="!sprintNames(project).length"
+                      class="text-xs text-gray-400 dark:text-gray-500 italic">Kein Sprint</span>
+                    <span v-for="name in sprintNames(project)" :key="name"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                      {{ name }}
+                    </span>
+                    <svg class="w-3 h-3 text-gray-400 ml-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <!-- Sprint-Dropdown -->
+                  <div v-if="openSprintDropdown === project.id"
+                    class="absolute left-0 top-full mt-1 z-30 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1">
+                    <label v-for="sprint in sprintsStore.sprints" :key="sprint.id"
+                      class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer">
+                      <input type="checkbox"
+                        :checked="(project.sprintIds ?? []).includes(sprint.id)"
+                        @change="toggleSprintInRow(project, sprint.id)"
+                        class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                      {{ sprint.name }}
+                    </label>
+                    <p v-if="!sprintsStore.sprints.length" class="px-3 py-2 text-xs text-gray-400">Keine Sprints vorhanden</p>
+                  </div>
+                </div>
               </td>
+
               <td class="px-6 py-4">
                 <button @click="projectsStore.toggleFavorite(project.id)"
                   :class="project.isFavorite ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'">
@@ -132,6 +177,7 @@ const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintI
       </div>
     </div>
 
+    <!-- Erstellen / Bearbeiten Modal -->
     <BaseModal v-if="showModal" :title="editingProject ? 'Projekt bearbeiten' : 'Neues Projekt'" size="lg" @close="showModal = false">
       <div class="p-6 space-y-4">
         <div>
@@ -142,7 +188,7 @@ const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintI
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
           <textarea v-model="projectForm.description" rows="3" class="input-field resize-none" />
         </div>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
             <select v-model="projectForm.status" class="input-field">
@@ -158,13 +204,27 @@ const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintI
               <option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">{{ t.name }}</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprint</label>
-            <select v-model="projectForm.sprintId" class="input-field">
-              <option :value="null">-- Kein Sprint --</option>
-              <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
+        </div>
+
+        <!-- Sprints: Checkboxen -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sprints</label>
+          <div class="rounded-lg border border-gray-200 dark:border-gray-600 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+            <label v-for="sprint in sprintsStore.sprints" :key="sprint.id"
+              class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer transition-colors">
+              <input type="checkbox"
+                :checked="projectForm.sprintIds.includes(sprint.id)"
+                @change="toggleFormSprint(sprint.id)"
+                class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ sprint.name }}</span>
+            </label>
+            <div v-if="!sprintsStore.sprints.length" class="px-4 py-3 text-sm text-gray-400 italic">
+              Keine Sprints vorhanden
+            </div>
           </div>
+          <p v-if="projectForm.sprintIds.length" class="text-xs text-indigo-600 dark:text-indigo-400 mt-1.5">
+            {{ projectForm.sprintIds.length }} Sprint{{ projectForm.sprintIds.length !== 1 ? 's' : '' }} ausgewählt
+          </p>
         </div>
       </div>
       <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">

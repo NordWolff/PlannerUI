@@ -30,3 +30,10 @@ export function requireAdmin(req, res, next) {
   }
   next();
 }
+
+export function requireAdminOrOwner(req, res, next) {
+  if (req.user?.role !== 'admin' && req.user?.role !== 'owner') {
+    return res.status(403).json({ error: 'Nur Admins und Owners dürfen diese Aktion ausführen' });
+  }
+  next();
+}

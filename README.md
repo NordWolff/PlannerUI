@@ -136,6 +136,20 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
   - **Ticket-Art-Icon** unten rechts (Bootstrap Icons SVGs — Bug, Feature, Verbesserung, Frage, Epic, Aufgabe)
   - Checklisten-Fortschritt (z. B. `1/3`)
   - **Avatar des zugewiesenen Benutzers** (oder gestrichelter Kreis wenn nicht zugewiesen)
+- **„Zeitstrahl"-Button** in der Kopfzeile wechselt zur Gantt-Ansicht
+
+### Gantt-Zeitstrahl (`/gantt`)
+- **Projekte als horizontale Balken** auf einem scrollbaren Zeitstrahl (Violett-Gradient)
+- **Zoom-Stufen:** Woche (28 px/Tag) · Monat (12 px/Tag) · Quartal (4 px/Tag)
+- **Zeitraum-Picker** (Von/Bis) für frei wählbaren Betrachtungszeitraum
+- **Heute-Linie** (rote vertikale Linie mit Punkt) immer sichtbar
+- **Monat-Gitterlinien** als visuelle Orientierung
+- **Drag-to-Move:** Projektbalken horizontal ziehen → Start- und Enddatum werden automatisch per API gespeichert
+- **Resize-Handle** am rechten Balkenrand → Enddatum verschieben
+- **Expandierbare Ticket-Listen** — `▶`-Button klappt alle Tickets eines Projekts darunter auf (Titel + Status-Badge)
+- **Abhängigkeits-Pfeile** — Toggle-Button blendet Bezier-Kurven zwischen abhängigen Tickets ein/aus
+- Projekte ohne Startdatum werden ausgeblendet; offenes Enddatum wird als 30-Tage-Vorschau dargestellt
+- Linke Spalte (240 px) mit Projekt- und Ticket-Namen bleibt beim horizontalen Scrollen fixiert
 
 ### Tickets
 - Automatisch aufsteigende Ticketnummer (Präfix konfigurierbar, z. B. `TKT-0001`, `FEED-0042`)
@@ -163,12 +177,16 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
   - Felder: Titel, Status, Priorität, Art (mit Icon), Projekt, Sprint, Beschreibung
   - Tabs: Checkliste, Kommentare, Anhänge, Verlauf
 
-### Teams
+### Teams & Sprints
 - Pro Team genau **ein Product Owner**
 - Ownership per Knopfdruck übertragen (bisheriger Owner wird Mitglied)
 - Admin kann kein Team-Mitglied sein (Einzelrolle)
 - Mitglieder-Suche mit Debounce; Admins und bereits vorhandene Mitglieder werden ausgefiltert
 - Hinweis wenn kein Product Owner vorhanden
+- **Sprint-Verwaltung** direkt auf der Teams-Seite (unterhalb der Team-Karten):
+  - Sprints erstellen, bearbeiten, starten, abschließen und löschen
+  - Status-Flow: Planung → Aktiv → Abgeschlossen
+  - Nur Admin und Owner haben Schreibzugriff
 
 ### Chat
 - Direktnachrichten zwischen Benutzern (zwei-Panel-Layout: Kontaktliste + Chatfenster)
@@ -243,6 +261,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | PUT | `/api/settings/ticket-prefix` | Präfix setzen (Admin) |
 | PUT | `/api/settings/ticket-counter` | Zähler setzen (Admin) |
 | GET | `/api/dashboard/stats` | Statistiken |
+| POST | `/api/sprints/:id/start` | Sprint starten (Admin / Owner) |
+| POST | `/api/sprints/:id/complete` | Sprint abschließen (Admin / Owner) |
+| GET/POST | `/api/projects` | Projekte abrufen / erstellen (inkl. `startDate`, `endDate`, `sprintIds`) |
+| PUT | `/api/projects/:id` | Projekt aktualisieren (inkl. `startDate`, `endDate`, `sprintIds`) |
+| DELETE | `/api/projects/:id` | Projekt löschen |
 | POST | `/api/auth/heartbeat` | Online-Status auffrischen (alle 60 s) |
 | POST | `/api/auth/logout` | Benutzer als offline markieren |
 | PUT | `/api/auth/me/privacy` | `privacyHideOnline` setzen |
@@ -254,6 +277,32 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v1.3.0 — Sprint-Verwaltung im Team-Bereich
+- **Sprints-Sektion** auf der Teams-Seite: Erstellen, Bearbeiten, Starten, Abschließen und Löschen von Sprints
+- **Status-Flow:** Planung → Aktiv → Abgeschlossen (mit farbigem Status-Badge und Status-Ikon)
+- Starten setzt `startDate` automatisch auf heute, falls noch leer; Abschließen setzt `endDate`
+- Aktive Sprints können nicht gelöscht werden (API-Schutz + UI-Ausblendung)
+- Abgeschlossene Sprints können nicht bearbeitet werden
+- Alle schreibenden Sprint-Routen durch `requireAdminOrOwner`-Middleware gesichert — normale Benutzer erhalten HTTP 403
+- Neues Feld `status` (`planning | active | completed`) auf Sprints; Seed-Sprint startet als `active`
+- `startSprint()` und `completeSprint()` im Pinia-Sprints-Store ergänzt
+
+### v1.2.0 — Projekt über mehrere Sprints
+- Projekte können beliebig vielen Sprints zugewiesen werden (`sprintIds`-Array statt einzelnem `sprintId`)
+- **Projekte-Seite:** Sprint-Spalte zeigt alle zugewiesenen Sprints als Indigo-Badges; Klick öffnet Checkbox-Dropdown zum direkten Hinzufügen/Entfernen ohne Modal
+- **Projekt-Modal** (Projekte-Seite + Erstellen-Button im Header): Sprint-Select durch scrollbare Checkbox-Liste ersetzt
+- API: `POST /projects` und `PUT /projects/:id` akzeptieren `sprintIds`-Array; `GET /projects?sprintId=` filtert via `includes()`
+
+### v1.1.0 — Gantt-Zeitstrahl
+- **Neue Ansicht `/gantt`** mit scrollbarem Zeitstrahl für alle Projekte mit Startdatum
+- Projektbalken drag-to-move (verschiebt Start + Ende) und resize (Enddatum ändern) — speichert per API
+- Zoom: Woche / Monat / Quartal; freier Zeitraum-Picker; Heute-Linie; Monat-Gitter
+- Ticket-Listen pro Projekt aufklappbar (Titel + Status-Badge)
+- Abhängigkeits-Pfeile als SVG-Bezier-Overlay (ein-/ausblendbar)
+- Seed-Daten: alle 3 Projekte mit `startDate`/`endDate`, erweiterte Ticket-Abhängigkeiten
+- Navigation: „Zeitstrahl" in der Haupt-Nav; „Zeitstrahl"-Button im Kanban-Board
+- `PUT /api/projects/:id` akzeptiert jetzt `startDate` und `endDate`
 
 ### v1.0.0 — Online-Status-Anzeige
 - **Status-Ampel** rechts oben am Avatar: 🟢 Online · 🔴 Offline · 🟡 Status verborgen
