@@ -74,7 +74,6 @@ const sprintName = (sprintId) => sprintsStore.sprints.find(s => s.id === sprintI
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Projekte</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">Alle Projekte verwalten</p>
       </div>
-      <button @click="openCreate" class="btn-primary">+ Projekt erstellen</button>
     </div>
 
     <SearchInput v-model="search" placeholder="Projekte suchen..." />

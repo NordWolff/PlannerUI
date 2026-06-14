@@ -5,11 +5,71 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 import TicketModal from '@/components/tickets/TicketModal.vue'
+import { useTicketsStore } from '@/stores/tickets'
+import { useProjectsStore } from '@/stores/projects'
+import { useBoardsStore } from '@/stores/boards'
+import { useTeamsStore } from '@/stores/teams'
+import { useSprintsStore } from '@/stores/sprints'
+import { useUsers } from '@/composables/useUsers'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
+
+const ticketsStore  = useTicketsStore()
+const projectsStore = useProjectsStore()
+const boardsStore   = useBoardsStore()
+const teamsStore    = useTeamsStore()
+const sprintsStore  = useSprintsStore()
+const { users: allUsers, fetchUsers } = useUsers()
+
+// ─── Erstellen-Button ─────────────────────────────────────────────────────────
+const showCreateDropdown = ref(false)
+const showCreateModal    = ref(false)
+const createTab          = ref('ticket')
+const creatingItem       = ref(false)
+
+const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null })
+const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintId: null })
+
+async function openCreate(tab) {
+  createTab.value = tab
+  showCreateDropdown.value = false
+  showCreateModal.value = true
+  await Promise.all([fetchUsers(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), sprintsStore.fetchSprints()])
+  if (!ticketForm.boardId && boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
+}
+
+function resetTicketForm() {
+  Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null })
+}
+function resetProjectForm() {
+  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintId: null })
+}
+
+async function submitTicket() {
+  if (!ticketForm.title.trim() || creatingItem.value) return
+  creatingItem.value = true
+  try {
+    await ticketsStore.createTicket({ ...ticketForm })
+    toast.success('Ticket erstellt')
+    resetTicketForm()
+    showCreateModal.value = false
+  } catch { toast.error('Fehler beim Erstellen') } finally { creatingItem.value = false }
+}
+
+async function submitProject() {
+  if (!projectForm.name.trim() || creatingItem.value) return
+  creatingItem.value = true
+  try {
+    await projectsStore.createProject({ ...projectForm })
+    toast.success('Projekt erstellt')
+    resetProjectForm()
+    showCreateModal.value = false
+  } catch { toast.error('Fehler beim Erstellen') } finally { creatingItem.value = false }
+}
+
 const showDropdown = ref(false)
 const showRequestModal = ref(false)
 const submittingRequest = ref(false)
@@ -187,6 +247,36 @@ const avatarUrl = (user) =>
       </div>
     </nav>
 
+    <!-- Erstellen-Button -->
+    <div class="relative mr-2">
+      <button
+        @click="showCreateDropdown = !showCreateDropdown"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="hidden sm:inline">Erstellen</span>
+        <svg class="w-3 h-3 hidden sm:block transition-transform" :class="showCreateDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div v-if="showCreateDropdown"
+        class="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+        <button @click="openCreate('ticket')"
+          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+          <span class="text-base">🎟</span>
+          Ticket
+        </button>
+        <button @click="openCreate('project')"
+          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+          <span class="text-base">📁</span>
+          Projekt
+        </button>
+      </div>
+    </div>
+
     <!-- Anfrage-Button (alle Benutzer) -->
     <button
       @click="openRequestModal"
@@ -226,6 +316,7 @@ const avatarUrl = (user) =>
 
     <div v-if="showDropdown" class="fixed inset-0 z-30" @click="showDropdown = false" />
     <div v-if="showTeamDropdown" class="fixed inset-0 z-30" @click="showTeamDropdown = false" />
+    <div v-if="showCreateDropdown" class="fixed inset-0 z-30" @click="showCreateDropdown = false" />
   </header>
 
   <!-- Ticket-Modal aus Header-Dropdown -->
@@ -236,6 +327,136 @@ const avatarUrl = (user) =>
     @saved="headerTicket = null; recentTickets = []"
     @deleted="headerTicket = null; recentTickets = []"
   />
+
+  <!-- Erstellen-Modal -->
+  <Teleport to="body">
+    <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="showCreateModal = false" />
+      <div class="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+
+        <!-- Modal-Header mit Tabs -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+          <div class="flex gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            <button
+              v-for="tab in [{ id: 'ticket', label: '🎟 Ticket' }, { id: 'project', label: '📁 Projekt' }]"
+              :key="tab.id"
+              @click="createTab = tab.id"
+              class="px-4 py-1.5 text-sm font-medium rounded-md transition-colors"
+              :class="createTab === tab.id
+                ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+          <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none">&times;</button>
+        </div>
+
+        <!-- Ticket-Formular -->
+        <div v-if="createTab === 'ticket'" class="p-6 space-y-4 overflow-y-auto">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Titel *</label>
+            <input v-model="ticketForm.title" type="text" class="input-field" placeholder="Ticket-Titel…" @keydown.enter="submitTicket" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Beschreibung</label>
+            <textarea v-model="ticketForm.description" rows="3" class="input-field resize-none" placeholder="Optionale Beschreibung…" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Art</label>
+              <select v-model="ticketForm.type" class="input-field">
+                <option value="task">Aufgabe</option>
+                <option value="bug">Bug</option>
+                <option value="feature">Feature</option>
+                <option value="improvement">Verbesserung</option>
+                <option value="question">Frage</option>
+                <option value="epic">Epic</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Priorität</label>
+              <select v-model="ticketForm.priority" class="input-field">
+                <option value="low">Niedrig</option>
+                <option value="medium">Mittel</option>
+                <option value="high">Hoch</option>
+                <option value="critical">Kritisch</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Zugewiesen an</label>
+              <select v-model="ticketForm.assigneeId" class="input-field">
+                <option :value="null">— Nicht zugewiesen —</option>
+                <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Board</label>
+              <select v-model="ticketForm.boardId" class="input-field">
+                <option :value="null">— Kein Board —</option>
+                <option v-for="b in boardsStore.boards" :key="b.id" :value="b.id">{{ b.name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projekt-Formular -->
+        <div v-else class="p-6 space-y-4 overflow-y-auto">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Name *</label>
+            <input v-model="projectForm.name" type="text" class="input-field" placeholder="Projektname…" @keydown.enter="submitProject" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Beschreibung</label>
+            <textarea v-model="projectForm.description" rows="3" class="input-field resize-none" placeholder="Optionale Beschreibung…" />
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Status</label>
+              <select v-model="projectForm.status" class="input-field">
+                <option value="active">Aktiv</option>
+                <option value="inactive">Inaktiv</option>
+                <option value="completed">Abgeschlossen</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Team</label>
+              <select v-model="projectForm.teamId" class="input-field">
+                <option :value="null">— Kein Team —</option>
+                <option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Sprint</label>
+              <select v-model="projectForm.sprintId" class="input-field">
+                <option :value="null">— Kein Sprint —</option>
+                <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal-Footer -->
+        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+          <button @click="showCreateModal = false" class="btn-secondary">Abbrechen</button>
+          <button
+            v-if="createTab === 'ticket'"
+            @click="submitTicket"
+            :disabled="!ticketForm.title.trim() || creatingItem"
+            class="btn-primary"
+          >{{ creatingItem ? 'Erstellen…' : 'Ticket erstellen' }}</button>
+          <button
+            v-else
+            @click="submitProject"
+            :disabled="!projectForm.name.trim() || creatingItem"
+            class="btn-primary"
+          >{{ creatingItem ? 'Erstellen…' : 'Projekt erstellen' }}</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 
   <!-- Anfrage-Modal -->
   <Teleport to="body">
