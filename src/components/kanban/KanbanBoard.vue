@@ -26,7 +26,7 @@ const ticketsByStatus = computed(() => {
 </script>
 
 <template>
-  <div class="flex gap-4 overflow-x-auto pb-4">
+  <div class="flex gap-3">
     <KanbanColumn
       v-for="column in columns"
       :key="column.status"
