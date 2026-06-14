@@ -32,7 +32,7 @@ const createTab          = ref('ticket')
 const creatingItem       = ref(false)
 
 const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null })
-const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintId: null })
+const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
 
 async function openCreate(tab) {
   createTab.value = tab
@@ -54,7 +54,13 @@ function resetTicketForm() {
   Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null })
 }
 function resetProjectForm() {
-  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintId: null })
+  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
+}
+
+function toggleHeaderSprint(sprintId) {
+  const idx = projectForm.sprintIds.indexOf(sprintId)
+  if (idx === -1) projectForm.sprintIds.push(sprintId)
+  else projectForm.sprintIds.splice(idx, 1)
 }
 
 async function submitTicket() {
@@ -402,7 +408,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Beschreibung</label>
             <textarea v-model="projectForm.description" rows="3" class="input-field resize-none" placeholder="Optionale Beschreibung…" />
           </div>
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Status</label>
               <select v-model="projectForm.status" class="input-field">
@@ -418,12 +424,19 @@ const avatarUrl = (user) => generateAvatar(user?.username)
                 <option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">{{ t.name }}</option>
               </select>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Sprint</label>
-              <select v-model="projectForm.sprintId" class="input-field">
-                <option :value="null">— Kein Sprint —</option>
-                <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
-              </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Sprints</label>
+            <div class="rounded-lg border border-gray-200 dark:border-gray-600 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden max-h-36 overflow-y-auto">
+              <label v-for="s in sprintsStore.sprints" :key="s.id"
+                class="flex items-center gap-2.5 px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer transition-colors">
+                <input type="checkbox"
+                  :checked="projectForm.sprintIds.includes(s.id)"
+                  @change="toggleHeaderSprint(s.id)"
+                  class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ s.name }}</span>
+              </label>
+              <div v-if="!sprintsStore.sprints.length" class="px-3 py-2 text-xs text-gray-400 italic">Keine Sprints vorhanden</div>
             </div>
           </div>
         </div>
