@@ -257,8 +257,8 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | PUT | `/api/settings/ticket-prefix` | Präfix setzen (Admin) |
 | PUT | `/api/settings/ticket-counter` | Zähler setzen (Admin) |
 | GET | `/api/dashboard/stats` | Statistiken |
-| GET/POST | `/api/projects` | Projekte abrufen / erstellen (inkl. `startDate`, `endDate`) |
-| PUT | `/api/projects/:id` | Projekt aktualisieren (inkl. `startDate`, `endDate`) |
+| GET/POST | `/api/projects` | Projekte abrufen / erstellen (inkl. `startDate`, `endDate`, `sprintIds`) |
+| PUT | `/api/projects/:id` | Projekt aktualisieren (inkl. `startDate`, `endDate`, `sprintIds`) |
 | DELETE | `/api/projects/:id` | Projekt löschen |
 | POST | `/api/auth/heartbeat` | Online-Status auffrischen (alle 60 s) |
 | POST | `/api/auth/logout` | Benutzer als offline markieren |
@@ -271,6 +271,12 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v1.2.0 — Projekt über mehrere Sprints
+- Projekte können beliebig vielen Sprints zugewiesen werden (`sprintIds`-Array statt einzelnem `sprintId`)
+- **Projekte-Seite:** Sprint-Spalte zeigt alle zugewiesenen Sprints als Indigo-Badges; Klick öffnet Checkbox-Dropdown zum direkten Hinzufügen/Entfernen ohne Modal
+- **Projekt-Modal** (Projekte-Seite + Erstellen-Button im Header): Sprint-Select durch scrollbare Checkbox-Liste ersetzt
+- API: `POST /projects` und `PUT /projects/:id` akzeptieren `sprintIds`-Array; `GET /projects?sprintId=` filtert via `includes()`
 
 ### v1.1.0 — Gantt-Zeitstrahl
 - **Neue Ansicht `/gantt`** mit scrollbarem Zeitstrahl für alle Projekte mit Startdatum
