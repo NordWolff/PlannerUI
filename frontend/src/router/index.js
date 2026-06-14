@@ -26,10 +26,15 @@ const router = createRouter({
   routes
 })
 
+function getToken() {
+  const m = document.cookie.match(/(?:^|; )planner_token=([^;]*)/)
+  return m ? decodeURIComponent(m[1]) : sessionStorage.getItem('planner_token')
+}
+
 router.beforeEach((to) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   if (!to.meta.public && !token) return '/login'
-  if (to.path === '/login' && token) return '/my-team'
+  if (to.path === '/login' && token) return '/dashboard'
 })
 
 export default router
