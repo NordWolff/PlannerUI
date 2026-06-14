@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
+import TicketModal from '@/components/tickets/TicketModal.vue'
 
 const authStore = useAuthStore()
 
@@ -17,6 +18,7 @@ const sending        = ref(false)
 const search         = ref('')
 const messagesEnd    = ref(null)
 const unread         = ref({})   // { [userId]: count }
+const selectedTicket = ref(null)
 let pollingInterval  = null
 
 // ─── Berechnete Listen ────────────────────────────────────────────────────────
@@ -60,9 +62,27 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-function formatText(text) {
+function formatText(text, ticketRefs = []) {
+  const refMap = Object.fromEntries((ticketRefs || []).map((r) => [r.ticketNumber, r]))
   return escapeHtml(text)
     .replace(/@(\w+)/g, '<strong class="text-indigo-300">@$1</strong>')
+    .replace(/#([A-Z]+-\d+)/g, (match, num) => {
+      const ref = refMap[num]
+      if (ref) {
+        return `<span data-ticket-id="${ref.ticketId}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 cursor-pointer hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors" title="${escapeHtml(ref.title)}">#${num}</span>`
+      }
+      return `<span class="font-mono text-xs text-gray-400 dark:text-gray-500">#${num}</span>`
+    })
+}
+
+async function onMessageClick(e) {
+  const el = e.target.closest('[data-ticket-id]')
+  if (!el) return
+  const ticketId = el.dataset.ticketId
+  try {
+    const { data } = await api.get(`/tickets/${ticketId}`)
+    selectedTicket.value = data
+  } catch { /* Ticket nicht gefunden */ }
 }
 
 function formatTime(iso) {
@@ -268,7 +288,7 @@ onUnmounted(() => clearInterval(pollingInterval))
         </div>
 
         <!-- Nachrichten -->
-        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-gray-50 dark:bg-gray-900/30">
+        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-gray-50 dark:bg-gray-900/30" @click.capture="onMessageClick">
           <div v-if="loadingMsgs" class="flex items-center justify-center h-full text-gray-400 text-sm">
             Lade Nachrichten…
           </div>
@@ -298,7 +318,7 @@ onUnmounted(() => clearInterval(pollingInterval))
                   :class="isOwn(msg)
                     ? 'bg-indigo-600 text-white rounded-br-sm'
                     : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-bl-sm shadow-sm'">
-                  <span v-html="formatText(msg.text || '')" />
+                  <span v-html="formatText(msg.text || '', msg.ticketRefs)" />
                 </div>
                 <p class="text-xs text-gray-400 mt-1" :class="isOwn(msg) ? 'text-right mr-1' : 'ml-1'">
                   {{ formatTimeFull(msg.createdAt) }}
@@ -335,4 +355,12 @@ onUnmounted(() => clearInterval(pollingInterval))
       </template>
     </div>
   </div>
+
+  <TicketModal
+    v-if="selectedTicket"
+    :ticket="selectedTicket"
+    @close="selectedTicket = null"
+    @saved="selectedTicket = null"
+    @deleted="selectedTicket = null"
+  />
 </template>
