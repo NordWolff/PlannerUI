@@ -142,7 +142,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - Priorität: Niedrig / Mittel / Hoch / Kritisch
 - Projekt- und Sprint-Zuweisung
 - Checkliste mit Fortschrittsbalken
-- Kommentare mit `@mention`-Unterstützung
+- **Kommentare** mit Avatar, Autorenname und relativem Zeitstempel
+  - `@mention`-Unterstützung
+  - **Reaktionen** 👍 👎 ❤️ pro Kommentar (Toggle, Zähler, eigene Reaktion hervorgehoben)
+  - Strg+Enter oder Senden-Button zum Absenden
 - Klonen mit neuer Ticketnummer
 - Verlaufsprotokoll aller Status-Änderungen
 
@@ -197,7 +200,8 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | GET | `/api/tickets/recent` | Eigene zuletzt bearbeitete Tickets |
 | PUT | `/api/tickets/:id` | Ticket aktualisieren (inkl. Zuweisung) |
 | POST | `/api/tickets/:id/clone` | Ticket klonen |
-| GET/POST | `/api/tickets/:id/comments` | Kommentare |
+| GET/POST | `/api/tickets/:id/comments` | Kommentare abrufen / erstellen |
+| POST | `/api/tickets/:id/comments/:cid/reactions` | Reaktion setzen / entfernen (Toggle) |
 | GET | `/api/tickets/:id/history` | Verlauf |
 | GET/POST | `/api/chat/messages` | Chat-Nachrichten |
 | GET | `/api/settings` | Ticket-Einstellungen |
@@ -208,6 +212,13 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v0.6.0 — Kommentare mit Reaktionen
+- Neuer Tab „Kommentare" im TicketModal mit Badge-Zähler
+- Kommentare zeigen Avatar, Autorenname und relativen Zeitstempel
+- Reaktions-Buttons 👍 👎 ❤️ pro Kommentar: Toggle, Zähler, eigene Reaktion farblich hervorgehoben
+- Neuen Kommentar schreiben via Strg+Enter oder Senden-Button
+- Backend: `reactions`-Array auf Kommentaren, neue Route `POST /:id/comments/:cid/reactions`
 
 ### v0.5.0 — Avatar auf Ticket-Karte, Benutzer-Cache
 - Assignee-Avatar auf jeder Kanban-Karte sichtbar (mit Tooltip)
