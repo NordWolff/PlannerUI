@@ -62,6 +62,11 @@ const counterInput = ref('')
 const savingPrefix = ref(false)
 const savingCounter = ref(false)
 
+// Team-Modal
+const showTeamModal = ref(false)
+const editingTeam = ref(null)
+const teamForm = reactive({ name: '', description: '' })
+
 // Board-Modal
 const showBoardModal = ref(false)
 const editingBoard = ref(null)
@@ -214,6 +219,37 @@ async function deleteRequest(id) {
 const openRequests = () => adminRequests.value.filter(r => r.status === 'open').length
 
 // ─── Teams ────────────────────────────────────────────────────────────────────
+
+function openCreateTeam() {
+  editingTeam.value = null
+  teamForm.name = ''
+  teamForm.description = ''
+  showTeamModal.value = true
+}
+
+function openEditTeam(team) {
+  editingTeam.value = team
+  teamForm.name = team.name
+  teamForm.description = team.description || ''
+  showTeamModal.value = true
+}
+
+async function saveTeam() {
+  if (!teamForm.name.trim()) return
+  const pid = route.params.plannerId
+  try {
+    if (editingTeam.value) {
+      await teamsStore.updateTeam(editingTeam.value.id, { name: teamForm.name, description: teamForm.description })
+      toast.success('Team aktualisiert')
+    } else {
+      await teamsStore.createTeam({ name: teamForm.name, description: teamForm.description, plannerId: pid || null })
+      toast.success('Team erstellt')
+    }
+    showTeamModal.value = false
+  } catch {
+    toast.error('Fehler beim Speichern')
+  }
+}
 
 async function deleteTeam(id) {
   if (!confirm('Team wirklich löschen?')) return
@@ -583,19 +619,26 @@ function formatDate(iso) {
 
     <!-- ── Teams ────────────────────────────────────────────────────────────── -->
     <div v-else-if="activeTab === 'teams'">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Teams erstellen, bearbeiten und löschen.</p>
+        <button @click="openCreateTeam" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+          + Team erstellen
+        </button>
+      </div>
       <p v-if="teamsStore.loading" class="text-gray-400 text-sm">Lade Teams…</p>
       <p v-else-if="!teamsStore.teams.length" class="text-gray-400 text-sm">Keine Teams vorhanden.</p>
       <ul v-else class="space-y-3">
         <li v-for="team in teamsStore.teams" :key="team.id"
-          class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between">
-          <div>
+          class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+          <div class="min-w-0">
             <p class="font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ team.members?.length ?? 0 }} Mitglieder</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ team.description || '' }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">{{ team.members?.length ?? 0 }} Mitglieder</p>
           </div>
-          <button @click="deleteTeam(team.id)"
-            class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium">
-            Löschen
-          </button>
+          <div class="flex gap-2 shrink-0">
+            <button @click="openEditTeam(team)" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-medium">Bearbeiten</button>
+            <button @click="deleteTeam(team.id)" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 font-medium">Löschen</button>
+          </div>
         </li>
       </ul>
     </div>
@@ -669,6 +712,37 @@ function formatDate(iso) {
       </div>
     </div>
   </div>
+
+  <!-- Team-Modal -->
+  <Teleport to="body">
+    <div v-if="showTeamModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="showTeamModal = false" />
+      <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+            {{ editingTeam ? 'Team bearbeiten' : 'Neues Team' }}
+          </h2>
+          <button @click="showTeamModal = false" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Name *</label>
+            <input v-model="teamForm.name" type="text" class="input-field" placeholder="Team-Name…" @keyup.enter="saveTeam" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Beschreibung</label>
+            <textarea v-model="teamForm.description" rows="2" class="input-field resize-none" placeholder="Optionale Beschreibung…" />
+          </div>
+        </div>
+        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <button @click="showTeamModal = false" class="btn-secondary">Abbrechen</button>
+          <button @click="saveTeam" :disabled="!teamForm.name.trim()" class="btn-primary">
+            {{ editingTeam ? 'Speichern' : 'Erstellen' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 
   <!-- Board-Modal -->
   <Teleport to="body">
