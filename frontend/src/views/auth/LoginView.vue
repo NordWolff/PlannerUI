@@ -2,8 +2,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 
 const authStore = useAuthStore()
+const plannersStore = usePlannersStore()
 const router = useRouter()
 
 const form = reactive({ email: '', password: '' })
@@ -19,7 +21,14 @@ onMounted(() => {
 
 async function login() {
   const ok = await authStore.login(form.email, form.password, rememberMe.value)
-  if (ok) router.push('/planners')
+  if (!ok) return
+  const favId = authStore.favoritePlannerId
+  if (favId) {
+    plannersStore.setActivePlanner(favId)
+    router.push(`/planner/${favId}/dashboard`)
+  } else {
+    router.push('/planners')
+  }
 }
 </script>
 

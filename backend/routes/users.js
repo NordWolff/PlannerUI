@@ -54,13 +54,14 @@ router.put('/:id/favorites', (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const { teamId, projectId, boardId } = req.body;
+  const { teamId, projectId, boardId, plannerId } = req.body;
   const user = store.users[userIndex];
 
   user.favorites = {
-    teamId: teamId !== undefined ? teamId : user.favorites.teamId,
+    teamId:    teamId    !== undefined ? teamId    : user.favorites.teamId,
     projectId: projectId !== undefined ? projectId : user.favorites.projectId,
-    boardId: boardId !== undefined ? boardId : user.favorites.boardId,
+    boardId:   boardId   !== undefined ? boardId   : user.favorites.boardId,
+    plannerId: plannerId !== undefined ? plannerId : (user.favorites.plannerId ?? null),
   };
 
   store.users[userIndex] = user;

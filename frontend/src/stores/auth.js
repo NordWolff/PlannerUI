@@ -108,13 +108,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function setFavoritePlanner(plannerId) {
+    const { data } = await api.put(`/users/${user.value.id}/favorites`, { plannerId })
+    user.value = data
+  }
+
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const isAdmin         = computed(() => user.value?.role === 'admin')
+  const favoritePlannerId = computed(() => user.value?.favorites?.plannerId ?? null)
 
   return {
     user, token, loading, error,
-    isAuthenticated, isAdmin,
+    isAuthenticated, isAdmin, favoritePlannerId,
     savedEmail, savedRemember,
-    login, register, logout, fetchMe, updateProfile,
+    login, register, logout, fetchMe, updateProfile, setFavoritePlanner,
   }
 })

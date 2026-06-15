@@ -78,7 +78,7 @@ export async function seedData() {
     language: 'de',
     theme: 'light',
     privacyHideOnline: false,
-    favorites: { teamId: null, projectId: null, boardId: null },
+    favorites: { teamId: null, projectId: null, boardId: null, plannerId: null },
     createdAt: now,
   });
 
