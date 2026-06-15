@@ -311,6 +311,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.3.1 — Fix: Planner-Header nach Favorit-Login
+- Nach dem Login mit gesetztem Favorit-Planner wurde der Header-Titel und die Kontext-Card nicht angezeigt
+- Ursache: `plannersStore.planners` war leer, weil `PlannersView` (einziger Ladeort) übersprungen wurde → `activePlanner` war `null`
+- Fix: `fetchPlanners()` wird nun vor dem Redirect zum Favorit-Planner aufgerufen
+
 ### v2.3.0 — Favorit-Planner & Login-Fix
 - Benutzer können einen Planner als **Startplanner** markieren (Stern-Icon, per Hover sichtbar)
 - Favorit: goldener Kartenrahmen, „Startplanner"-Label, immer ganz oben auf der Auswahlseite
