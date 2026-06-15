@@ -1,30 +1,29 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTicketsStore } from '@/stores/tickets'
 import { useBoardsStore } from '@/stores/boards'
-import { useTeamsStore } from '@/stores/teams'
 import { useProjectsStore } from '@/stores/projects'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 
+const route = useRoute()
 const router = useRouter()
 
 const ticketsStore = useTicketsStore()
 const boardsStore = useBoardsStore()
-const teamsStore = useTeamsStore()
 const projectsStore = useProjectsStore()
 
 const selectedBoardId = ref(null)
-const selectedTeamId = ref(null)
 const selectedProjectId = ref(null)
 const selectedTicket = ref(null)
 
 onMounted(async () => {
+  const plannerId = route.params.plannerId
+  const filter = plannerId ? { plannerId } : {}
   await Promise.all([
-    boardsStore.fetchBoards(),
-    teamsStore.fetchTeams(),
-    projectsStore.fetchProjects(),
+    boardsStore.fetchBoards(filter),
+    projectsStore.fetchProjects(filter),
   ])
   if (boardsStore.boards.length) selectedBoardId.value = boardsStore.boards[0].id
   await loadTickets()
@@ -32,8 +31,9 @@ onMounted(async () => {
 
 async function loadTickets() {
   const filters = {}
+  const plannerId = route.params.plannerId
+  if (plannerId) filters.plannerId = plannerId
   if (selectedBoardId.value) filters.boardId = selectedBoardId.value
-  if (selectedTeamId.value) filters.teamId = selectedTeamId.value
   if (selectedProjectId.value) filters.projectId = selectedProjectId.value
   await ticketsStore.fetchTickets(filters)
 }
@@ -50,7 +50,7 @@ async function handleStatusChange({ ticketId, status }) {
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kanban</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1">Tickets per Drag & Drop verschieben</p>
       </div>
-      <button @click="router.push('/gantt')"
+      <button @click="router.push(`/planner/${route.params.plannerId}/gantt`)"
         class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 hover:border-indigo-400 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -65,10 +65,6 @@ async function handleStatusChange({ ticketId, status }) {
       <select v-model="selectedBoardId" @change="loadTickets" class="input-field w-auto">
         <option :value="null">Alle Boards</option>
         <option v-for="board in boardsStore.boards" :key="board.id" :value="board.id">{{ board.name }}</option>
-      </select>
-      <select v-model="selectedTeamId" @change="loadTickets" class="input-field w-auto">
-        <option :value="null">Alle Teams</option>
-        <option v-for="team in teamsStore.teams" :key="team.id" :value="team.id">{{ team.name }}</option>
       </select>
       <select v-model="selectedProjectId" @change="loadTickets" class="input-field w-auto">
         <option :value="null">Alle Projekte</option>

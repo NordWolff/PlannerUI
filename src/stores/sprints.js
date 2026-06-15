@@ -7,10 +7,10 @@ export const useSprintsStore = defineStore('sprints', () => {
   const currentSprint = ref(null)
   const loading = ref(false)
 
-  async function fetchSprints() {
+  async function fetchSprints(filters = {}) {
     loading.value = true
     try {
-      const { data } = await api.get('/sprints')
+      const { data } = await api.get('/sprints', { params: filters })
       sprints.value = data
     } finally {
       loading.value = false
@@ -60,5 +60,7 @@ export const useSprintsStore = defineStore('sprints', () => {
     return data
   }
 
-  return { sprints, currentSprint, loading, fetchSprints, fetchCurrentSprint, createSprint, updateSprint, deleteSprint, startSprint, completeSprint }
+  function clear() { sprints.value = []; currentSprint.value = null }
+
+  return { sprints, currentSprint, loading, fetchSprints, fetchCurrentSprint, createSprint, updateSprint, deleteSprint, startSprint, completeSprint, clear }
 })

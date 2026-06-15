@@ -39,5 +39,7 @@ export const useProjectsStore = defineStore('projects', () => {
     if (idx !== -1) projects.value[idx] = { ...projects.value[idx], isFavorite: !projects.value[idx].isFavorite }
   }
 
-  return { projects, loading, fetchProjects, createProject, updateProject, deleteProject, toggleFavorite }
+  function clear() { projects.value = [] }
+
+  return { projects, loading, fetchProjects, createProject, updateProject, deleteProject, toggleFavorite, clear }
 })

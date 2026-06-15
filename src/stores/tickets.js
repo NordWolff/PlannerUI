@@ -93,5 +93,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     await api.delete(`/tickets/${ticketId}/attachments/${attachmentId}`)
   }
 
-  return { tickets, loading, fetchTickets, createTicket, updateTicket, deleteTicket, updateStatus, toggleChecklist, addChecklistItem, fetchHistory, fetchComments, addComment, toggleReaction, fetchAttachments, uploadAttachment, deleteAttachment }
+  function clear() { tickets.value = [] }
+
+  return { tickets, loading, fetchTickets, createTicket, updateTicket, deleteTicket, updateStatus, toggleChecklist, addChecklistItem, fetchHistory, fetchComments, addComment, toggleReaction, fetchAttachments, uploadAttachment, deleteAttachment, clear }
 })

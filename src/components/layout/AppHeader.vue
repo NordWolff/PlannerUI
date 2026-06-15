@@ -2,6 +2,7 @@
 import { ref, computed, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 import TicketModal from '@/components/tickets/TicketModal.vue'
@@ -13,7 +14,8 @@ import { useSprintsStore } from '@/stores/sprints'
 import { useUsers } from '@/composables/useUsers'
 import { generateAvatar } from '@/utils/avatar'
 
-const authStore = useAuthStore()
+const authStore     = useAuthStore()
+const plannersStore = usePlannersStore()
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
@@ -32,7 +34,7 @@ const createTab          = ref('ticket')
 const creatingItem       = ref(false)
 
 const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null })
-const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
+const projectForm = reactive({ name: '', description: '', status: 'active', plannerId: null, sprintIds: [] })
 
 async function openCreate(tab) {
   createTab.value = tab
@@ -45,8 +47,11 @@ async function openCreate(tab) {
   }
   showCreateModal.value = true
   if (tab !== 'request') {
-    await Promise.all([fetchUsers(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), sprintsStore.fetchSprints()])
+    const pid = plannersStore.activePlannerId
+    const plannerFilter = pid ? { plannerId: pid } : {}
+    await Promise.all([fetchUsers(), teamsStore.fetchTeams(), boardsStore.fetchBoards(plannerFilter), sprintsStore.fetchSprints(plannerFilter)])
     if (!ticketForm.boardId && boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
+    projectForm.plannerId = pid
   }
 }
 
@@ -54,7 +59,7 @@ function resetTicketForm() {
   Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null })
 }
 function resetProjectForm() {
-  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
+  Object.assign(projectForm, { name: '', description: '', status: 'active', plannerId: plannersStore.activePlannerId, sprintIds: [] })
 }
 
 function toggleHeaderSprint(sprintId) {
@@ -127,25 +132,34 @@ function openHeaderTicket(ticket) {
 
 function goToMyTeam() {
   showTeamDropdown.value = false
-  router.push('/my-team')
+  const pid = plannersStore.activePlannerId
+  router.push(pid ? `/planner/${pid}/my-team` : '/planners')
 }
 
 const requestForm = reactive({ title: '', description: '', type: 'feature' })
 
-const baseLinks = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/my-team', label: 'Mein Team' },
-  { to: '/teams', label: 'Teams' },
-  { to: '/projects', label: 'Projekte' },
-  { to: '/kanban', label: 'Kanban' },
-  { to: '/gantt', label: 'Zeitstrahl' },
-  { to: '/reports', label: 'Reports' },
-  { to: '/chat', label: 'Chat' },
-]
+const baseLinks = computed(() => {
+  const pid = plannersStore.activePlannerId
+  if (!pid) return []
+  return [
+    { to: `/planner/${pid}/dashboard`, label: 'Dashboard' },
+    { to: `/planner/${pid}/my-team`,   label: 'Mein Team', isTeam: true },
+    { to: `/planner/${pid}/teams`,     label: 'Teams' },
+    { to: `/planner/${pid}/projects`,  label: 'Projekte' },
+    { to: `/planner/${pid}/kanban`,    label: 'Kanban' },
+    { to: `/planner/${pid}/gantt`,     label: 'Zeitstrahl' },
+    { to: `/planner/${pid}/reports`,   label: 'Reports' },
+    { to: `/planner/${pid}/chat`,      label: 'Chat' },
+  ]
+})
 
-const navLinks = computed(() =>
-  authStore.isAdmin ? [...baseLinks, { to: '/admin', label: 'Admin' }] : baseLinks
-)
+const navLinks = computed(() => {
+  const pid = plannersStore.activePlannerId
+  if (!pid) return []
+  return authStore.isAdmin
+    ? [...baseLinks.value, { to: `/planner/${pid}/admin`, label: 'Admin' }]
+    : baseLinks.value
+})
 
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
@@ -175,9 +189,23 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 
 <template>
   <header class="fixed top-0 left-0 right-0 z-40 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 sm:px-6">
-    <!-- Logo -->
-    <div class="flex-none mr-6">
+    <!-- Logo + Planner-Kontext -->
+    <div class="flex-none flex items-center gap-3 mr-6">
       <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">Planner</span>
+      <template v-if="plannersStore.activePlanner">
+        <span class="text-gray-300 dark:text-gray-600">|</span>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[140px] truncate">
+          {{ plannersStore.activePlanner.name }}
+        </span>
+        <button
+          @click="router.push('/planners')"
+          title="Planner wechseln"
+          class="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+        >⇄</button>
+      </template>
+      <template v-else>
+        <router-link to="/planners" class="text-xs text-indigo-500 hover:underline">Planner wählen →</router-link>
+      </template>
     </div>
 
     <!-- Navigation -->
@@ -186,7 +214,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
         <template v-for="link in navLinks" :key="link.to">
 
           <!-- Mein Team: Dropdown -->
-          <div v-if="link.to === '/my-team'" class="relative">
+          <div v-if="link.isTeam" class="relative">
             <button
               @click="toggleTeamDropdown"
               class="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
@@ -297,10 +325,16 @@ const avatarUrl = (user) => generateAvatar(user?.username)
       </button>
 
       <div v-if="showDropdown" class="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-        <router-link to="/settings" @click="showDropdown = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+        <router-link
+          :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/settings` : '/planners'"
+          @click="showDropdown = false"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
           Einstellungen
         </router-link>
-        <router-link v-if="authStore.isAdmin" to="/admin" @click="showDropdown = false" class="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+        <router-link v-if="authStore.isAdmin"
+          :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/admin` : '/planners'"
+          @click="showDropdown = false"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
           Admin-Bereich
         </router-link>
         <hr class="border-gray-200 dark:border-gray-700 my-1" />
@@ -418,11 +452,10 @@ const avatarUrl = (user) => generateAvatar(user?.username)
               </select>
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Team</label>
-              <select v-model="projectForm.teamId" class="input-field">
-                <option :value="null">— Kein Team —</option>
-                <option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">{{ t.name }}</option>
-              </select>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Planner</label>
+              <div class="input-field bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 select-none">
+                {{ plannersStore.activePlanner?.name || '— Kein Planner —' }}
+              </div>
             </div>
           </div>
           <div>

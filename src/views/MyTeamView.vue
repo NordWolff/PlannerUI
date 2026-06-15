@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTicketsStore } from '@/stores/tickets'
 import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
@@ -11,6 +12,7 @@ import TicketDetail from '@/components/tickets/TicketDetail.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import { useUsers } from '@/composables/useUsers'
 
+const route = useRoute()
 const ticketsStore = useTicketsStore()
 const teamsStore = useTeamsStore()
 const sprintsStore = useSprintsStore()
@@ -51,6 +53,8 @@ onMounted(async () => {
 
 async function loadTickets() {
   const filters = {}
+  const plannerId = route.params.plannerId
+  if (plannerId) filters.plannerId = plannerId
   if (selectedTeamId.value) filters.teamId = selectedTeamId.value
   if (selectedSprintId.value) filters.sprintId = selectedSprintId.value
   await ticketsStore.fetchTickets(filters)

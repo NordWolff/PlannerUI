@@ -1,13 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useTicketsStore } from '@/stores/tickets'
-import { useTeamsStore } from '@/stores/teams'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 
+const route = useRoute()
 const projectsStore = useProjectsStore()
 const ticketsStore = useTicketsStore()
-const teamsStore = useTeamsStore()
 
 // ── Ansichts-Modus ────────────────────────────────────────────────────────────
 const viewMode = ref('month') // 'week' | 'month' | 'quarter'
@@ -107,11 +107,6 @@ function ticketsForProject(projectId) {
   return ticketsStore.tickets.filter(t => t.projectId === projectId)
 }
 
-// ── Team-Name ─────────────────────────────────────────────────────────────────
-function teamName(teamId) {
-  return teamsStore.teams.find(t => t.id === teamId)?.name ?? ''
-}
-
 // ── Drag-to-Move ──────────────────────────────────────────────────────────────
 const dragging = ref(null) // { projectId, startX, origLeft }
 const dragOffsets = ref({}) // { [projectId]: px offset }
@@ -202,10 +197,11 @@ function onGlobalMouseUp() {
 }
 
 onMounted(async () => {
+  const plannerId = route.params.plannerId
+  const filter = plannerId ? { plannerId } : {}
   await Promise.all([
-    projectsStore.fetchProjects(),
-    ticketsStore.fetchTickets(),
-    teamsStore.fetchTeams(),
+    projectsStore.fetchProjects(filter),
+    ticketsStore.fetchTickets(filter),
   ])
   window.addEventListener('mousemove', onGlobalMouseMove)
   window.addEventListener('mouseup', onGlobalMouseUp)
@@ -325,7 +321,7 @@ function ticketDepLines() {
               </button>
               <div class="min-w-0">
                 <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ project.name }}</p>
-                <p class="text-xs text-gray-400 truncate">{{ teamName(project.teamId) }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ project.status }}</p>
               </div>
             </div>
             <!-- Ticket-Zeilen -->

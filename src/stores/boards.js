@@ -7,10 +7,10 @@ export const useBoardsStore = defineStore('boards', () => {
   const currentBoard = ref(null)
   const loading = ref(false)
 
-  async function fetchBoards() {
+  async function fetchBoards(filters = {}) {
     loading.value = true
     try {
-      const { data } = await api.get('/boards')
+      const { data } = await api.get('/boards', { params: filters })
       boards.value = data
     } finally {
       loading.value = false
@@ -35,5 +35,7 @@ export const useBoardsStore = defineStore('boards', () => {
     boards.value = boards.value.filter(b => b.id !== id)
   }
 
-  return { boards, currentBoard, loading, fetchBoards, createBoard, updateBoard, deleteBoard }
+  function clear() { boards.value = []; currentBoard.value = null }
+
+  return { boards, currentBoard, loading, fetchBoards, createBoard, updateBoard, deleteBoard, clear }
 })
