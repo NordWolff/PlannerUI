@@ -311,6 +311,15 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.5.0 — Glassmorphism-Header
+- **AppHeader** komplett auf Glassmorphism-Design umgestellt: `backdrop-blur-xl` + semi-transparente Hintergründe (`bg-white/70 dark:bg-[#0e0d14]/60`)
+- Alle Dropdowns (Team, Erstellen, User-Profil) mit frosted-glass-Stil: `bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl`, `rounded-xl`, `ring-1`-Rahmen
+- **Markenkopf „Planner"** mit Indigo→Magenta-Text-Gradient (`.brand-gradient`)
+- **Navigations-Links:** aktiver Zustand als dezenter Violett→Pink-Gradient mit Ring-Rahmen; Hover subtil transparent
+- **„Erstellen"-Button:** Indigo→Pink-Gradient mit Glow-Shadow (`.btn-create`)
+- **Magenta-Unterrandlinie** im Header via CSS `::after`-Pseudoelement (`.app-header`)
+- Hover-Effekte durchgehend als relative Transparenz (`hover:bg-black/[0.05] dark:hover:bg-white/[0.07]`) statt fester Farben
+
 ### v2.4.0 — Magenta-Strahlverlauf als App-Hintergrund
 - **Dark Mode:** tief-dunkler Hintergrund (`#0e0d14`) mit kräftigem Magenta-Radial-Glow von oben-mitte + subtiler Gegenstrahler von unten-rechts
 - **Light Mode:** weiches Off-White (`#f5f3fa`, leicht violett getönt) mit zartem Magenta-Hauch von oben — wärmer als reines Grau, ohne aufdringlich zu wirken
