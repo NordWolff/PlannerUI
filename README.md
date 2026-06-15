@@ -311,6 +311,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.4.0 — Magenta-Strahlverlauf als App-Hintergrund
+- **Dark Mode:** tief-dunkler Hintergrund (`#0e0d14`) mit kräftigem Magenta-Radial-Glow von oben-mitte + subtiler Gegenstrahler von unten-rechts
+- **Light Mode:** weiches Off-White (`#f5f3fa`, leicht violett getönt) mit zartem Magenta-Hauch von oben — wärmer als reines Grau, ohne aufdringlich zu wirken
+- Hintergrund als CSS-Klasse `.app-bg` in `style.css` definiert (Dark-Variante via `.dark .app-bg`)
+
 ### v2.3.1 — Fix: Planner-Header nach Favorit-Login
 - Nach dem Login mit gesetztem Favorit-Planner wurde der Header-Titel und die Kontext-Card nicht angezeigt
 - Ursache: `plannersStore.planners` war leer, weil `PlannersView` (einziger Ladeort) übersprungen wurde → `activePlanner` war `null`
