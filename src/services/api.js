@@ -16,7 +16,9 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const url = err.config?.url ?? ''
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register')
+    if (err.response?.status === 401 && !isAuthEndpoint) {
       document.cookie = 'planner_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/'
       sessionStorage.removeItem('planner_token')
       window.location.href = '/login'
