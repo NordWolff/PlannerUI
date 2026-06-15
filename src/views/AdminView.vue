@@ -62,6 +62,29 @@ const counterInput = ref('')
 const savingPrefix = ref(false)
 const savingCounter = ref(false)
 
+// Planner-Präfixe
+const plannerPrefixEdits = ref({})
+const savingPlannerPrefixId = ref(null)
+
+function initPlannerPrefixEdits() {
+  plannersStore.planners.forEach(p => {
+    plannerPrefixEdits.value[p.id] = p.ticketPrefix ?? 'TKT'
+  })
+}
+
+async function savePlannerPrefix(plannerId) {
+  const raw = plannerPrefixEdits.value[plannerId] ?? ''
+  const val = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (!val) { toast.error('Präfix darf nicht leer sein'); return }
+  plannerPrefixEdits.value[plannerId] = val
+  savingPlannerPrefixId.value = plannerId
+  try {
+    await plannersStore.updateSettings(plannerId, { ticketPrefix: val })
+    toast.success('Planner-Präfix gespeichert')
+  } catch { toast.error('Fehler beim Speichern') }
+  finally { savingPlannerPrefixId.value = null }
+}
+
 // Team-Modal
 const showTeamModal = ref(false)
 const editingTeam = ref(null)
@@ -168,6 +191,7 @@ function plannerUserEmail(userId) {
 onMounted(async () => {
   const pid = route.params.plannerId
   await Promise.all([loadUsers(), loadRequests(), teamsStore.fetchTeams(pid ? { plannerId: pid } : {}), boardsStore.fetchBoards(pid ? { plannerId: pid } : {}), loadSettings(), plannersStore.fetchPlanners()])
+  initPlannerPrefixEdits()
 })
 
 // ─── Benutzer ─────────────────────────────────────────────────────────────────
@@ -672,9 +696,53 @@ function formatDate(iso) {
     </div>
 
     <!-- ── Einstellungen ────────────────────────────────────────────────────── -->
-    <div v-else-if="activeTab === 'settings'" class="space-y-6 max-w-lg">
+    <div v-else-if="activeTab === 'settings'" class="space-y-6 max-w-2xl">
+
+      <!-- Planner-Präfixe -->
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 space-y-4">
+        <div>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white">Ticket-Präfix je Planner</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Jeder Planner hat eine eigene Ticket-Nummerierung. Der Zähler läuft unabhängig.</p>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div v-if="!plannersStore.planners.length" class="px-4 py-4 text-sm text-gray-400 italic text-center">
+            Keine Planner vorhanden
+          </div>
+          <div v-for="planner in plannersStore.planners" :key="planner.id"
+            class="flex items-center gap-4 px-4 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ planner.name }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                Zählerstand: <span class="font-mono">{{ planner.ticketCounter ?? 1 }}</span>
+                · Nächste Nr.: <span class="font-mono text-indigo-500">{{ (plannerPrefixEdits[planner.id] || planner.ticketPrefix || 'TKT').toUpperCase().replace(/[^A-Z0-9]/g,'') }}-{{ String(planner.ticketCounter ?? 1).padStart(4, '0') }}</span>
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <input
+                :value="plannerPrefixEdits[planner.id] ?? planner.ticketPrefix ?? 'TKT'"
+                @input="plannerPrefixEdits[planner.id] = $event.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+                type="text" maxlength="8"
+                class="input-field w-24 font-mono uppercase text-center py-1.5 text-sm"
+                placeholder="TKT"
+                @keyup.enter="savePlannerPrefix(planner.id)"
+              />
+              <button
+                @click="savePlannerPrefix(planner.id)"
+                :disabled="savingPlannerPrefixId === planner.id"
+                class="btn-primary text-sm py-1.5 px-3 shrink-0">
+                {{ savingPlannerPrefixId === planner.id ? '…' : 'Setzen' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Globaler Fallback -->
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 space-y-5">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Ticket-Nummerierung</h2>
+        <div>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white">Globaler Fallback</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Wird verwendet, wenn ein Ticket keinem Planner zugeordnet ist.</p>
+        </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Präfix <span class="text-xs text-gray-400 ml-1">(max. 10 Zeichen)</span>
@@ -703,11 +771,6 @@ function formatDate(iso) {
           <span class="inline-block font-mono text-lg font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-lg">
             {{ ticketSettings ? ticketSettings.nextTicketNumber : previewNumber(prefixInput, counterInput) }}
           </span>
-        </div>
-        <div class="text-xs text-gray-400 space-y-1">
-          <p class="font-medium text-gray-500 dark:text-gray-400">Beispiele:</p>
-          <p>Präfix <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">FEED</code> → FEED-0001, FEED-0002 …</p>
-          <p>Präfix <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">TKG</code> → TKG-0001, TKG-0002 …</p>
         </div>
       </div>
     </div>
