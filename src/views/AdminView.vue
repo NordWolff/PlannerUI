@@ -1,15 +1,19 @@
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTeamsStore } from '@/stores/teams'
 import { useBoardsStore } from '@/stores/boards'
+import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 import { generateAvatar } from '@/utils/avatar'
 
+const route = useRoute()
 const authStore = useAuthStore()
 const teamsStore = useTeamsStore()
 const boardsStore = useBoardsStore()
+const plannersStore = usePlannersStore()
 const toast = useToast()
 
 const activeTab = ref('requests')
@@ -20,6 +24,7 @@ const loadingRequests = ref(false)
 
 const tabs = [
   { key: 'requests',  label: 'Anfragen' },
+  { key: 'planner',   label: 'Planner-Zugang' },
   { key: 'users',     label: 'Benutzer' },
   { key: 'teams',     label: 'Teams' },
   { key: 'boards',    label: 'Boards' },
@@ -104,8 +109,59 @@ async function loadSettings() {
   }
 }
 
+// ─── Planner-Zugang ───────────────────────────────────────────────────────────
+
+const activePlanner = computed(() =>
+  plannersStore.planners.find(p => p.id === route.params.plannerId) ?? null
+)
+
+const plannerMembers = computed(() => activePlanner.value?.members ?? [])
+
+const usersNotInPlanner = computed(() => {
+  const existing = plannerMembers.value.map(m => m.userId)
+  return users.value.filter(u => u.role !== 'admin' && !existing.includes(u.id))
+})
+
+const newPlannerMember = reactive({ userId: '', role: 'member' })
+
+async function addPlannerMember() {
+  if (!newPlannerMember.userId || !activePlanner.value) return
+  const updated = [...plannerMembers.value, { userId: newPlannerMember.userId, role: newPlannerMember.role }]
+  try {
+    await plannersStore.updateMembers(activePlanner.value.id, updated)
+    newPlannerMember.userId = ''
+    newPlannerMember.role = 'member'
+    toast.success('Mitglied hinzugefügt')
+  } catch { toast.error('Fehler beim Hinzufügen') }
+}
+
+async function removePlannerMember(userId) {
+  if (!activePlanner.value) return
+  const updated = plannerMembers.value.filter(m => m.userId !== userId)
+  try {
+    await plannersStore.updateMembers(activePlanner.value.id, updated)
+    toast.info('Mitglied entfernt')
+  } catch { toast.error('Fehler beim Entfernen') }
+}
+
+async function changePlannerRole(userId, role) {
+  if (!activePlanner.value) return
+  const updated = plannerMembers.value.map(m => m.userId === userId ? { ...m, role } : m)
+  try {
+    await plannersStore.updateMembers(activePlanner.value.id, updated)
+  } catch { toast.error('Fehler beim Ändern der Rolle') }
+}
+
+function plannerUserName(userId) {
+  return users.value.find(u => u.id === userId)?.username ?? userId
+}
+
+function plannerUserEmail(userId) {
+  return users.value.find(u => u.id === userId)?.email ?? ''
+}
+
 onMounted(async () => {
-  await Promise.all([loadUsers(), loadRequests(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), loadSettings()])
+  await Promise.all([loadUsers(), loadRequests(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), loadSettings(), plannersStore.fetchPlanners()])
 })
 
 // ─── Benutzer ─────────────────────────────────────────────────────────────────
@@ -374,6 +430,99 @@ function formatDate(iso) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Planner-Zugang ─────────────────────────────────────────────────── -->
+    <div v-else-if="activeTab === 'planner'">
+      <div v-if="!activePlanner" class="py-12 text-center text-sm text-gray-400">
+        Kein Planner ausgewählt.
+      </div>
+      <div v-else class="space-y-6">
+        <!-- Planner-Info -->
+        <div class="flex items-center gap-3 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
+          <span class="font-mono text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 px-2 py-0.5 rounded">
+            {{ activePlanner.ticketPrefix ?? 'TKT' }}
+          </span>
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white">{{ activePlanner.name }}</p>
+            <p v-if="activePlanner.description" class="text-xs text-gray-500 dark:text-gray-400">{{ activePlanner.description }}</p>
+          </div>
+          <span class="ml-auto text-xs text-indigo-500 dark:text-indigo-400">{{ plannerMembers.length }} Mitglieder</span>
+        </div>
+
+        <!-- Mitglied hinzufügen -->
+        <div class="flex flex-wrap gap-2 items-end">
+          <div class="flex-1 min-w-48">
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Benutzer hinzufügen</label>
+            <select v-model="newPlannerMember.userId" class="input-field">
+              <option value="">-- Benutzer wählen --</option>
+              <option v-for="u in usersNotInPlanner" :key="u.id" :value="u.id">
+                {{ u.username }} ({{ u.email }})
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rolle</label>
+            <select v-model="newPlannerMember.role" class="input-field w-44">
+              <option value="member">Mitglied</option>
+              <option value="owner">Verantwortlicher</option>
+            </select>
+          </div>
+          <button @click="addPlannerMember" :disabled="!newPlannerMember.userId" class="btn-primary">
+            Hinzufügen
+          </button>
+        </div>
+
+        <!-- Mitgliederliste -->
+        <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+              <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th class="px-4 py-3">Benutzer</th>
+                <th class="px-4 py-3">E-Mail</th>
+                <th class="px-4 py-3">System-Rolle</th>
+                <th class="px-4 py-3">Planner-Rolle</th>
+                <th class="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr v-if="!plannerMembers.length">
+                <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400 italic">Keine Mitglieder</td>
+              </tr>
+              <tr v-for="m in plannerMembers" :key="m.userId"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <img :src="generateAvatar(plannerUserName(m.userId))"
+                      class="w-7 h-7 rounded-full bg-gray-200" alt="" />
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ plannerUserName(m.userId) }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ plannerUserEmail(m.userId) }}</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    :class="ROLE_COLORS[users.find(u => u.id === m.userId)?.role] || ROLE_COLORS.user">
+                    {{ users.find(u => u.id === m.userId)?.role ?? '–' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <select :value="m.role" @change="changePlannerRole(m.userId, $event.target.value)"
+                    class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="member">Mitglied</option>
+                    <option value="owner">Verantwortlicher</option>
+                  </select>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <button @click="removePlannerMember(m.userId)"
+                    class="text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors">
+                    Entfernen
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
