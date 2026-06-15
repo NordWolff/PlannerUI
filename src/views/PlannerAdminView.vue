@@ -2,6 +2,7 @@
 import { onMounted, ref, computed, reactive } from 'vue'
 import { usePlannersStore } from '@/stores/planners'
 import { useTeamsStore } from '@/stores/teams'
+import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { useUsers } from '@/composables/useUsers'
 import BaseModal from '@/components/common/BaseModal.vue'
@@ -10,14 +11,19 @@ import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const plannersStore = usePlannersStore()
 const teamsStore    = useTeamsStore()
+const authStore     = useAuthStore()
 const toast         = useToast()
 const { users, fetchUsers } = useUsers()
 
 // ── Planner-Liste ──────────────────────────────────────────────────────────
 const search = ref('')
-const filtered = computed(() =>
-  plannersStore.planners.filter(p => p.name.toLowerCase().includes(search.value.toLowerCase()))
-)
+const filtered = computed(() => {
+  const q = search.value.toLowerCase()
+  const list = plannersStore.planners.filter(p => p.name.toLowerCase().includes(q))
+  const mine = list.filter(p => p.createdBy === authStore.user?.id)
+  const others = list.filter(p => p.createdBy !== authStore.user?.id)
+  return [...mine, ...others]
+})
 
 // ── Erstell-Modal (einfach) ────────────────────────────────────────────────
 const showCreateModal = ref(false)
@@ -229,13 +235,21 @@ onMounted(() => Promise.all([
       <div v-for="planner in filtered" :key="planner.id" class="card flex flex-col gap-3">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
                 {{ planner.ticketPrefix ?? 'TKT' }}
               </span>
               <h2 class="font-semibold text-gray-900 dark:text-white truncate">{{ planner.name }}</h2>
+              <span v-if="planner.createdBy === authStore.user?.id"
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                Mein Planner
+              </span>
             </div>
             <p v-if="planner.description" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ planner.description }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              Erstellt von:
+              <span class="font-medium text-gray-600 dark:text-gray-300">{{ userName(planner.createdBy) }}</span>
+            </p>
           </div>
           <div class="flex gap-2 shrink-0">
             <button @click="openDetail(planner)"
