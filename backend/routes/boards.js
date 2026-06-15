@@ -7,11 +7,15 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get('/', (req, res) => {
-  return res.json(store.boards);
+  let boards = store.boards;
+  if (req.query.plannerId) {
+    boards = boards.filter(b => b.plannerId === req.query.plannerId);
+  }
+  return res.json(boards);
 });
 
 router.post('/', requireAdmin, (req, res) => {
-  const { name, description, startDate, endDate, teamIds, projectIds } = req.body;
+  const { name, description, startDate, endDate, plannerId, teamIds, projectIds } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'name is required' });
   }
@@ -20,6 +24,7 @@ router.post('/', requireAdmin, (req, res) => {
     id: uuidv4(),
     name,
     description: description || '',
+    plannerId: plannerId || null,
     startDate: startDate || null,
     endDate: endDate || null,
     teamIds: teamIds || [],
@@ -45,13 +50,14 @@ router.put('/:id', (req, res) => {
     return res.status(404).json({ error: 'Board not found' });
   }
 
-  const { name, description, startDate, endDate, teamIds, projectIds } = req.body;
+  const { name, description, startDate, endDate, plannerId, teamIds, projectIds } = req.body;
   const board = store.boards[index];
 
   if (name) board.name = name;
   if (description !== undefined) board.description = description;
   if (startDate !== undefined) board.startDate = startDate;
   if (endDate !== undefined) board.endDate = endDate;
+  if (plannerId !== undefined) board.plannerId = plannerId;
   if (teamIds !== undefined) board.teamIds = teamIds;
   if (projectIds !== undefined) board.projectIds = projectIds;
 

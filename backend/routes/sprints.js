@@ -7,7 +7,11 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get('/', (req, res) => {
-  return res.json(store.sprints);
+  let sprints = store.sprints;
+  if (req.query.plannerId) {
+    sprints = sprints.filter(s => s.plannerId === req.query.plannerId);
+  }
+  return res.json(sprints);
 });
 
 // /current muss VOR /:id registriert sein
@@ -24,7 +28,7 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', requireAdminOrOwner, (req, res) => {
-  const { name, description, startDate, endDate, projectIds, ticketIds } = req.body;
+  const { name, description, startDate, endDate, plannerId, projectIds, ticketIds } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   const newSprint = {
@@ -32,6 +36,7 @@ router.post('/', requireAdminOrOwner, (req, res) => {
     name,
     description: description || '',
     status: 'planning',
+    plannerId: plannerId || null,
     startDate: startDate || null,
     endDate: endDate || null,
     projectIds: projectIds || [],
@@ -47,13 +52,14 @@ router.put('/:id', requireAdminOrOwner, (req, res) => {
   const index = store.sprints.findIndex((s) => s.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Sprint not found' });
 
-  const { name, description, startDate, endDate, projectIds, ticketIds } = req.body;
+  const { name, description, startDate, endDate, plannerId, projectIds, ticketIds } = req.body;
   const sprint = store.sprints[index];
 
   if (name) sprint.name = name;
   if (description !== undefined) sprint.description = description;
   if (startDate !== undefined) sprint.startDate = startDate;
   if (endDate !== undefined) sprint.endDate = endDate;
+  if (plannerId !== undefined) sprint.plannerId = plannerId;
   if (projectIds !== undefined) sprint.projectIds = projectIds;
   if (ticketIds !== undefined) sprint.ticketIds = ticketIds;
 

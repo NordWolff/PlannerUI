@@ -42,6 +42,12 @@ const upload = multer({
 router.get('/', (req, res) => {
   let tickets = store.tickets;
 
+  if (req.query.plannerId) {
+    const plannerProjectIds = store.projects
+      .filter(p => p.plannerId === req.query.plannerId)
+      .map(p => p.id);
+    tickets = tickets.filter(t => plannerProjectIds.includes(t.projectId));
+  }
   if (req.query.boardId) tickets = tickets.filter((t) => t.boardId === req.query.boardId);
   if (req.query.teamId) tickets = tickets.filter((t) => t.teamId === req.query.teamId);
   if (req.query.sprintId) tickets = tickets.filter((t) => t.sprintId === req.query.sprintId);
@@ -75,9 +81,26 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'title is required' });
   }
 
-  const { ticketPrefix, ticketCounter } = store.settings;
-  const ticketNumber = `${ticketPrefix}-${String(ticketCounter).padStart(4, '0')}`;
-  store.settings.ticketCounter += 1;
+  // Planner-spezifischen Präfix ermitteln (Fallback: globale Einstellungen)
+  let prefix = store.settings.ticketPrefix;
+  let counter = store.settings.ticketCounter;
+  let usePlanner = null;
+  if (projectId) {
+    const project = store.projects.find(p => p.id === projectId);
+    if (project?.plannerId) {
+      usePlanner = store.planners.find(pl => pl.id === project.plannerId);
+      if (usePlanner?.ticketPrefix) {
+        prefix = usePlanner.ticketPrefix;
+        counter = usePlanner.ticketCounter ?? 1;
+      }
+    }
+  }
+  const ticketNumber = `${prefix}-${String(counter).padStart(4, '0')}`;
+  if (usePlanner) {
+    usePlanner.ticketCounter = (usePlanner.ticketCounter ?? 1) + 1;
+  } else {
+    store.settings.ticketCounter += 1;
+  }
 
   const now = new Date().toISOString();
   const newTicket = {

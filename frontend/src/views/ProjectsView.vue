@@ -1,27 +1,35 @@
 <script setup>
 import { onMounted, ref, computed, reactive } from 'vue'
+import { useRoute } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
-import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
+import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/common/BaseModal.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 
+const route = useRoute()
 const projectsStore = useProjectsStore()
+const sprintsStore  = useSprintsStore()
+const plannersStore = usePlannersStore()
 const toast = useToast()
-const teamsStore = useTeamsStore()
-const sprintsStore = useSprintsStore()
 
 const search = ref('')
 const showModal = ref(false)
 const editingProject = ref(null)
-const projectForm = reactive({ name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
+const projectForm = reactive({ name: '', description: '', status: 'active', plannerId: null, sprintIds: [] })
 
-// Sprint-Dropdown pro Tabellenzeile
 const openSprintDropdown = ref(null)
 
-onMounted(() => Promise.all([projectsStore.fetchProjects(), teamsStore.fetchTeams(), sprintsStore.fetchSprints()]))
+onMounted(() => {
+  const plannerId = route.params.plannerId
+  const filter = plannerId ? { plannerId } : {}
+  return Promise.all([
+    projectsStore.fetchProjects(filter),
+    sprintsStore.fetchSprints(filter),
+  ])
+})
 
 const filtered = computed(() =>
   projectsStore.projects.filter(p => p.name.toLowerCase().includes(search.value.toLowerCase()))
@@ -29,7 +37,7 @@ const filtered = computed(() =>
 
 function openCreate() {
   editingProject.value = null
-  Object.assign(projectForm, { name: '', description: '', status: 'active', teamId: null, sprintIds: [] })
+  Object.assign(projectForm, { name: '', description: '', status: 'active', plannerId: route.params.plannerId || plannersStore.activePlannerId, sprintIds: [] })
   showModal.value = true
 }
 
@@ -39,7 +47,7 @@ function openEdit(project) {
     name: project.name,
     description: project.description || '',
     status: project.status || 'active',
-    teamId: project.teamId || null,
+    plannerId: project.plannerId || route.params.plannerId || plannersStore.activePlannerId,
     sprintIds: Array.isArray(project.sprintIds) ? [...project.sprintIds] : [],
   })
   showModal.value = true
@@ -75,8 +83,6 @@ function sprintNames(project) {
   return ids.map(id => sprintsStore.sprints.find(s => s.id === id)?.name).filter(Boolean)
 }
 
-const teamName = (teamId) => teamsStore.teams.find(t => t.id === teamId)?.name || '-'
-
 function toggleFormSprint(sprintId) {
   const idx = projectForm.sprintIds.indexOf(sprintId)
   if (idx === -1) projectForm.sprintIds.push(sprintId)
@@ -102,7 +108,6 @@ function toggleFormSprint(sprintId) {
             <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               <th class="px-6 py-3">Name</th>
               <th class="px-6 py-3">Status</th>
-              <th class="px-6 py-3">Team</th>
               <th class="px-6 py-3">Sprints</th>
               <th class="px-6 py-3">Favorit</th>
               <th class="px-6 py-3">Aktionen</th>
@@ -110,7 +115,7 @@ function toggleFormSprint(sprintId) {
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
             <tr v-if="projectsStore.loading">
-              <td colspan="6" class="px-6 py-10 text-center text-gray-400">Laden...</td>
+              <td colspan="5" class="px-6 py-10 text-center text-gray-400">Laden...</td>
             </tr>
             <tr v-for="project in filtered" :key="project.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
               <td class="px-6 py-4">
@@ -120,7 +125,6 @@ function toggleFormSprint(sprintId) {
                 </div>
               </td>
               <td class="px-6 py-4"><StatusBadge :status="project.status" /></td>
-              <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ teamName(project.teamId) }}</td>
 
               <!-- Sprint-Spalte: Badges + Dropdown -->
               <td class="px-6 py-4" @click.stop>
@@ -170,7 +174,7 @@ function toggleFormSprint(sprintId) {
               </td>
             </tr>
             <tr v-if="!projectsStore.loading && !filtered.length">
-              <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-400">Keine Projekte gefunden</td>
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">Keine Projekte gefunden</td>
             </tr>
           </tbody>
         </table>
@@ -198,11 +202,10 @@ function toggleFormSprint(sprintId) {
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team</label>
-            <select v-model="projectForm.teamId" class="input-field">
-              <option :value="null">-- Kein Team --</option>
-              <option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">{{ t.name }}</option>
-            </select>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planner</label>
+            <div class="input-field bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-default">
+              {{ plannersStore.activePlanner?.name || '—' }}
+            </div>
           </div>
         </div>
 

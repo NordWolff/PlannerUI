@@ -1,26 +1,48 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 
 const routes = [
   { path: '/login', component: () => import('@/views/auth/LoginView.vue'), meta: { public: true } },
   { path: '/register', component: () => import('@/views/auth/RegisterView.vue'), meta: { public: true } },
+  // Planner-Auswahl (nach Login, bevor ein Planner gewählt wird)
   {
-    path: '/',
+    path: '/planners',
     component: () => import('@/components/layout/AppLayout.vue'),
     children: [
-      { path: '', redirect: '/my-team' },
-      { path: 'dashboard', component: () => import('@/views/DashboardView.vue') },
-      { path: 'my-team', component: () => import('@/views/MyTeamView.vue') },
-      { path: 'teams', component: () => import('@/views/TeamsView.vue') },
-      { path: 'projects', component: () => import('@/views/ProjectsView.vue') },
-      { path: 'kanban', component: () => import('@/views/KanbanView.vue') },
-      { path: 'gantt', component: () => import('@/views/GanttView.vue') },
-      { path: 'reports', component: () => import('@/views/ReportsView.vue') },
-      { path: 'settings', component: () => import('@/views/SettingsView.vue') },
-      { path: 'chat', component: () => import('@/views/ChatView.vue') },
-      { path: 'admin', component: () => import('@/views/AdminView.vue'), meta: { requiresAdmin: true } },
+      { path: '', component: () => import('@/views/PlannersView.vue') },
     ]
-  }
+  },
+  // Planner-Admin: nur für Admin
+  {
+    path: '/planner-admin',
+    component: () => import('@/components/layout/AppLayout.vue'),
+    meta: { requiresAdmin: true },
+    children: [
+      { path: '', component: () => import('@/views/PlannerAdminView.vue') },
+    ]
+  },
+  // Planner-Kontext: alle Inhaltsseiten unter /planner/:plannerId/...
+  {
+    path: '/planner/:plannerId',
+    component: () => import('@/components/layout/AppLayout.vue'),
+    meta: { requiresPlanner: true },
+    children: [
+      { path: '', redirect: to => `/planner/${to.params.plannerId}/dashboard` },
+      { path: 'dashboard',  component: () => import('@/views/DashboardView.vue') },
+      { path: 'my-team',    component: () => import('@/views/MyTeamView.vue') },
+      { path: 'teams',      component: () => import('@/views/TeamsView.vue') },
+      { path: 'projects',   component: () => import('@/views/ProjectsView.vue') },
+      { path: 'kanban',     component: () => import('@/views/KanbanView.vue') },
+      { path: 'gantt',      component: () => import('@/views/GanttView.vue') },
+      { path: 'reports',    component: () => import('@/views/ReportsView.vue') },
+      { path: 'settings',   component: () => import('@/views/SettingsView.vue') },
+      { path: 'chat',       component: () => import('@/views/ChatView.vue') },
+      { path: 'admin',      component: () => import('@/views/AdminView.vue'), meta: { requiresAdmin: true } },
+    ]
+  },
+  // Fallback: / leitet zu /planners (Planner-Auswahl)
+  { path: '/', redirect: '/planners' },
 ]
 
 const router = createRouter({
@@ -35,11 +57,23 @@ function getToken() {
 
 router.beforeEach((to) => {
   const token = getToken()
+
+  // Nicht eingeloggt → Login
   if (!to.meta.public && !token) return '/login'
-  if (to.path === '/login' && token) return '/dashboard'
+
+  // Eingeloggt und Login-Seite → Planner-Auswahl
+  if (to.path === '/login' && token) return '/planners'
+
+  // Admin-Guard
   if (to.meta.requiresAdmin) {
     const authStore = useAuthStore()
-    if (!authStore.isAdmin) return '/dashboard'
+    if (!authStore.isAdmin) return '/planners'
+  }
+
+  // Planner-Kontext-Guard: plannerId in URL muss zum aktiven Planner passen
+  if (to.meta.requiresPlanner && to.params.plannerId) {
+    const plannersStore = usePlannersStore()
+    plannersStore.setActivePlanner(to.params.plannerId)
   }
 })
 

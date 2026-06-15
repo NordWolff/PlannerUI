@@ -1,19 +1,30 @@
 <script setup>
 import { onMounted, ref, reactive } from 'vue'
+import { useRoute } from 'vue-router'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useBoardsStore } from '@/stores/boards'
+import { usePlannersStore } from '@/stores/planners'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 
+const route = useRoute()
 const dashboardStore = useDashboardStore()
 const boardsStore = useBoardsStore()
+const plannersStore = usePlannersStore()
 
 const showBoardModal = ref(false)
 const editingBoard = ref(null)
 const boardForm = reactive({ name: '', description: '', startDate: '', endDate: '' })
 
-onMounted(() => Promise.all([dashboardStore.fetchStats(), dashboardStore.fetchActivity(), boardsStore.fetchBoards()]))
+onMounted(() => {
+  const plannerId = route.params.plannerId
+  return Promise.all([
+    dashboardStore.fetchStats(),
+    dashboardStore.fetchActivity(),
+    boardsStore.fetchBoards(plannerId ? { plannerId } : {}),
+  ])
+})
 
 const kpiCards = [
   { label: 'Teams', key: 'teams', icon: '👥', color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400' },
@@ -43,10 +54,11 @@ function openEditBoard(board) {
 }
 
 async function saveBoard() {
+  const plannerId = route.params.plannerId || plannersStore.activePlannerId
   if (editingBoard.value) {
-    await boardsStore.updateBoard(editingBoard.value.id, boardForm)
+    await boardsStore.updateBoard(editingBoard.value.id, { ...boardForm, plannerId })
   } else {
-    await boardsStore.createBoard(boardForm)
+    await boardsStore.createBoard({ ...boardForm, plannerId })
   }
   showBoardModal.value = false
   dashboardStore.fetchStats()
@@ -61,7 +73,20 @@ async function deleteBoard(id) {
 
 <template>
   <div class="space-y-6">
-    <div>
+    <!-- Planner-Kontext -->
+    <div v-if="plannersStore.activePlanner" class="flex items-start justify-between gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ plannersStore.activePlanner.name }}</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-0.5 text-sm">{{ plannersStore.activePlanner.description }}</p>
+        <div class="flex gap-4 mt-2 text-xs text-indigo-600 dark:text-indigo-400">
+          <span>{{ plannersStore.activePlanner.members?.length ?? 0 }} Mitglieder</span>
+          <span>·</span>
+          <span>{{ plannersStore.activePlanner.teamIds?.length ?? 0 }} Teams</span>
+        </div>
+      </div>
+      <router-link to="/planners" class="shrink-0 text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1">Planner wechseln</router-link>
+    </div>
+    <div v-else>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
       <p class="text-gray-500 dark:text-gray-400 mt-1">Übersicht und Statistiken</p>
     </div>

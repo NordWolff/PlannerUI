@@ -9,6 +9,9 @@ router.use(authenticateToken);
 router.get('/', (req, res) => {
   let projects = store.projects;
 
+  if (req.query.plannerId) {
+    projects = projects.filter((p) => p.plannerId === req.query.plannerId);
+  }
   if (req.query.teamId) {
     projects = projects.filter((p) => p.teamId === req.query.teamId);
   }
@@ -20,7 +23,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, description, status, sprintIds, teamId, startDate, endDate } = req.body;
+  const { name, description, status, sprintIds, plannerId, teamId, startDate, endDate } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'name is required' });
   }
@@ -31,6 +34,7 @@ router.post('/', (req, res) => {
     description: description || '',
     status: status || 'active',
     sprintIds: Array.isArray(sprintIds) ? sprintIds : [],
+    plannerId: plannerId || null,
     teamId: teamId || null,
     startDate: startDate || null,
     endDate: endDate || null,
@@ -55,13 +59,14 @@ router.put('/:id', (req, res) => {
     return res.status(404).json({ error: 'Project not found' });
   }
 
-  const { name, description, status, sprintIds, teamId, startDate, endDate } = req.body;
+  const { name, description, status, sprintIds, plannerId, teamId, startDate, endDate } = req.body;
   const project = store.projects[index];
 
   if (name) project.name = name;
   if (description !== undefined) project.description = description;
   if (status) project.status = status;
   if (sprintIds !== undefined) project.sprintIds = Array.isArray(sprintIds) ? sprintIds : [];
+  if (plannerId !== undefined) project.plannerId = plannerId;
   if (teamId !== undefined) project.teamId = teamId;
   if (startDate !== undefined) project.startDate = startDate;
   if (endDate !== undefined) project.endDate = endDate;
