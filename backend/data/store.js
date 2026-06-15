@@ -98,6 +98,11 @@ export async function seedData() {
     makeUser(felixId,        'Felix Schmidt',     'felix.schmidt@planner.dev',     userHash,   'user'),
   );
 
+  // ── Planner-IDs (müssen vor Teams deklariert sein) ───────────────────────
+  const planner1Id = uuidv4(); // Entwicklungs-Planner
+  const planner2Id = uuidv4(); // Design-Planner
+  const planner3Id = uuidv4(); // Management-Planner
+
   // ── Teams ─────────────────────────────────────────────────────────────────
   const team1Id = uuidv4(); // Entwicklung
   const team2Id = uuidv4(); // Design
@@ -165,10 +170,6 @@ export async function seedData() {
   );
 
   // ── Planner ───────────────────────────────────────────────────────────────
-  const planner1Id = uuidv4(); // Entwicklungs-Planner
-  const planner2Id = uuidv4(); // Design-Planner
-  const planner3Id = uuidv4(); // Management-Planner
-
   store.planners.push(
     {
       id: planner1Id,
