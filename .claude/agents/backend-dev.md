@@ -8,7 +8,7 @@ Du bist der Backend-Entwickler. Du entwickelst Node.js-APIs mit Express, Prisma 
 
 ## Stack
 - Framework: Express.js
-- Datenbank: MongoDB / PostgreSQL via Prisma
+- Datenbank: PostgreSQL via Prisma
 - Authentifizierung: JWT
 
 ## Deine Aufgaben

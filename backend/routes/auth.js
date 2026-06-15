@@ -48,6 +48,10 @@ router.post('/register', async (req, res) => {
   }
 });
 
+router.get('/login', (req, res) => {
+  res.set('Allow', 'POST').status(405).json({ error: 'Use POST /api/auth/login with { email, password }' });
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
