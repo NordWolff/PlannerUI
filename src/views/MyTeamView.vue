@@ -116,6 +116,7 @@ const ticketsByStatus = computed(() => {
         <table class="w-full">
           <thead class="bg-gray-50 dark:bg-gray-700/50">
             <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th class="px-6 py-3">ID</th>
               <th class="px-6 py-3">Titel</th>
               <th class="px-6 py-3">Status</th>
               <th class="px-6 py-3">Priorität</th>
@@ -124,6 +125,7 @@ const ticketsByStatus = computed(() => {
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
             <tr v-for="ticket in myTickets" :key="ticket.id" @click="selectedTicket = ticket" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+              <td class="px-6 py-3 text-xs font-mono text-indigo-500 dark:text-indigo-400 whitespace-nowrap">{{ ticket.ticketNumber }}</td>
               <td class="px-6 py-3 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">{{ ticket.title }}</td>
               <td class="px-6 py-3"><StatusBadge :status="ticket.status" /></td>
               <td class="px-6 py-3"><PriorityBadge v-if="ticket.priority" :priority="ticket.priority" /></td>
@@ -133,7 +135,7 @@ const ticketsByStatus = computed(() => {
               </td>
             </tr>
             <tr v-if="!myTickets.length">
-              <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets zugewiesen</td>
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets zugewiesen</td>
             </tr>
           </tbody>
         </table>
@@ -148,7 +150,10 @@ const ticketsByStatus = computed(() => {
           <div v-for="ticket in ticketsByStatus[status]" :key="ticket.id" @click="selectedTicket = ticket"
             class="bg-white dark:bg-gray-700 rounded-lg p-3 text-sm cursor-pointer hover:shadow-md border border-gray-200 dark:border-gray-600 transition-shadow">
             <div class="flex items-start justify-between gap-2">
-              <p class="font-medium text-gray-900 dark:text-white line-clamp-2 flex-1">{{ ticket.title }}</p>
+              <div class="flex-1 min-w-0">
+                <span v-if="ticket.ticketNumber" class="font-mono text-xs text-indigo-500 dark:text-indigo-400 block mb-0.5">{{ ticket.ticketNumber }}</span>
+                <p class="font-medium text-gray-900 dark:text-white line-clamp-2">{{ ticket.title }}</p>
+              </div>
               <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="sm" class="mt-0.5" />
               <div v-else class="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500 shrink-0 mt-0.5" title="Nicht zugewiesen" />
             </div>
