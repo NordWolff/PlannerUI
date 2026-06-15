@@ -19,7 +19,7 @@ onMounted(() => {
 
 async function login() {
   const ok = await authStore.login(form.email, form.password, rememberMe.value)
-  if (ok) router.push('/dashboard')
+  if (ok) router.push('/planners')
 }
 </script>
 
