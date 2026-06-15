@@ -71,6 +71,32 @@ const ticketsByStatus = computed(() => {
   })
   return map
 })
+
+const dragOverStatus = ref(null)
+
+function onDragStart(e, ticket) {
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('ticketId', ticket.id)
+}
+
+function onDragOver(e, status) {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+  dragOverStatus.value = status
+}
+
+function onDragLeave() {
+  dragOverStatus.value = null
+}
+
+async function onDrop(e, status) {
+  e.preventDefault()
+  dragOverStatus.value = null
+  const ticketId = e.dataTransfer.getData('ticketId')
+  if (ticketId) {
+    await ticketsStore.updateStatus(ticketId, status)
+  }
+}
 </script>
 
 <template>
@@ -116,7 +142,6 @@ const ticketsByStatus = computed(() => {
         <table class="w-full">
           <thead class="bg-gray-50 dark:bg-gray-700/50">
             <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              <th class="px-6 py-3">ID</th>
               <th class="px-6 py-3">Titel</th>
               <th class="px-6 py-3">Status</th>
               <th class="px-6 py-3">Priorität</th>
@@ -125,7 +150,6 @@ const ticketsByStatus = computed(() => {
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
             <tr v-for="ticket in myTickets" :key="ticket.id" @click="selectedTicket = ticket" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
-              <td class="px-6 py-3 text-xs font-mono text-indigo-500 dark:text-indigo-400 whitespace-nowrap">{{ ticket.ticketNumber }}</td>
               <td class="px-6 py-3 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">{{ ticket.title }}</td>
               <td class="px-6 py-3"><StatusBadge :status="ticket.status" /></td>
               <td class="px-6 py-3"><PriorityBadge v-if="ticket.priority" :priority="ticket.priority" /></td>
@@ -144,11 +168,21 @@ const ticketsByStatus = computed(() => {
 
     <!-- Mini-Kanban -->
     <div v-else class="flex gap-4 overflow-x-auto pb-4">
-      <div v-for="status in allStatuses" :key="status" class="bg-gray-100 dark:bg-gray-800/50 rounded-xl p-3 min-w-[240px] w-60">
+      <div v-for="status in allStatuses" :key="status"
+        class="rounded-xl p-3 min-w-[240px] w-60 transition-colors"
+        :class="dragOverStatus === status
+          ? 'bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-indigo-400'
+          : 'bg-gray-100 dark:bg-gray-800/50'"
+        @dragover="onDragOver($event, status)"
+        @dragleave="onDragLeave"
+        @drop="onDrop($event, status)">
         <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">{{ statusLabels[status] }} ({{ ticketsByStatus[status]?.length || 0 }})</h3>
         <div class="space-y-2">
-          <div v-for="ticket in ticketsByStatus[status]" :key="ticket.id" @click="selectedTicket = ticket"
-            class="bg-white dark:bg-gray-700 rounded-lg p-3 text-sm cursor-pointer hover:shadow-md border border-gray-200 dark:border-gray-600 transition-shadow">
+          <div v-for="ticket in ticketsByStatus[status]" :key="ticket.id"
+            draggable="true"
+            @dragstart="onDragStart($event, ticket)"
+            @click="selectedTicket = ticket"
+            class="bg-white dark:bg-gray-700 rounded-lg p-3 text-sm cursor-grab active:cursor-grabbing hover:shadow-md border border-gray-200 dark:border-gray-600 transition-shadow">
             <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
                 <span v-if="ticket.ticketNumber" class="font-mono text-xs text-indigo-500 dark:text-indigo-400 block mb-0.5">{{ ticket.ticketNumber }}</span>
@@ -163,7 +197,7 @@ const ticketsByStatus = computed(() => {
               <TicketTypeIcon :type="ticket.type || 'task'" />
             </div>
           </div>
-          <div v-if="!ticketsByStatus[status]?.length" class="py-4 text-center text-xs text-gray-400">Leer</div>
+          <div v-if="!ticketsByStatus[status]?.length" class="py-6 text-center text-xs text-gray-400">Leer</div>
         </div>
       </div>
     </div>
