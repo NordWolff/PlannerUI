@@ -175,6 +175,7 @@ export async function seedData() {
       id: planner1Id,
       name: 'Entwicklungs-Planner',
       description: 'Planner für das Entwicklungs- und QA-Team',
+      createdBy: miladId,
       members: [
         { userId: miladId,        role: 'owner'  },
         { userId: thomasWolffId,  role: 'member' },
@@ -192,6 +193,7 @@ export async function seedData() {
       id: planner2Id,
       name: 'Design-Planner',
       description: 'Planner für das Design-Team',
+      createdBy: kayId,
       members: [
         { userId: kayId,    role: 'owner'  },
         { userId: cindyId,  role: 'member' },
@@ -206,6 +208,7 @@ export async function seedData() {
       id: planner3Id,
       name: 'Management-Planner',
       description: 'Planner für Projektleitung und übergreifende Koordination',
+      createdBy: miladId,
       members: [
         { userId: miladId,   role: 'owner'  },
         { userId: kayId,     role: 'member' },

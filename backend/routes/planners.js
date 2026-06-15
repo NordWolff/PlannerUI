@@ -45,6 +45,7 @@ router.post('/', requireAdmin, (req, res) => {
     members: members || [],
     ticketPrefix: 'TKT',
     ticketCounter: 1,
+    createdBy: req.user.id,
     createdAt: new Date().toISOString(),
   };
 
