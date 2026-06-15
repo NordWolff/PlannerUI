@@ -7,12 +7,14 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get('/', (req, res) => {
-  return res.json(store.teams);
+  let teams = store.teams;
+  if (req.query.plannerId) teams = teams.filter(t => t.plannerId === req.query.plannerId);
+  return res.json(teams);
 });
 
-// Admin erstellt Team — kein Auto-Owner, optional ownerId mitgeben
+// Admin erstellt Team — optional ownerId und plannerId
 router.post('/', requireAdmin, (req, res) => {
-  const { name, description, ownerId } = req.body;
+  const { name, description, ownerId, plannerId } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   const members = [];
@@ -27,6 +29,7 @@ router.post('/', requireAdmin, (req, res) => {
     id: uuidv4(),
     name,
     description: description || '',
+    plannerId: plannerId || null,
     boardId: null,
     members,
     createdAt: new Date().toISOString(),

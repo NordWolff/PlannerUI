@@ -161,7 +161,8 @@ function plannerUserEmail(userId) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadUsers(), loadRequests(), teamsStore.fetchTeams(), boardsStore.fetchBoards(), loadSettings(), plannersStore.fetchPlanners()])
+  const pid = route.params.plannerId
+  await Promise.all([loadUsers(), loadRequests(), teamsStore.fetchTeams(pid ? { plannerId: pid } : {}), boardsStore.fetchBoards(pid ? { plannerId: pid } : {}), loadSettings(), plannersStore.fetchPlanners()])
 })
 
 // ─── Benutzer ─────────────────────────────────────────────────────────────────

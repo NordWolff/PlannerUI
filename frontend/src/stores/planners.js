@@ -5,6 +5,7 @@ import { useProjectsStore } from './projects'
 import { useBoardsStore } from './boards'
 import { useSprintsStore } from './sprints'
 import { useTicketsStore } from './tickets'
+import { useTeamsStore } from './teams'
 
 const ACTIVE_PLANNER_KEY = 'planner_active_id'
 
@@ -37,6 +38,7 @@ export const usePlannersStore = defineStore('planners', () => {
       useBoardsStore().clear()
       useSprintsStore().clear()
       useTicketsStore().clear()
+      useTeamsStore().clear()
     }
     activePlannerId.value = id
     if (id) {
@@ -72,13 +74,6 @@ export const usePlannersStore = defineStore('planners', () => {
     return data
   }
 
-  async function updateTeams(id, teamIds) {
-    const { data } = await api.put(`/planners/${id}/teams`, { teamIds })
-    const idx = planners.value.findIndex(p => p.id === id)
-    if (idx !== -1) planners.value[idx] = data
-    return data
-  }
-
   async function updateSettings(id, { ticketPrefix }) {
     const { data } = await api.put(`/planners/${id}/settings`, { ticketPrefix })
     const idx = planners.value.findIndex(p => p.id === id)
@@ -90,6 +85,6 @@ export const usePlannersStore = defineStore('planners', () => {
     planners, activePlannerId, activePlanner, loading,
     fetchPlanners, setActivePlanner,
     createPlanner, updatePlanner, deletePlanner,
-    updateMembers, updateTeams, updateSettings,
+    updateMembers, updateSettings,
   }
 })

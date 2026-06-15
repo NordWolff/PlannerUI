@@ -7,15 +7,17 @@ export const useTeamsStore = defineStore('teams', () => {
   const currentTeam = ref(null)
   const loading = ref(false)
 
-  async function fetchTeams() {
+  async function fetchTeams(filters = {}) {
     loading.value = true
     try {
-      const { data } = await api.get('/teams')
+      const { data } = await api.get('/teams', { params: filters })
       teams.value = data
     } finally {
       loading.value = false
     }
   }
+
+  function clear() { teams.value = []; currentTeam.value = null }
 
   async function createTeam(teamData) {
     const { data } = await api.post('/teams', teamData)
@@ -54,5 +56,5 @@ export const useTeamsStore = defineStore('teams', () => {
     currentTeam.value = team
   }
 
-  return { teams, currentTeam, loading, fetchTeams, createTeam, updateTeam, deleteTeam, addMember, removeMember, setCurrentTeam }
+  return { teams, currentTeam, loading, fetchTeams, createTeam, updateTeam, deleteTeam, addMember, removeMember, setCurrentTeam, clear }
 })

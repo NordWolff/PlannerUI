@@ -49,7 +49,7 @@ async function openCreate(tab) {
   if (tab !== 'request') {
     const pid = plannersStore.activePlannerId
     const plannerFilter = pid ? { plannerId: pid } : {}
-    await Promise.all([fetchUsers(), teamsStore.fetchTeams(), boardsStore.fetchBoards(plannerFilter), sprintsStore.fetchSprints(plannerFilter)])
+    await Promise.all([fetchUsers(), teamsStore.fetchTeams(plannerFilter), boardsStore.fetchBoards(plannerFilter), sprintsStore.fetchSprints(plannerFilter)])
     if (!ticketForm.boardId && boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
     projectForm.plannerId = pid
   }

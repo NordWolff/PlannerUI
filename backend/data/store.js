@@ -109,6 +109,7 @@ export async function seedData() {
       id: team1Id,
       name: 'Entwicklung',
       description: 'Backend- und Frontend-Entwicklung',
+      plannerId: planner1Id,
       boardId: null,
       members: [
         { userId: miladId,        role: 'owner'  },
@@ -123,6 +124,7 @@ export async function seedData() {
       id: team2Id,
       name: 'Design',
       description: 'UX/UI Design und Kreation',
+      plannerId: planner2Id,
       boardId: null,
       members: [
         { userId: kayId,     role: 'owner'  },
@@ -136,6 +138,7 @@ export async function seedData() {
       id: team3Id,
       name: 'Management',
       description: 'Projektleitung und Koordination',
+      plannerId: planner3Id,
       boardId: null,
       members: [
         { userId: miladId,   role: 'owner'  },
@@ -149,6 +152,7 @@ export async function seedData() {
       id: team4Id,
       name: 'QA & Testing',
       description: 'Qualitätssicherung und Testautomatisierung',
+      plannerId: planner1Id,
       boardId: null,
       members: [
         { userId: torstenKloseId, role: 'owner'  },
@@ -170,7 +174,6 @@ export async function seedData() {
       id: planner1Id,
       name: 'Entwicklungs-Planner',
       description: 'Planner für das Entwicklungs- und QA-Team',
-      teamIds: [team1Id, team4Id],
       members: [
         { userId: miladId,        role: 'owner'  },
         { userId: thomasWolffId,  role: 'member' },
@@ -188,7 +191,6 @@ export async function seedData() {
       id: planner2Id,
       name: 'Design-Planner',
       description: 'Planner für das Design-Team',
-      teamIds: [team2Id],
       members: [
         { userId: kayId,    role: 'owner'  },
         { userId: cindyId,  role: 'member' },
@@ -203,7 +205,6 @@ export async function seedData() {
       id: planner3Id,
       name: 'Management-Planner',
       description: 'Planner für Projektleitung und übergreifende Koordination',
-      teamIds: [team3Id],
       members: [
         { userId: miladId,   role: 'owner'  },
         { userId: kayId,     role: 'member' },

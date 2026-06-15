@@ -3,7 +3,6 @@ import { onMounted, ref, computed, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
-import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/common/BaseModal.vue'
@@ -14,7 +13,6 @@ import { generateAvatar } from '@/utils/avatar'
 const route        = useRoute()
 const teamsStore   = useTeamsStore()
 const sprintsStore = useSprintsStore()
-const plannersStore = usePlannersStore()
 const authStore    = useAuthStore()
 const toast        = useToast()
 
@@ -41,7 +39,7 @@ const allUsers = ref([])
 onMounted(async () => {
   const plannerId = route.params.plannerId
   const filter = plannerId ? { plannerId } : {}
-  await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints(filter)])
+  await Promise.all([teamsStore.fetchTeams(filter), sprintsStore.fetchSprints(filter)])
   try {
     const { data } = await api.get('/users')
     allUsers.value = data
@@ -61,13 +59,9 @@ const sortedMembers = computed(() => {
   return [...members].sort((a, b) => (a.role === 'owner' ? -1 : b.role === 'owner' ? 1 : 0))
 })
 
-const filteredTeams = computed(() => {
-  const plannerTeamIds = plannersStore.activePlanner?.teamIds ?? null
-  return teamsStore.teams.filter(t => {
-    if (plannerTeamIds && !plannerTeamIds.includes(t.id)) return false
-    return t.name.toLowerCase().includes(search.value.toLowerCase())
-  })
-})
+const filteredTeams = computed(() =>
+  teamsStore.teams.filter(t => t.name.toLowerCase().includes(search.value.toLowerCase()))
+)
 
 async function searchUsers(q) {
   if (q.length < 2) { memberSearchResults.value = []; return }
@@ -123,7 +117,7 @@ async function saveTeam() {
     await teamsStore.updateTeam(editingTeam.value.id, teamForm)
     toast.success('Team aktualisiert')
   } else {
-    await teamsStore.createTeam(teamForm)
+    await teamsStore.createTeam({ ...teamForm, plannerId: route.params.plannerId || null })
     toast.success('Team erstellt')
   }
   showCreateModal.value = false
