@@ -24,6 +24,7 @@ async function login() {
   if (!ok) return
   const favId = authStore.favoritePlannerId
   if (favId) {
+    await plannersStore.fetchPlanners()
     plannersStore.setActivePlanner(favId)
     router.push(`/planner/${favId}/dashboard`)
   } else {
