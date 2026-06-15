@@ -88,14 +88,14 @@ npm run dev
 
 ## Demo-Zugangsdaten
 
-| Rolle | E-Mail | Passwort |
-|---|---|---|
-| Admin | admin@planner.dev | admin123 |
-| Owner (Milad) | milad@planner.dev | owner123 |
-| Owner (Kay) | kay@planner.dev | owner123 |
-| Benutzer | thomas.wolff@planner.dev | user123 |
-| Benutzer | torsten.klose@planner.dev | user123 |
-| Benutzer | cindy.scholka@planner.dev | user123 |
+| Rolle | E-Mail | Passwort | Planner-Zugang |
+|---|---|---|---|
+| Admin | admin@planner.dev | admin123 | alle Planner |
+| Owner (Milad) | milad@planner.dev | owner123 | Entwicklungs-Planner, Management-Planner |
+| Owner (Kay) | kay@planner.dev | owner123 | Design-Planner |
+| Benutzer | thomas.wolff@planner.dev | user123 | Entwicklungs-Planner |
+| Benutzer | torsten.klose@planner.dev | user123 | Entwicklungs-Planner |
+| Benutzer | cindy.scholka@planner.dev | user123 | Design-Planner |
 
 Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `thomas.wunderlich`, `lisa.hartmann`, `kevin.mueller`, `sandra.braun`, `felix.schmidt` — jeweils `@planner.dev`
 
@@ -195,18 +195,44 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - `@username` hebt Erwähnungen hervor
 - `#TKT-0001` — existierende Tickets werden als klickbares Badge gerendert und öffnen das TicketModal per Klick; nicht-existierende Nummern erscheinen als grauer Monospace-Text
 
-### Admin-Bereich (`/admin` — nur Admins)
-- Route ist durch Router-Guard gesichert — Nicht-Admins werden zu `/dashboard` weitergeleitet
+### Multi-Planner (`/planners`)
+- **Planner** ist die oberste Organisationseinheit — jeder Planner hat eigene Teams, Projekte, Sprints, Boards und Tickets
+- Benutzer sind global und können mehreren Plannern angehören (mit je eigener Rolle)
+- Nach dem Login landet der Benutzer auf der **Planner-Auswahl** (`/planners`)
+- Aktiver Planner wird in `localStorage` gespeichert — beim Wechsel werden alle Daten-Stores geleert
+- URL-Struktur: `/planner/:plannerId/dashboard`, `/planner/:plannerId/kanban` usw.
+- **Ticket-Nummerierung je Planner:** jeder Planner hat eigenen Präfix (`ENT-`, `DSN-`, `MGT-`) und unabhängigen Zähler
+- Seed-Daten: 3 Planner (Entwicklung, Design, Management) mit eigenen Teams, Projekten und Tickets
+
+### Favorit-Planner
+- Jeder Benutzer kann einen Planner als **Startplanner** markieren (Stern-Icon auf der Auswahlseite)
+- Der Favorit erscheint auf der Planner-Auswahl immer ganz oben und ist mit goldenem Rahmen + **„Startplanner"**-Label gekennzeichnet
+- Nach dem Login wird bei gesetztem Favoriten direkt zum Planner-Dashboard weitergeleitet — ohne Umweg über die Auswahlseite
+- Stern erscheint beim Hover, Klick toggelt den Favoriten; ein weiterer Klick hebt ihn wieder auf
+
+### Planner-Verwaltung (`/planner-admin` — nur Admins)
+- Alle Planner auf einen Blick mit Ticket-Präfix, Mitglieder-Avataren, Teamanzahl und **Ersteller**
+- Eigene (erstellte) Planner werden oben sortiert und mit **„Mein Planner"**-Badge gekennzeichnet
+- **Verwalten-Modal** mit 4 Tabs:
+  - **Info:** Name und Beschreibung bearbeiten
+  - **Mitglieder:** Benutzer hinzufügen (mit Planner-Rolle), Rolle ändern, entfernen
+  - **Teams:** Planner-eigene Teams erstellen, umbenennen, löschen; Team-Mitglieder verwalten (hinzufügen / entfernen)
+  - **Einstellungen:** Ticket-Präfix pro Planner konfigurieren (z. B. `ENT` → `ENT-0015`)
+
+### Admin-Bereich (`/planner/:id/admin` — nur Admins)
+- Route ist durch Router-Guard gesichert — Nicht-Admins werden zur Planner-Auswahl weitergeleitet
 - Startet auf Tab **„Anfragen"** mit rotem Badge-Zähler für offene Anfragen
 - **Anfragen:** alle eingegangenen Feature-/Bug-Anfragen aller Benutzer
   - Typ-Badge (`✨ Feature` / `🐛 Bug`), Avatar und Zeitstempel des Absenders
   - Status-Dropdown pro Anfrage: Offen → In Arbeit → Erledigt → Abgelehnt
-  - Admin-Notiz-Feld (interne Kommentare)
-  - Anfrage löschen
-- **Benutzer:** Rollen (admin / owner / user) per Dropdown vergeben
-- **Teams:** alle Teams einsehen und löschen
+  - Admin-Notiz-Feld (interne Kommentare), Anfrage löschen
+- **Planner-Zugang:** Mitglieder des aktuellen Planners verwalten (hinzufügen, Rolle ändern, entfernen)
+- **Benutzer:** Systemrollen (admin / owner / user) per Dropdown vergeben
+- **Teams:** Teams des aktuellen Planners erstellen, bearbeiten und löschen
 - **Boards:** erstellen (mit Datum), bearbeiten und löschen
-- **Einstellungen:** Ticket-Präfix (z. B. `FEED`, `TKG`) und Startzähler anpassen, Vorschau der nächsten Nummer
+- **Einstellungen:**
+  - **Ticket-Präfix je Planner** — alle Planner auf einen Blick mit editierbarem Präfix-Input und aktuellem Zählerstand
+  - **Globaler Fallback** — Präfix und Zähler für Tickets ohne Planner-Zuordnung
 
 ### „Erstellen"-Button im Header
 - **Dropdown-Menü** mit drei Optionen: 🎟 Ticket, 📁 Projekt, 📨 Anfrage
@@ -243,7 +269,14 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | GET | `/api/users` | Alle Benutzer |
 | GET | `/api/users/search?q=` | Benutzer suchen |
 | PUT | `/api/users/:id/role` | Rolle setzen (Admin) |
-| GET/POST | `/api/teams` | Teams abrufen / erstellen |
+| PUT | `/api/users/:id/favorites` | Favoriten setzen (teamId, projectId, boardId, plannerId) |
+| GET | `/api/planners` | Alle zugänglichen Planner abrufen |
+| POST | `/api/planners` | Neuen Planner erstellen (Admin) |
+| PUT | `/api/planners/:id` | Planner-Info aktualisieren (Admin) |
+| DELETE | `/api/planners/:id` | Planner löschen (Admin) |
+| PUT | `/api/planners/:id/members` | Mitgliederliste setzen `[{userId, role}]` (Admin) |
+| PUT | `/api/planners/:id/settings` | Ticket-Präfix konfigurieren (Admin) |
+| GET/POST | `/api/teams` | Teams abrufen (`?plannerId=`) / erstellen |
 | POST | `/api/teams/:id/members` | Mitglied hinzufügen |
 | PUT | `/api/teams/:id/members/:uid/role` | Ownership übertragen |
 | DELETE | `/api/teams/:id/members/:uid` | Mitglied entfernen |
@@ -277,6 +310,37 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v2.3.0 — Favorit-Planner & Login-Fix
+- Benutzer können einen Planner als **Startplanner** markieren (Stern-Icon, per Hover sichtbar)
+- Favorit: goldener Kartenrahmen, „Startplanner"-Label, immer ganz oben auf der Auswahlseite
+- Nach dem Login → direkter Redirect zum Favoriten-Planner-Dashboard (wenn gesetzt)
+- Stern toggelt: erneuter Klick hebt den Favoriten auf; Wert wird serverseitig als `favorites.plannerId` gespeichert
+- Fix: Login-Redirect zeigt nun korrekt `/planners` (statt der ungültigen Route `/dashboard`)
+
+### v2.2.0 — Admin-Bereich Erweiterungen
+- **Teams-Tab im Admin:** „Bearbeiten"-Button mit Modal (Name, Beschreibung); „Team erstellen"-Button ergänzt
+- **Einstellungen-Tab:** neue Karte „Ticket-Präfix je Planner" — alle Planner tabellarisch mit Präfix-Input und Zählerstand; globaler Fallback bleibt erhalten
+- **Planner-Verwaltung:** zeigt „Erstellt von"-Feld (aus `createdBy`-Attribut); eigene Planner mit „Mein Planner"-Badge; eigene Planner werden immer zuerst sortiert
+- Backend: `createdBy: req.user.id` beim Erstellen eines Planners; Seed-Daten mit Owner als Ersteller
+
+### v2.1.0 — Teams gehören zum Planner
+- Teams haben jetzt ein `plannerId`-Feld — jedes Team gehört genau einem Planner
+- `planner.teamIds` vollständig entfernt; Backend liefert stattdessen `teamCount` via `enrich()`-Hilfsfunktion
+- `GET /teams?plannerId=` filtert Teams planner-spezifisch
+- Planner-Verwaltung Teams-Tab: direkte Verwaltung der Planner-eigenen Teams (kein Checkbox-Zuweisung-Mechanismus mehr)
+- Store-Reset beim Planner-Wechsel schließt `TeamsStore` ein (`clear()`)
+- **Planner-Zugang im Admin-Bereich:** neuer Tab zum Verwalten der Mitglieder des aktuellen Planners
+
+### v2.0.0 — Multi-Planner-Architektur
+- **Planner** als neue Top-Level-Einheit: Admin erstellt Planner, weist Teams und Benutzer zu
+- Jeder Planner hat eigene Projects, Tickets, Sprints, Boards — vollständige Datenisolation
+- URL-Struktur: `/planners` (Auswahl) → `/planner/:plannerId/dashboard` (Inhalt)
+- Aktiver Planner in `localStorage` (`planner_active_id`); Stores werden beim Wechsel geleert
+- **Planner-Admin** unter `/planner-admin`: CRUD, Mitglieder- und Teamverwaltung, Ticket-Präfix pro Planner
+- **Planner-spezifische Ticket-Nummerierung**: Präfix und Zähler je Planner (`ENT-0001`, `DSN-0001`, `MGT-0001`)
+- Seed-Daten: 3 Planner (Entwicklung `ENT`, Design `DSN`, Management `MGT`), 4 Teams, 5 Projekte, 14 Tickets, 3 Sprints
+- Router-Guard: `requiresPlanner` setzt aktiven Planner; `requiresAdmin` blockiert Nicht-Admins
 
 ### v1.3.0 — Sprint-Verwaltung im Team-Bereich
 - **Sprints-Sektion** auf der Teams-Seite: Erstellen, Bearbeiten, Starten, Abschließen und Löschen von Sprints
