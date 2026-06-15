@@ -23,6 +23,54 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 
+/* Brand-Gradient */
+.brand-gradient {
+  background: linear-gradient(135deg, #818cf8, #e879f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Header: Glassmorphism + Magenta-Unterrand */
+.app-header {
+  position: relative;
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(232, 72, 144, 0.15) 20%,
+    rgba(232, 72, 144, 0.45) 50%,
+    rgba(232, 72, 144, 0.15) 80%,
+    transparent 100%
+  );
+}
+.dark .app-header::after {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(232, 72, 144, 0.35) 20%,
+    rgba(232, 72, 144, 0.75) 50%,
+    rgba(232, 72, 144, 0.35) 80%,
+    transparent 100%
+  );
+}
+
+/* Erstellen-Button Glow */
+.btn-create {
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.28), 0 1px 3px rgba(0,0,0,0.1);
+}
+.dark .btn-create {
+  box-shadow: 0 0 20px rgba(232, 72, 144, 0.38), 0 0 6px rgba(232, 72, 144, 0.18);
+}
+.btn-create:hover {
+  box-shadow: 0 4px 18px rgba(232, 72, 144, 0.45), 0 1px 4px rgba(0,0,0,0.12);
+}
+
 /* App-Hintergrund mit Magenta-Strahlverlauf */
 .app-bg {
   min-height: 100vh;
