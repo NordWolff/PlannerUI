@@ -26,7 +26,7 @@ const createForm = reactive({ name: '', description: '' })
 async function saveCreate() {
   if (!createForm.name.trim()) return
   try {
-    await plannersStore.createPlanner({ name: createForm.name, description: createForm.description, teamIds: [], members: [] })
+    await plannersStore.createPlanner({ name: createForm.name, description: createForm.description, members: [] })
     toast.success('Planner erstellt')
     showCreateModal.value = false
     Object.assign(createForm, { name: '', description: '' })
@@ -34,7 +34,7 @@ async function saveCreate() {
 }
 
 // ── Detail-Modal ───────────────────────────────────────────────────────────
-const detailPlanner = ref(null)   // aktuell geöffneter Planner
+const detailPlanner = ref(null)
 const activeTab = ref('info')
 
 const infoForm = reactive({ name: '', description: '' })
@@ -48,6 +48,7 @@ function openDetail(planner) {
   newTeamForm.name = ''
   newTeamForm.description = ''
   ticketPrefixInput.value = planner.ticketPrefix ?? 'TKT'
+  teamsStore.fetchTeams({ plannerId: planner.id })
 }
 
 function closeDetail() { detailPlanner.value = null }
@@ -108,19 +109,7 @@ const newTeamForm = reactive({ name: '', description: '' })
 const addMemberTeamId = ref(null)
 const newTeamMember = reactive({ userId: '', role: 'member' })
 
-const plannerTeamIds = computed(() => detailPlanner.value?.teamIds ?? [])
-const plannerTeams   = computed(() => teamsStore.teams.filter(t => plannerTeamIds.value.includes(t.id)))
-
-async function toggleTeamAssign(teamId) {
-  const current = [...plannerTeamIds.value]
-  const next = current.includes(teamId)
-    ? current.filter(id => id !== teamId)
-    : [...current, teamId]
-  try {
-    await plannersStore.updateTeams(detailPlanner.value.id, next)
-    detailPlanner.value = plannersStore.planners.find(p => p.id === detailPlanner.value.id)
-  } catch { toast.error('Fehler') }
-}
+const plannerTeams = computed(() => teamsStore.teams)
 
 function startEditTeam(team) {
   editingTeam.value = team.id
@@ -138,14 +127,16 @@ async function saveEditTeam(teamId) {
 async function createTeam() {
   if (!newTeamForm.name.trim()) return
   try {
-    const team = await teamsStore.createTeam({ name: newTeamForm.name, description: newTeamForm.description })
-    // Direkt dem Planner zuweisen
-    const next = [...plannerTeamIds.value, team.id]
-    await plannersStore.updateTeams(detailPlanner.value.id, next)
+    await teamsStore.createTeam({
+      name: newTeamForm.name,
+      description: newTeamForm.description,
+      plannerId: detailPlanner.value.id,
+    })
+    await plannersStore.fetchPlanners()
     detailPlanner.value = plannersStore.planners.find(p => p.id === detailPlanner.value.id)
     newTeamForm.name = ''
     newTeamForm.description = ''
-    toast.success('Team erstellt und zugewiesen')
+    toast.success('Team erstellt')
   } catch { toast.error('Fehler') }
 }
 
@@ -153,8 +144,7 @@ async function deleteTeam(teamId) {
   if (!confirm('Team wirklich löschen?')) return
   try {
     await teamsStore.deleteTeam(teamId)
-    const next = plannerTeamIds.value.filter(id => id !== teamId)
-    await plannersStore.updateTeams(detailPlanner.value.id, next)
+    await plannersStore.fetchPlanners()
     detailPlanner.value = plannersStore.planners.find(p => p.id === detailPlanner.value.id)
     toast.info('Team gelöscht')
   } catch { toast.error('Fehler') }
@@ -208,14 +198,12 @@ async function deletePlanner(planner) {
 }
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────
-function userName(id)   { return users.value.find(u => u.id === id)?.username ?? id }
-function teamName(id)   { return teamsStore.teams.find(t => t.id === id)?.name ?? id }
+function userName(id) { return users.value.find(u => u.id === id)?.username ?? id }
 
 const ROLE_LABELS = { owner: 'Verantwortlicher', member: 'Mitglied' }
 
 onMounted(() => Promise.all([
   plannersStore.fetchPlanners(),
-  teamsStore.fetchTeams(),
   fetchUsers(),
 ]))
 </script>
@@ -261,13 +249,11 @@ onMounted(() => Promise.all([
           </div>
         </div>
 
-        <!-- Teams -->
-        <div class="flex flex-wrap gap-1.5">
-          <span v-for="tid in (planner.teamIds ?? [])" :key="tid"
-            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-            {{ teamName(tid) }}
-          </span>
-          <span v-if="!(planner.teamIds?.length)" class="text-xs text-gray-400 italic">Keine Teams</span>
+        <!-- Statistik-Zeile -->
+        <div class="flex gap-3 text-xs text-gray-400">
+          <span>{{ planner.members?.length ?? 0 }} Mitglieder</span>
+          <span>·</span>
+          <span>{{ planner.teamCount ?? 0 }} Teams</span>
         </div>
 
         <!-- Member-Avatare -->
@@ -308,7 +294,7 @@ onMounted(() => Promise.all([
         <button v-for="tab in [
             { id: 'info',       label: 'Info' },
             { id: 'members',    label: 'Mitglieder', count: detailPlanner.members?.length },
-            { id: 'teams',      label: 'Teams',      count: detailPlanner.teamIds?.length },
+            { id: 'teams',      label: 'Teams',      count: detailPlanner.teamCount ?? 0 },
             { id: 'settings',   label: 'Einstellungen' },
           ]" :key="tab.id"
           @click="activeTab = tab.id"
@@ -319,7 +305,7 @@ onMounted(() => Promise.all([
           {{ tab.label }}
           <span v-if="tab.count !== undefined"
             class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-1.5 py-0.5">
-            {{ tab.count ?? 0 }}
+            {{ tab.count }}
           </span>
         </button>
       </div>
@@ -397,7 +383,7 @@ onMounted(() => Promise.all([
         <!-- Neues Team erstellen -->
         <details class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
           <summary class="px-4 py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer select-none hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg">
-            + Neues Team erstellen und zuweisen
+            + Neues Team erstellen
           </summary>
           <div class="px-4 pb-4 pt-2 space-y-3">
             <div>
@@ -412,100 +398,86 @@ onMounted(() => Promise.all([
           </div>
         </details>
 
-        <!-- Alle Teams — zuweisen/entziehen -->
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Teams zuweisen</p>
-          <div class="rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden max-h-36 overflow-y-auto">
-            <label v-for="team in teamsStore.teams" :key="team.id"
-              class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 cursor-pointer">
-              <input type="checkbox" :checked="plannerTeamIds.includes(team.id)"
-                @change="toggleTeamAssign(team.id)"
-                class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-              <span class="text-sm text-gray-800 dark:text-gray-200">{{ team.name }}</span>
-              <span v-if="team.description" class="text-xs text-gray-400 truncate">— {{ team.description }}</span>
-            </label>
-            <div v-if="!teamsStore.teams.length" class="px-4 py-3 text-sm text-gray-400 italic text-center">Keine Teams vorhanden</div>
-          </div>
-        </div>
+        <!-- Teams dieses Planners -->
+        <div v-if="plannerTeams.length" class="space-y-2">
+          <div v-for="team in plannerTeams" :key="team.id"
+            class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
 
-        <!-- Zugewiesene Teams — Details / Mitglieder -->
-        <div v-if="plannerTeams.length">
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Zugewiesene Teams</p>
-          <div class="space-y-2">
-            <div v-for="team in plannerTeams" :key="team.id"
-              class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-
-              <!-- Team-Header -->
-              <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700/50">
-                <button @click="expandedTeamId = expandedTeamId === team.id ? null : team.id"
-                  class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
-                  <svg class="w-4 h-4 transition-transform" :class="expandedTeamId === team.id ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </button>
-                <div class="flex-1 min-w-0">
-                  <template v-if="editingTeam === team.id">
-                    <div class="flex gap-2">
-                      <input v-model="editTeamForm.name" class="input-field text-sm py-1 flex-1" @keyup.enter="saveEditTeam(team.id)" />
-                      <input v-model="editTeamForm.description" class="input-field text-sm py-1 flex-1" placeholder="Beschreibung" />
-                    </div>
-                  </template>
-                  <template v-else>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
-                    <p v-if="team.description" class="text-xs text-gray-400 truncate">{{ team.description }}</p>
-                  </template>
-                </div>
-                <div class="flex gap-1.5 shrink-0">
-                  <template v-if="editingTeam === team.id">
-                    <button @click="saveEditTeam(team.id)" class="text-xs text-green-600 hover:underline">Speichern</button>
-                    <button @click="editingTeam = null" class="text-xs text-gray-400 hover:underline">Abbrechen</button>
-                  </template>
-                  <template v-else>
-                    <button @click="startEditTeam(team)" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Bearbeiten</button>
-                    <button @click="deleteTeam(team.id)" class="text-xs text-red-500 hover:underline">Löschen</button>
-                  </template>
-                </div>
-              </div>
-
-              <!-- Team-Mitglieder (aufgeklappt) -->
-              <div v-if="expandedTeamId === team.id" class="px-4 pb-3 pt-2 space-y-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <div v-for="m in (team.members ?? [])" :key="m.userId"
-                    class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs">
-                    <UserAvatar :username="userName(m.userId)" size="xs" />
-                    <span class="text-gray-700 dark:text-gray-300">{{ userName(m.userId) }}</span>
-                    <span class="text-gray-400">· {{ m.role === 'owner' ? 'Owner' : 'Mitglied' }}</span>
-                    <button @click="removeTeamMember(team.id, m.userId)"
-                      class="text-red-400 hover:text-red-600 ml-1">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                    </button>
+            <!-- Team-Header -->
+            <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700/50">
+              <button @click="expandedTeamId = expandedTeamId === team.id ? null : team.id"
+                class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                <svg class="w-4 h-4 transition-transform" :class="expandedTeamId === team.id ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+              <div class="flex-1 min-w-0">
+                <template v-if="editingTeam === team.id">
+                  <div class="flex gap-2">
+                    <input v-model="editTeamForm.name" class="input-field text-sm py-1 flex-1" @keyup.enter="saveEditTeam(team.id)" />
+                    <input v-model="editTeamForm.description" class="input-field text-sm py-1 flex-1" placeholder="Beschreibung" />
                   </div>
-                  <span v-if="!(team.members?.length)" class="text-xs text-gray-400 italic">Keine Mitglieder</span>
-                </div>
-
-                <!-- Mitglied zum Team hinzufügen -->
-                <div v-if="addMemberTeamId === team.id" class="flex gap-2 flex-wrap items-end pt-1">
-                  <select v-model="newTeamMember.userId" class="input-field text-sm flex-1 min-w-36">
-                    <option value="">-- Benutzer wählen --</option>
-                    <option v-for="u in usersNotInTeam(team)" :key="u.id" :value="u.id">{{ u.username }}</option>
-                  </select>
-                  <select v-model="newTeamMember.role" class="input-field text-sm w-32">
-                    <option value="member">Mitglied</option>
-                    <option value="owner">Owner</option>
-                  </select>
-                  <button @click="addTeamMember(team.id)" :disabled="!newTeamMember.userId" class="btn-primary text-sm py-1.5">Hinzufügen</button>
-                  <button @click="addMemberTeamId = null; newTeamMember.userId = ''" class="btn-secondary text-sm py-1.5">Abbrechen</button>
-                </div>
-                <button v-else @click="addMemberTeamId = team.id; newTeamMember.userId = ''; newTeamMember.role = 'member'"
-                  class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
-                  + Mitglied hinzufügen
-                </button>
+                </template>
+                <template v-else>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
+                  <p v-if="team.description" class="text-xs text-gray-400 truncate">{{ team.description }}</p>
+                </template>
               </div>
+              <div class="flex gap-1.5 shrink-0">
+                <template v-if="editingTeam === team.id">
+                  <button @click="saveEditTeam(team.id)" class="text-xs text-green-600 hover:underline">Speichern</button>
+                  <button @click="editingTeam = null" class="text-xs text-gray-400 hover:underline">Abbrechen</button>
+                </template>
+                <template v-else>
+                  <button @click="startEditTeam(team)" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Bearbeiten</button>
+                  <button @click="deleteTeam(team.id)" class="text-xs text-red-500 hover:underline">Löschen</button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Team-Mitglieder (aufgeklappt) -->
+            <div v-if="expandedTeamId === team.id" class="px-4 pb-3 pt-2 space-y-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <div v-for="m in (team.members ?? [])" :key="m.userId"
+                  class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs">
+                  <UserAvatar :username="userName(m.userId)" size="xs" />
+                  <span class="text-gray-700 dark:text-gray-300">{{ userName(m.userId) }}</span>
+                  <span class="text-gray-400">· {{ m.role === 'owner' ? 'Owner' : 'Mitglied' }}</span>
+                  <button @click="removeTeamMember(team.id, m.userId)"
+                    class="text-red-400 hover:text-red-600 ml-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+                <span v-if="!(team.members?.length)" class="text-xs text-gray-400 italic">Keine Mitglieder</span>
+              </div>
+
+              <!-- Mitglied zum Team hinzufügen -->
+              <div v-if="addMemberTeamId === team.id" class="flex gap-2 flex-wrap items-end pt-1">
+                <select v-model="newTeamMember.userId" class="input-field text-sm flex-1 min-w-36">
+                  <option value="">-- Benutzer wählen --</option>
+                  <option v-for="u in usersNotInTeam(team)" :key="u.id" :value="u.id">{{ u.username }}</option>
+                </select>
+                <select v-model="newTeamMember.role" class="input-field text-sm w-32">
+                  <option value="member">Mitglied</option>
+                  <option value="owner">Owner</option>
+                </select>
+                <button @click="addTeamMember(team.id)" :disabled="!newTeamMember.userId" class="btn-primary text-sm py-1.5">Hinzufügen</button>
+                <button @click="addMemberTeamId = null; newTeamMember.userId = ''" class="btn-secondary text-sm py-1.5">Abbrechen</button>
+              </div>
+              <button v-else @click="addMemberTeamId = team.id; newTeamMember.userId = ''; newTeamMember.role = 'member'"
+                class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                + Mitglied hinzufügen
+              </button>
             </div>
           </div>
         </div>
+
+        <div v-else-if="!teamsStore.loading" class="py-8 text-center text-sm text-gray-400 italic">
+          Noch keine Teams in diesem Planner
+        </div>
+        <div v-else class="py-4 text-center text-sm text-gray-400">Lade Teams…</div>
       </div>
 
       <!-- ── Tab: Einstellungen ────────────────────────────────────────── -->

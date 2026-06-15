@@ -22,7 +22,7 @@
         <div class="flex items-center gap-3 text-xs text-gray-400">
           <span>{{ planner.members?.length ?? 0 }} Mitglieder</span>
           <span>·</span>
-          <span>{{ planner.teamIds?.length ?? 0 }} Teams</span>
+          <span>{{ planner.teamCount ?? 0 }} Teams</span>
         </div>
       </button>
     </div>

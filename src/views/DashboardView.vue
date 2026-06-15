@@ -81,7 +81,7 @@ async function deleteBoard(id) {
         <div class="flex gap-4 mt-2 text-xs text-indigo-600 dark:text-indigo-400">
           <span>{{ plannersStore.activePlanner.members?.length ?? 0 }} Mitglieder</span>
           <span>·</span>
-          <span>{{ plannersStore.activePlanner.teamIds?.length ?? 0 }} Teams</span>
+          <span>{{ plannersStore.activePlanner.teamCount ?? 0 }} Teams</span>
         </div>
       </div>
       <router-link to="/planners" class="shrink-0 text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1">Planner wechseln</router-link>
