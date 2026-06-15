@@ -188,10 +188,10 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 </script>
 
 <template>
-  <header class="fixed top-0 left-0 right-0 z-40 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 sm:px-6">
+  <header class="app-header fixed top-0 left-0 right-0 z-40 h-16 bg-white/70 dark:bg-[#0e0d14]/60 backdrop-blur-xl flex items-center px-4 sm:px-6">
     <!-- Logo + Planner-Kontext -->
     <div class="flex-none flex items-center gap-3 mr-6">
-      <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">Planner</span>
+      <span class="text-lg font-bold brand-gradient">Planner</span>
       <template v-if="plannersStore.activePlanner">
         <span class="text-gray-300 dark:text-gray-600">|</span>
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[140px] truncate">
@@ -217,10 +217,10 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           <div v-if="link.isTeam" class="relative">
             <button
               @click="toggleTeamDropdown"
-              class="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+              class="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150"
               :class="isActive('/my-team') || showTeamDropdown
-                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'"
+                ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
             >
               Mein Team
               <svg class="w-3.5 h-3.5 transition-transform" :class="showTeamDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +230,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 
             <!-- Team-Dropdown-Panel -->
             <div v-if="showTeamDropdown"
-              class="absolute left-0 top-full mt-1 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+              class="absolute left-0 top-full mt-1 w-80 bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 dark:border-white/[0.06] ring-1 ring-black/[0.05] dark:ring-white/[0.08] z-50 overflow-hidden">
 
               <!-- Header -->
               <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
@@ -248,7 +248,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
                   v-for="ticket in recentTickets"
                   :key="ticket.id"
                   @click="openHeaderTicket(ticket)"
-                  class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/40 cursor-pointer group transition-colors"
+                  class="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer group transition-colors"
                 >
                   <span class="font-mono text-xs text-indigo-500 dark:text-indigo-400 w-20 shrink-0">{{ ticket.ticketNumber || '—' }}</span>
                   <span class="flex-1 text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ ticket.title }}</span>
@@ -269,10 +269,10 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           <router-link
             v-else
             :to="link.to"
-            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150"
             :class="isActive(link.to)
-              ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'"
+              ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
           >
             {{ link.label }}
           </router-link>
@@ -285,7 +285,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
     <div class="relative mr-2">
       <button
         @click="showCreateDropdown = !showCreateDropdown"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+        class="btn-create flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white transition-all duration-200 active:scale-95"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -297,20 +297,20 @@ const avatarUrl = (user) => generateAvatar(user?.username)
       </button>
 
       <div v-if="showCreateDropdown"
-        class="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+        class="absolute right-0 mt-1 w-44 bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 dark:border-white/[0.06] ring-1 ring-black/[0.05] dark:ring-white/[0.08] py-1 z-50">
         <button @click="openCreate('ticket')"
-          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg mx-0">
           <span class="text-base">🎟</span>
           Ticket
         </button>
         <button @click="openCreate('project')"
-          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
           <span class="text-base">📁</span>
           Projekt
         </button>
-        <hr class="border-gray-100 dark:border-gray-700 my-1" />
+        <hr class="border-black/[0.06] dark:border-white/[0.06] my-1" />
         <button @click="openCreate('request')"
-          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+          class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
           <span class="text-base">📨</span>
           Anfrage
         </button>
@@ -319,26 +319,26 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 
     <!-- User-Profil -->
     <div class="flex-none relative">
-      <button @click="showDropdown = !showDropdown" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+      <button @click="showDropdown = !showDropdown" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
         <img :src="avatarUrl(authStore.user)" class="w-8 h-8 rounded-full bg-gray-200" :alt="authStore.user?.username" />
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">{{ authStore.user?.username }}</span>
       </button>
 
-      <div v-if="showDropdown" class="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+      <div v-if="showDropdown" class="absolute right-0 mt-1 w-52 bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 dark:border-white/[0.06] ring-1 ring-black/[0.05] dark:ring-white/[0.08] py-1 z-50">
         <router-link
           :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/settings` : '/planners'"
           @click="showDropdown = false"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+          class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
           Einstellungen
         </router-link>
         <router-link v-if="authStore.isAdmin"
           :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/admin` : '/planners'"
           @click="showDropdown = false"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+          class="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
           Admin-Bereich
         </router-link>
-        <hr class="border-gray-200 dark:border-gray-700 my-1" />
-        <button @click="logout" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
+        <hr class="border-black/[0.06] dark:border-white/[0.06] my-1" />
+        <button @click="logout" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/[0.08] dark:hover:bg-red-500/[0.12] transition-colors">
           Abmelden
         </button>
       </div>
