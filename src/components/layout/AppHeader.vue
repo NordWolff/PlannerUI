@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePlannersStore } from '@/stores/planners'
@@ -29,7 +29,19 @@ const { users: allUsers, fetchUsers } = useUsers()
 
 // ─── Erstellen-Button ─────────────────────────────────────────────────────────
 const showCreateDropdown = ref(false)
+const createDropdownRef  = ref(null)
 const showCreateModal    = ref(false)
+
+// Schließt den Erstellen-Dropdown bei Klick außerhalb — der "fixed inset-0"-Overlay
+// lag im Stacking-Kontext über dem Button selbst und fing dessen eigenen Toggle-Klick ab,
+// sodass ein erneuter Klick auf den Button nicht mehr schloss (nur ein weiterer Klick daneben).
+function onCreateDropdownDocClick(e) {
+  if (showCreateDropdown.value && createDropdownRef.value && !createDropdownRef.value.contains(e.target)) {
+    showCreateDropdown.value = false
+  }
+}
+onMounted(() => document.addEventListener('click', onCreateDropdownDocClick))
+onUnmounted(() => document.removeEventListener('click', onCreateDropdownDocClick))
 const createTab          = ref('ticket')
 const creatingItem       = ref(false)
 
@@ -282,7 +294,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
     </nav>
 
     <!-- Erstellen-Button -->
-    <div class="relative mr-2">
+    <div class="relative mr-2" ref="createDropdownRef">
       <button
         @click="showCreateDropdown = !showCreateDropdown"
         class="btn-create flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white transition-all duration-200 active:scale-95"
@@ -346,7 +358,6 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 
     <div v-if="showDropdown" class="fixed inset-0 z-30" @click="showDropdown = false" />
     <div v-if="showTeamDropdown" class="fixed inset-0 z-30" @click="showTeamDropdown = false" />
-    <div v-if="showCreateDropdown" class="fixed inset-0 z-30" @click="showCreateDropdown = false" />
   </header>
 
   <!-- Ticket-Modal aus Header-Dropdown -->
