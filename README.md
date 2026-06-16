@@ -104,7 +104,7 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 | Rolle | Beschreibung |
 |---|---|
-| **admin** | Systemadministrator — verwaltet Benutzer, Rollen, Teams, Boards, Ticket-Einstellungen. Gehört zu keinem Team. |
+| **admin** | Systemadministrator — verwaltet Benutzer, Rollen, Teams, Boards, Ticket-Einstellungen. Kann ebenfalls Planner besitzen und Planner-Mitglied sein. |
 | **owner** | Product Owner — leitet ein Team. Pro Team genau ein Owner. |
 | **user** | Standardmitglied — kann Tickets, Kommentare, Checklisten bearbeiten. Tickets zuweisen. |
 
