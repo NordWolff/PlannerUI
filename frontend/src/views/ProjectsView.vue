@@ -127,10 +127,10 @@ function toggleFormSprint(sprintId) {
               <td class="px-6 py-4"><StatusBadge :status="project.status" /></td>
 
               <!-- Sprint-Spalte: Badges + Dropdown -->
-              <td class="px-6 py-4" @click.stop>
+              <td class="px-6 py-4">
                 <div class="relative">
                   <button
-                    @click="openSprintDropdown = openSprintDropdown === project.id ? null : project.id"
+                    @click.stop="openSprintDropdown = openSprintDropdown === project.id ? null : project.id"
                     class="flex flex-wrap gap-1 items-center min-w-[120px] min-h-[28px] text-left"
                   >
                     <span v-if="!sprintNames(project).length"
@@ -145,7 +145,7 @@ function toggleFormSprint(sprintId) {
                   </button>
 
                   <!-- Sprint-Dropdown -->
-                  <div v-if="openSprintDropdown === project.id"
+                  <div v-if="openSprintDropdown === project.id" @click.stop
                     class="absolute left-0 top-full mt-1 z-30 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1">
                     <label v-for="sprint in sprintsStore.sprints" :key="sprint.id"
                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer">

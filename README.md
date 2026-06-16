@@ -311,6 +311,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.8.0 — Fix: Erstellen-Dropdown & Sprint-Dropdown schließen bei Klick daneben
+- **Erstellen-Button im Header:** Der schließende Vollbild-Overlay lag im Stacking-Kontext über dem Button selbst (höherer `z-index`), wodurch ein erneuter Klick auf den Button den eigenen Toggle-Handler nicht mehr erreichte — Schließen war nur über einen zusätzlichen Klick daneben möglich. Fix: Klick-außerhalb-Erkennung per `document`-Click-Listener + Ref-Containment-Check statt Overlay-Div; der Button toggelt jetzt wieder normal per Klick auf/zu
+- **Sprint-Dropdown in der Projekte-Tabelle:** `@click.stop` lag auf der gesamten Tabellenzelle, wodurch Klicks daneben innerhalb der Zelle nicht schlossen. Fix: `@click.stop` sitzt jetzt nur noch direkt am Toggle-Button und am Dropdown-Panel — Klicks daneben schließen den Dropdown korrekt
+
 ### v2.7.0 — Zeitstrahl ohne linke Spalte
 - Linke fixe Spalte (Projekt-/Ticket-Namen) im Zeitstrahl vollständig entfernt — der Zeitstrahl nimmt jetzt die gesamte Breite ein
 - **Projektbalken selbst ist der Auf-/Zuklapp-Button:** Klick (ohne Ziehen) klappt die Ticket-Zeilen des Projekts auf/zu; Chevron-Icon im Balken zeigt den Zustand an
