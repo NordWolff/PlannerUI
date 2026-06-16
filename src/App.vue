@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 
 onMounted(() => {
-  if (localStorage.getItem('darkMode') === 'true') {
+  if (localStorage.getItem('darkMode') !== 'false') {
     document.documentElement.classList.add('dark')
   }
   authStore.fetchMe()

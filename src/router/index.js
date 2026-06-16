@@ -13,15 +13,6 @@ const routes = [
       { path: '', component: () => import('@/views/PlannersView.vue') },
     ]
   },
-  // Planner-Admin: nur für Admin
-  {
-    path: '/planner-admin',
-    component: () => import('@/components/layout/AppLayout.vue'),
-    meta: { requiresAdmin: true },
-    children: [
-      { path: '', component: () => import('@/views/PlannerAdminView.vue') },
-    ]
-  },
   // Planner-Kontext: alle Inhaltsseiten unter /planner/:plannerId/...
   {
     path: '/planner/:plannerId',

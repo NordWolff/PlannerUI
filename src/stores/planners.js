@@ -11,6 +11,9 @@ const ACTIVE_PLANNER_KEY = 'planner_active_id'
 
 export const usePlannersStore = defineStore('planners', () => {
   const planners = ref([])
+  // Nur für Admin-Systemverwaltung (Admin-Bereich → „Alle Planner"): enthält wirklich ALLE Planner,
+  // unabhängig von eigener Mitgliedschaft. `planners` bleibt überall sonst auf eigene Mitgliedschaft beschränkt.
+  const allPlanners = ref([])
   const activePlannerId = ref(localStorage.getItem(ACTIVE_PLANNER_KEY) || null)
   const loading = ref(false)
 
@@ -32,6 +35,23 @@ export const usePlannersStore = defineStore('planners', () => {
     }
   }
 
+  async function fetchAllPlanners() {
+    loading.value = true
+    try {
+      const { data } = await api.get('/planners', { params: { all: true } })
+      allPlanners.value = data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function syncPlanner(data) {
+    const idx1 = planners.value.findIndex(p => p.id === data.id)
+    if (idx1 !== -1) planners.value[idx1] = data
+    const idx2 = allPlanners.value.findIndex(p => p.id === data.id)
+    if (idx2 !== -1) allPlanners.value[idx2] = data
+  }
+
   function setActivePlanner(id) {
     if (id !== activePlannerId.value) {
       useProjectsStore().clear()
@@ -51,39 +71,38 @@ export const usePlannersStore = defineStore('planners', () => {
   async function createPlanner(plannerData) {
     const { data } = await api.post('/planners', plannerData)
     planners.value.push(data)
+    allPlanners.value.push(data)
     return data
   }
 
   async function updatePlanner(id, plannerData) {
     const { data } = await api.put(`/planners/${id}`, plannerData)
-    const idx = planners.value.findIndex(p => p.id === id)
-    if (idx !== -1) planners.value[idx] = data
+    syncPlanner(data)
     return data
   }
 
   async function deletePlanner(id) {
     await api.delete(`/planners/${id}`)
     planners.value = planners.value.filter(p => p.id !== id)
+    allPlanners.value = allPlanners.value.filter(p => p.id !== id)
     if (activePlannerId.value === id) setActivePlanner(null)
   }
 
   async function updateMembers(id, members) {
     const { data } = await api.put(`/planners/${id}/members`, { members })
-    const idx = planners.value.findIndex(p => p.id === id)
-    if (idx !== -1) planners.value[idx] = data
+    syncPlanner(data)
     return data
   }
 
   async function updateSettings(id, { ticketPrefix }) {
     const { data } = await api.put(`/planners/${id}/settings`, { ticketPrefix })
-    const idx = planners.value.findIndex(p => p.id === id)
-    if (idx !== -1) planners.value[idx] = data
+    syncPlanner(data)
     return data
   }
 
   return {
-    planners, activePlannerId, activePlanner, loading,
-    fetchPlanners, setActivePlanner,
+    planners, allPlanners, activePlannerId, activePlanner, loading,
+    fetchPlanners, fetchAllPlanners, setActivePlanner,
     createPlanner, updatePlanner, deletePlanner,
     updateMembers, updateSettings,
   }
