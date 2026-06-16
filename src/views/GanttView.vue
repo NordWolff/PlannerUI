@@ -17,6 +17,13 @@ const pxPerDay = computed(() => PX_PER_DAY[viewMode.value])
 // ── Dependency-Pfeile ─────────────────────────────────────────────────────────
 const showDeps = ref(false)
 
+// ── Linke Spalte ein-/ausklappen ─────────────────────────────────────────────
+const sidebarCollapsed = ref(localStorage.getItem('ganttSidebarCollapsed') === 'true')
+function toggleSidebar() {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+  localStorage.setItem('ganttSidebarCollapsed', String(sidebarCollapsed.value))
+}
+
 // ── Aufgeklappte Projekte ─────────────────────────────────────────────────────
 const expandedProjects = ref(new Set())
 function toggleExpand(projectId) {
@@ -296,11 +303,12 @@ function ticketDepLines() {
     </div>
 
     <!-- Gantt-Body -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden relative">
       <!-- Linke fixe Spalte -->
-      <div class="w-60 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10 flex flex-col">
+      <div class="shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10 flex flex-col overflow-hidden transition-all duration-200"
+        :class="sidebarCollapsed ? 'w-0 border-r-0' : 'w-60'">
         <!-- Kopfzeile links -->
-        <div class="h-10 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
+        <div class="h-10 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 whitespace-nowrap">
           <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Projekt / Ticket</span>
         </div>
 
@@ -339,6 +347,17 @@ function ticketDepLines() {
           </template>
         </div>
       </div>
+
+      <!-- Ein-/Ausklapp-Button für linke Spalte -->
+      <button @click="toggleSidebar"
+        class="absolute top-3 z-30 w-6 h-6 rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-sm flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all duration-200"
+        :style="{ left: (sidebarCollapsed ? 0 : 240) - 12 + 'px' }"
+        :title="sidebarCollapsed ? 'Projektliste einblenden' : 'Projektliste ausblenden'">
+        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
 
       <!-- Rechte scrollbare Timeline -->
       <div class="flex-1 overflow-x-auto overflow-y-auto relative" ref="svgContainer">
