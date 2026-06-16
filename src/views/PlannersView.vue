@@ -40,7 +40,7 @@
           </svg>
           <span class="text-xs font-medium text-amber-600 dark:text-amber-400">Startplanner</span>
         </div>
-        <div v-else class="h-1 rounded-full bg-indigo-500 mb-4 w-12"></div>
+        <div v-else class="h-1 rounded-full bg-primary mb-4 w-12"></div>
 
         <!-- Karteninhalt (klickbar) -->
         <button class="text-left w-full focus:outline-none" @click="openPlanner(planner.id)">

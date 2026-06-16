@@ -212,11 +212,11 @@ const avatarUrl = (user) => generateAvatar(user?.username)
         <button
           @click="router.push('/planners')"
           title="Planner wechseln"
-          class="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+          class="text-xs text-primary hover:text-primary-hover dark:hover:text-primary-dark-hover transition-colors"
         >⇄</button>
       </template>
       <template v-else>
-        <router-link to="/planners" class="text-xs text-indigo-500 hover:underline">Planner wählen →</router-link>
+        <router-link to="/planners" class="text-xs text-primary hover:underline">Planner wählen →</router-link>
       </template>
     </div>
 
@@ -247,7 +247,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
               <!-- Header -->
               <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
                 <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Zuletzt bearbeitet</span>
-                <button @click="goToMyTeam" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+                <button @click="goToMyTeam" class="text-xs text-primary dark:text-primary-dark hover:underline font-medium">
                   Alle anzeigen →
                 </button>
               </div>
@@ -262,15 +262,15 @@ const avatarUrl = (user) => generateAvatar(user?.username)
                   @click="openHeaderTicket(ticket)"
                   class="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer group transition-colors"
                 >
-                  <span class="font-mono text-xs text-indigo-500 dark:text-indigo-400 w-20 shrink-0">{{ ticket.ticketNumber || '—' }}</span>
-                  <span class="flex-1 text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ ticket.title }}</span>
+                  <span class="font-mono text-xs text-primary dark:text-primary-dark w-20 shrink-0">{{ ticket.ticketNumber || '—' }}</span>
+                  <span class="flex-1 text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary dark:group-hover:text-primary-dark transition-colors">{{ ticket.title }}</span>
                   <span class="text-xs text-gray-400 shrink-0">{{ formatRecent(ticket.updatedAt) }}</span>
                 </li>
               </ul>
 
               <!-- Footer -->
               <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-700">
-                <button @click="goToMyTeam" class="w-full text-center text-xs text-indigo-600 dark:text-indigo-400 hover:underline py-0.5">
+                <button @click="goToMyTeam" class="w-full text-center text-xs text-primary dark:text-primary-dark hover:underline py-0.5">
                   Mein-Team-Seite öffnen
                 </button>
               </div>
@@ -297,7 +297,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
     <div class="relative mr-2" ref="createDropdownRef">
       <button
         @click="showCreateDropdown = !showCreateDropdown"
-        class="btn-create flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white transition-all duration-200 active:scale-95"
+        class="btn-create flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-primary to-pink-500 hover:from-primary hover:to-pink-600 text-white transition-all duration-200 active:scale-95"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -346,7 +346,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
         <router-link v-if="authStore.isAdmin"
           :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/admin` : '/planners'"
           @click="showDropdown = false"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
+          class="flex items-center gap-2 px-4 py-2 text-sm text-primary dark:text-primary-dark hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
           Admin-Bereich
         </router-link>
         <hr class="border-black/[0.06] dark:border-white/[0.06] my-1" />
@@ -473,11 +473,11 @@ const avatarUrl = (user) => generateAvatar(user?.username)
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Sprints</label>
             <div class="rounded-lg border border-gray-200 dark:border-gray-600 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden max-h-36 overflow-y-auto">
               <label v-for="s in sprintsStore.sprints" :key="s.id"
-                class="flex items-center gap-2.5 px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer transition-colors">
+                class="flex items-center gap-2.5 px-3 py-2 hover:bg-primary-light dark:hover:bg-primary-active/20 cursor-pointer transition-colors">
                 <input type="checkbox"
                   :checked="projectForm.sprintIds.includes(s.id)"
                   @change="toggleHeaderSprint(s.id)"
-                  class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                  class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary" />
                 <span class="text-sm text-gray-700 dark:text-gray-300">{{ s.name }}</span>
               </label>
               <div v-if="!sprintsStore.sprints.length" class="px-3 py-2 text-xs text-gray-400 italic">Keine Sprints vorhanden</div>

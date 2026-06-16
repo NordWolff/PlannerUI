@@ -76,8 +76,8 @@ async function saveProfile() {
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Dunkles Design aktivieren</p>
         </div>
         <button @click="toggleDarkMode"
-          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          :class="darkMode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'">
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+          :class="darkMode ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'">
           <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform"
             :class="darkMode ? 'translate-x-6' : 'translate-x-1'" />
         </button>
@@ -95,7 +95,7 @@ async function saveProfile() {
             @click="setMyTeamViewMode('table')"
             class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-colors"
             :class="myTeamViewMode === 'table'
-              ? 'bg-indigo-600 text-white border-indigo-600'
+              ? 'bg-primary text-white border-primary'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-transparent'"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ async function saveProfile() {
             @click="setMyTeamViewMode('kanban')"
             class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-colors"
             :class="myTeamViewMode === 'kanban'
-              ? 'bg-indigo-600 text-white border-indigo-600'
+              ? 'bg-primary text-white border-primary'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-transparent'"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,8 +133,8 @@ async function saveProfile() {
         </div>
         <button
           @click="togglePrivacyHideOnline"
-          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          :class="privacyHideOnline ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+          :class="privacyHideOnline ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'"
         >
           <span
             class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform"
@@ -147,11 +147,11 @@ async function saveProfile() {
     <BaseCard title="Sprache">
       <div class="flex gap-3">
         <button @click="setLanguage('de')" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          :class="language === 'de' ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'">
+          :class="language === 'de' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'">
           Deutsch
         </button>
         <button @click="setLanguage('en')" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          :class="language === 'en' ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'">
+          :class="language === 'en' ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'">
           English
         </button>
       </div>

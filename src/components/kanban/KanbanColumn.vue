@@ -46,7 +46,7 @@ const headerColors = {
 <template>
   <div
     class="flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl border-t-4 flex-1 min-w-0 transition-all"
-    :class="[columnColors[column.status] || 'border-t-gray-400', isDragOver ? 'ring-2 ring-indigo-400' : '']"
+    :class="[columnColors[column.status] || 'border-t-gray-400', isDragOver ? 'ring-2 ring-primary-dark' : '']"
     @dragover="onDragOver"
     @dragleave="onDragLeave"
     @drop="onDrop"

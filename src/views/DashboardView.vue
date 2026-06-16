@@ -74,17 +74,17 @@ async function deleteBoard(id) {
 <template>
   <div class="space-y-6">
     <!-- Planner-Kontext -->
-    <div v-if="plannersStore.activePlanner" class="flex items-start justify-between gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+    <div v-if="plannersStore.activePlanner" class="flex items-start justify-between gap-4 p-4 bg-primary-light dark:bg-primary-active/20 border border-primary-light dark:border-primary-active rounded-xl">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ plannersStore.activePlanner.name }}</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-0.5 text-sm">{{ plannersStore.activePlanner.description }}</p>
-        <div class="flex gap-4 mt-2 text-xs text-indigo-600 dark:text-indigo-400">
+        <div class="flex gap-4 mt-2 text-xs text-primary dark:text-primary-dark">
           <span>{{ plannersStore.activePlanner.members?.length ?? 0 }} Mitglieder</span>
           <span>·</span>
           <span>{{ plannersStore.activePlanner.teamCount ?? 0 }} Teams</span>
         </div>
       </div>
-      <router-link to="/planners" class="shrink-0 text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1">Planner wechseln</router-link>
+      <router-link to="/planners" class="shrink-0 text-xs text-primary dark:text-primary-dark hover:underline mt-1">Planner wechseln</router-link>
     </div>
     <div v-else>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
@@ -134,7 +134,7 @@ async function deleteBoard(id) {
               <p v-if="board.description" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-xs">{{ board.description }}</p>
             </div>
             <div class="flex gap-2">
-              <button @click="openEditBoard(board)" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Bearbeiten</button>
+              <button @click="openEditBoard(board)" class="text-xs text-primary dark:text-primary-dark hover:underline">Bearbeiten</button>
               <button @click="deleteBoard(board.id)" class="text-xs text-red-500 hover:underline">Löschen</button>
             </div>
           </div>
@@ -151,7 +151,7 @@ async function deleteBoard(id) {
               <span class="font-medium text-gray-900 dark:text-white">{{ count }}</span>
             </div>
             <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div class="h-full bg-indigo-600 rounded-full" :style="{ width: `${(count / (dashboardStore.stats.tickets || 1)) * 100}%` }" />
+              <div class="h-full bg-primary rounded-full" :style="{ width: `${(count / (dashboardStore.stats.tickets || 1)) * 100}%` }" />
             </div>
           </div>
           <div v-if="!dashboardStore.stats.byStatus || !Object.keys(dashboardStore.stats.byStatus).length"

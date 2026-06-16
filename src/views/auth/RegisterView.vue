@@ -17,7 +17,7 @@ async function register() {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Planner</h1>
+        <h1 class="text-3xl font-bold text-primary dark:text-primary-dark">Planner</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-2">Neues Konto erstellen</p>
       </div>
 
@@ -47,7 +47,7 @@ async function register() {
 
         <p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           Bereits ein Konto?
-          <router-link to="/login" class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Anmelden</router-link>
+          <router-link to="/login" class="text-primary dark:text-primary-dark font-medium hover:underline">Anmelden</router-link>
         </p>
       </div>
     </div>

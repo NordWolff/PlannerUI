@@ -9,7 +9,7 @@ defineEmits(['toggle', 'delete'])
       type="checkbox"
       :checked="item.done"
       @change="$emit('toggle', item.id)"
-      class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 focus:ring-indigo-500"
+      class="w-4 h-4 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
     />
     <span class="flex-1 text-sm text-gray-700 dark:text-gray-300" :class="item.done ? 'line-through text-gray-400' : ''">
       {{ item.text }}

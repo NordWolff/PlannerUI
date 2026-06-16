@@ -4,7 +4,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary hover:bg-primary-hover active:bg-primary-active dark:bg-primary-dark dark:hover:bg-primary-dark-hover dark:active:bg-primary-dark-active text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-secondary {
     @apply bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors;
@@ -13,7 +13,7 @@
     @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors;
   }
   .input-field {
-    @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors;
+    @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary-dark focus:border-transparent transition-colors;
   }
   .card {
     @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6;
@@ -25,7 +25,7 @@ body { margin: 0; }
 
 /* Brand-Gradient */
 .brand-gradient {
-  background: linear-gradient(135deg, #818cf8, #e879f9);
+  background: linear-gradient(135deg, #E20074, #FF4FA0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -43,9 +43,9 @@ body { margin: 0; }
   background: linear-gradient(
     to right,
     transparent 0%,
-    rgba(232, 72, 144, 0.15) 20%,
-    rgba(232, 72, 144, 0.45) 50%,
-    rgba(232, 72, 144, 0.15) 80%,
+    rgba(226, 0, 116, 0.15) 20%,
+    rgba(226, 0, 116, 0.45) 50%,
+    rgba(226, 0, 116, 0.15) 80%,
     transparent 100%
   );
 }
@@ -53,36 +53,36 @@ body { margin: 0; }
   background: linear-gradient(
     to right,
     transparent 0%,
-    rgba(232, 72, 144, 0.35) 20%,
-    rgba(232, 72, 144, 0.75) 50%,
-    rgba(232, 72, 144, 0.35) 80%,
+    rgba(255, 10, 120, 0.35) 20%,
+    rgba(255, 10, 120, 0.75) 50%,
+    rgba(255, 10, 120, 0.35) 80%,
     transparent 100%
   );
 }
 
 /* Erstellen-Button Glow */
 .btn-create {
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.28), 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 12px rgba(226, 0, 116, 0.28), 0 1px 3px rgba(0,0,0,0.1);
 }
 .dark .btn-create {
-  box-shadow: 0 0 20px rgba(232, 72, 144, 0.38), 0 0 6px rgba(232, 72, 144, 0.18);
+  box-shadow: 0 0 20px rgba(255, 10, 120, 0.38), 0 0 6px rgba(255, 10, 120, 0.18);
 }
 .btn-create:hover {
-  box-shadow: 0 4px 18px rgba(232, 72, 144, 0.45), 0 1px 4px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 18px rgba(255, 10, 120, 0.45), 0 1px 4px rgba(0,0,0,0.12);
 }
 
 /* App-Hintergrund mit Magenta-Strahlverlauf */
 .app-bg {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(219, 39, 119, 0.13) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 35% at 90% 95%, rgba(168, 0, 100, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(226, 0, 116, 0.13) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 90% 95%, rgba(162, 0, 80, 0.07) 0%, transparent 55%),
     #f5f3fa;
 }
 
 .dark .app-bg {
   background:
-    radial-gradient(ellipse 85% 50% at 50% -8%, rgba(219, 39, 119, 0.32) 0%, transparent 60%),
-    radial-gradient(ellipse 45% 30% at 85% 100%, rgba(168, 0, 110, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse 85% 50% at 50% -8%, rgba(255, 10, 120, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 30% at 85% 100%, rgba(226, 0, 116, 0.16) 0%, transparent 50%),
     #0e0d14;
 }

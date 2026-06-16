@@ -136,7 +136,7 @@ function toggleFormSprint(sprintId) {
                     <span v-if="!sprintNames(project).length"
                       class="text-xs text-gray-400 dark:text-gray-500 italic">Kein Sprint</span>
                     <span v-for="name in sprintNames(project)" :key="name"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-light dark:bg-primary-active/40 text-primary-hover dark:text-primary-dark-hover">
                       {{ name }}
                     </span>
                     <svg class="w-3 h-3 text-gray-400 ml-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,11 +148,11 @@ function toggleFormSprint(sprintId) {
                   <div v-if="openSprintDropdown === project.id" @click.stop
                     class="absolute left-0 top-full mt-1 z-30 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1">
                     <label v-for="sprint in sprintsStore.sprints" :key="sprint.id"
-                      class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer">
+                      class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-primary-light dark:hover:bg-primary-active/20 cursor-pointer">
                       <input type="checkbox"
                         :checked="(project.sprintIds ?? []).includes(sprint.id)"
                         @change="toggleSprintInRow(project, sprint.id)"
-                        class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                        class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary" />
                       {{ sprint.name }}
                     </label>
                     <p v-if="!sprintsStore.sprints.length" class="px-3 py-2 text-xs text-gray-400">Keine Sprints vorhanden</p>
@@ -168,7 +168,7 @@ function toggleFormSprint(sprintId) {
               </td>
               <td class="px-6 py-4">
                 <div class="flex gap-2">
-                  <button @click="openEdit(project)" class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm">Bearbeiten</button>
+                  <button @click="openEdit(project)" class="text-primary dark:text-primary-dark hover:underline text-sm">Bearbeiten</button>
                   <button @click="deleteProject(project.id)" class="text-red-500 hover:underline text-sm">Löschen</button>
                 </div>
               </td>
@@ -214,18 +214,18 @@ function toggleFormSprint(sprintId) {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sprints</label>
           <div class="rounded-lg border border-gray-200 dark:border-gray-600 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
             <label v-for="sprint in sprintsStore.sprints" :key="sprint.id"
-              class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer transition-colors">
+              class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary-light dark:hover:bg-primary-active/20 cursor-pointer transition-colors">
               <input type="checkbox"
                 :checked="projectForm.sprintIds.includes(sprint.id)"
                 @change="toggleFormSprint(sprint.id)"
-                class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                class="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary" />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{ sprint.name }}</span>
             </label>
             <div v-if="!sprintsStore.sprints.length" class="px-4 py-3 text-sm text-gray-400 italic">
               Keine Sprints vorhanden
             </div>
           </div>
-          <p v-if="projectForm.sprintIds.length" class="text-xs text-indigo-600 dark:text-indigo-400 mt-1.5">
+          <p v-if="projectForm.sprintIds.length" class="text-xs text-primary dark:text-primary-dark mt-1.5">
             {{ projectForm.sprintIds.length }} Sprint{{ projectForm.sprintIds.length !== 1 ? 's' : '' }} ausgewählt
           </p>
         </div>

@@ -38,7 +38,7 @@ async function login() {
     <div class="w-full max-w-md">
 
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl mb-4 shadow-lg">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-primary rounded-2xl mb-4 shadow-lg">
           <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -114,7 +114,7 @@ async function login() {
               id="remember"
               v-model="rememberMe"
               type="checkbox"
-              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-gray-700 cursor-pointer"
+              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary bg-white dark:bg-gray-700 cursor-pointer"
             />
             <label for="remember" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
               Angemeldet bleiben
@@ -137,7 +137,7 @@ async function login() {
 
         <p class="mt-5 text-center text-sm text-gray-500 dark:text-gray-400">
           Noch kein Konto?
-          <router-link to="/register" class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+          <router-link to="/register" class="text-primary dark:text-primary-dark font-medium hover:underline">
             Registrieren
           </router-link>
         </p>

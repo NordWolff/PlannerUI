@@ -198,7 +198,7 @@ const checklistProgress = computed(() => {
     <!-- Header mit Ticketnummer + Titel -->
     <div class="flex items-start justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
       <div>
-        <span v-if="ticket.ticketNumber" class="inline-block font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded mb-1">{{ ticket.ticketNumber }}</span>
+        <span v-if="ticket.ticketNumber" class="inline-block font-mono text-xs font-semibold text-primary dark:text-primary-dark bg-primary-light dark:bg-primary-active/20 px-2 py-0.5 rounded mb-1">{{ ticket.ticketNumber }}</span>
         <h2 class="text-base font-semibold text-gray-900 dark:text-white leading-snug max-w-xl">{{ ticket.title }}</h2>
       </div>
       <button @click="emit('close')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none ml-4 shrink-0">&times;</button>
@@ -212,7 +212,7 @@ const checklistProgress = computed(() => {
         @click="activeTab = tab"
         class="shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
         :class="activeTab === tab
-          ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+          ? 'border-primary text-primary dark:border-primary-dark dark:text-primary-dark'
           : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'"
       >
         <span v-if="tab === 'details'">Details</span>
@@ -223,7 +223,7 @@ const checklistProgress = computed(() => {
         </span>
         <span v-else-if="tab === 'comments'">
           Kommentare
-          <span v-if="comments.length" class="ml-1 text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-full px-1.5 py-0.5">{{ comments.length }}</span>
+          <span v-if="comments.length" class="ml-1 text-xs bg-primary-light dark:bg-primary-active/40 text-primary dark:text-primary-dark rounded-full px-1.5 py-0.5">{{ comments.length }}</span>
         </span>
         <span v-else>Verlauf</span>
       </button>
@@ -303,7 +303,7 @@ const checklistProgress = computed(() => {
             <span>{{ checklistProgress }}%</span>
           </div>
           <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full bg-indigo-600 rounded-full transition-all" :style="{ width: checklistProgress + '%' }" />
+            <div class="h-full bg-primary rounded-full transition-all" :style="{ width: checklistProgress + '%' }" />
           </div>
         </div>
 
@@ -335,8 +335,8 @@ const checklistProgress = computed(() => {
         <div
           class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
           :class="isDragOver
-            ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
-            : 'border-gray-300 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-500'"
+            ? 'border-primary-dark bg-primary-light dark:bg-primary-active/20'
+            : 'border-gray-300 dark:border-gray-600 hover:border-primary-dark-hover dark:hover:border-primary'"
           @dragover.prevent="isDragOver = true"
           @dragleave="isDragOver = false"
           @drop.prevent="onDrop"
@@ -351,7 +351,7 @@ const checklistProgress = computed(() => {
         <!-- Upload-Fortschritt -->
         <div v-if="uploadProgress !== null" class="flex items-center gap-3">
           <div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full bg-indigo-500 rounded-full transition-all" :style="{ width: uploadProgress + '%' }" />
+            <div class="h-full bg-primary rounded-full transition-all" :style="{ width: uploadProgress + '%' }" />
           </div>
           <span class="text-xs text-gray-500 w-10 text-right">{{ uploadProgress }}%</span>
         </div>
@@ -412,8 +412,8 @@ const checklistProgress = computed(() => {
                 @click="handleReaction(comment, emoji)"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors"
                 :class="myReaction(comment, emoji)
-                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
-                  : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-600'"
+                  ? 'bg-primary-light dark:bg-primary-active/30 border-primary-dark-hover dark:border-primary text-primary-hover dark:text-primary-dark-hover'
+                  : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-primary-dark-hover dark:hover:border-primary'"
               >
                 <span>{{ emoji }}</span>
                 <span v-if="reactionCount(comment, emoji) > 0" class="font-medium">{{ reactionCount(comment, emoji) }}</span>
@@ -456,12 +456,12 @@ const checklistProgress = computed(() => {
       <div v-else class="space-y-3">
         <div v-if="!history.length" class="py-8 text-center text-sm text-gray-400">Keine Verlaufseinträge</div>
         <div v-for="entry in history" :key="entry.id" class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <div class="w-2 h-2 mt-2 rounded-full bg-indigo-400 flex-none" />
+          <div class="w-2 h-2 mt-2 rounded-full bg-primary-dark flex-none" />
           <div>
             <p class="text-sm text-gray-700 dark:text-gray-300">
               <span class="font-medium">Status</span> geändert von
               <span class="font-medium">{{ entry.from }}</span> zu
-              <span class="font-medium text-indigo-600 dark:text-indigo-400">{{ entry.to }}</span>
+              <span class="font-medium text-primary dark:text-primary-dark">{{ entry.to }}</span>
             </p>
             <p class="text-xs text-gray-400 mt-0.5">{{ new Date(entry.changedAt).toLocaleString('de-DE') }}</p>
           </div>

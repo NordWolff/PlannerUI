@@ -287,8 +287,8 @@ async function deleteSprint(sprint) {
           @click="openDetail(team)">
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
-                <span class="text-indigo-600 dark:text-indigo-400 font-bold text-sm">{{ team.name?.charAt(0).toUpperCase() }}</span>
+              <div class="w-10 h-10 bg-primary-light dark:bg-primary-active/30 rounded-xl flex items-center justify-center">
+                <span class="text-primary dark:text-primary-dark font-bold text-sm">{{ team.name?.charAt(0).toUpperCase() }}</span>
               </div>
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">{{ team.name }}</h3>
@@ -526,7 +526,7 @@ async function deleteSprint(sprint) {
               <ul v-if="memberSearchResults.length"
                 class="absolute z-20 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg overflow-hidden">
                 <li v-for="u in memberSearchResults" :key="u.id"
-                  class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer"
+                  class="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-primary-light dark:hover:bg-primary-active/20 cursor-pointer"
                   @mousedown.prevent="selectUser(u)">
                   <img :src="generateAvatar(u.username)" class="w-6 h-6 rounded-full" alt="" />
                   <span class="font-medium text-gray-900 dark:text-white">{{ u.username }}</span>
