@@ -69,7 +69,7 @@ Avatare werden **lokal** via `@dicebear/avataaars@9` aus dem Benutzernamen gener
 `http://localhost:3000/api` — fest in `frontend/src/services/api.js` konfiguriert.
 
 ### Gantt-Ansicht
-`GanttView.vue` ist die komplexeste Komponente: scrollbarer Zeitstrahl mit Drag-to-Move, Resize-Handle, Zoom-Stufen (Woche/Monat/Quartal), SVG-Bezier-Abhängigkeitspfeile und einer fixierten linken Spalte (240 px).
+`GanttView.vue` ist die komplexeste Komponente: scrollbarer Zeitstrahl mit Drag-to-Move, Resize-Handle, Zoom-Stufen (Woche/Monat/Quartal) und SVG-Bezier-Abhängigkeitspfeilen. Keine separate linke Spalte — der Projektbalken selbst dient als Auf-/Zuklapp-Button für die Ticket-Zeilen (Klick ohne Bewegung = Toggle, Ziehen = Termin verschieben).
 
 ## Demo-Zugangsdaten
 

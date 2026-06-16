@@ -146,10 +146,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - **Monat-Gitterlinien** als visuelle Orientierung
 - **Drag-to-Move:** Projektbalken horizontal ziehen → Start- und Enddatum werden automatisch per API gespeichert
 - **Resize-Handle** am rechten Balkenrand → Enddatum verschieben
-- **Expandierbare Ticket-Listen** — `▶`-Button klappt alle Tickets eines Projekts darunter auf (Titel + Status-Badge)
+- **Expandierbare Ticket-Listen** — Klick auf den Projektbalken (ohne Ziehen) klappt alle Tickets darunter auf/zu (Titel + Status-Badge); Chevron-Icon im Balken zeigt den Zustand
 - **Abhängigkeits-Pfeile** — Toggle-Button blendet Bezier-Kurven zwischen abhängigen Tickets ein/aus
 - Projekte ohne Startdatum werden ausgeblendet; offenes Enddatum wird als 30-Tage-Vorschau dargestellt
-- Linke Spalte (240 px) mit Projekt- und Ticket-Namen bleibt beim horizontalen Scrollen fixiert
+- Keine separate Projektliste — der Zeitstrahl selbst übernimmt diese Funktion und nutzt die volle Breite
 
 ### Tickets
 - Automatisch aufsteigende Ticketnummer (Präfix konfigurierbar, z. B. `TKT-0001`, `FEED-0042`)
@@ -311,11 +311,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
-### v2.6.0 — Einklappbare linke Spalte im Zeitstrahl
-- Linke fixe Spalte (Projekt-/Ticket-Namen) im Zeitstrahl ist jetzt ein-/ausklappbar
-- Sichtbarer Toggle-Button (Chevron-Icon) sitzt direkt auf der Grenze zwischen Spalte und Zeitstrahl, dreht sich beim Umschalten
-- Eingeklappt übernimmt der Zeitstrahl die volle Breite — Projektnamen bleiben auf den Balken sichtbar, Ticket-Status/-Titel bleiben an ihrer Timeline-Position sichtbar
-- Zustand wird in `localStorage` (`ganttSidebarCollapsed`) gespeichert und bleibt nach Reload erhalten
+### v2.7.0 — Zeitstrahl ohne linke Spalte
+- Linke fixe Spalte (Projekt-/Ticket-Namen) im Zeitstrahl vollständig entfernt — der Zeitstrahl nimmt jetzt die gesamte Breite ein
+- **Projektbalken selbst ist der Auf-/Zuklapp-Button:** Klick (ohne Ziehen) klappt die Ticket-Zeilen des Projekts auf/zu; Chevron-Icon im Balken zeigt den Zustand an
+- Ziehen des Balkens verschiebt weiterhin Start-/Enddatum (Drag-to-Move bleibt unverändert erhalten) — Klick- und Zieh-Geste werden anhand der Mausbewegung unterschieden
+- Tooltip am Balken erklärt beide Gesten („Klicken: Tickets auf-/zuklappen · Ziehen: Termin verschieben")
 
 ### v2.5.0 — Glassmorphism-Header
 - **AppHeader** komplett auf Glassmorphism-Design umgestellt: `backdrop-blur-xl` + semi-transparente Hintergründe (`bg-white/70 dark:bg-[#0e0d14]/60`)
