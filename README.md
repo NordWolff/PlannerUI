@@ -313,6 +313,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.14.0 — Versionsnummer im UI sichtbar
+- Aktuelle Versionsnummer wird jetzt angezeigt: dezent im Benutzermenü (rechts neben „Changelog") sowie in den Einstellungen im neuen Abschnitt **„Über T-Compass"** (mit Link zum Changelog-Modal)
+- Single Source of Truth: `currentVersion` in `frontend/src/data/changelog.js` (= Version des neuesten Einträgs) — Platzierung basiert auf Empfehlung des Webdesigners (Benutzermenü für schnellen Zugriff, Einstellungen für gezieltes Nachschlagen z. B. bei Support-Anfragen)
+
 ### v2.13.0 — Changelog im Benutzermenü
 - Neuer Menüpunkt **„Changelog"** im Benutzermenü öffnet ein Modal mit allen Versionen und ihren Änderungen
 - Datenquelle `frontend/src/data/changelog.js` — wird ab jetzt bei jeder dokumentierten Änderung parallel zu diesem README-Abschnitt gepflegt

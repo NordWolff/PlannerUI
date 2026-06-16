@@ -7,6 +7,7 @@ import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 import ChangelogModal from '@/components/common/ChangelogModal.vue'
+import { currentVersion } from '@/data/changelog'
 import { useTicketsStore } from '@/stores/tickets'
 import { useProjectsStore } from '@/stores/projects'
 import { useBoardsStore } from '@/stores/boards'
@@ -352,8 +353,9 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           Admin-Bereich
         </router-link>
         <button @click="showChangelog = true; showDropdown = false"
-          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
+          class="flex items-center justify-between gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
           Changelog
+          <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">v{{ currentVersion }}</span>
         </button>
         <hr class="border-black/[0.06] dark:border-white/[0.06] my-1" />
         <button @click="logout" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/[0.08] dark:hover:bg-red-500/[0.12] transition-colors">

@@ -3,6 +3,14 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.14.0',
+    title: 'Versionsnummer im UI sichtbar',
+    items: [
+      'Aktuelle Versionsnummer wird jetzt im Benutzermenü (unter "Changelog") sowie in den Einstellungen ("Über T-Compass") angezeigt',
+      'Platzierung basiert auf Empfehlung des Webdesigners: dezent im Benutzermenü für schnellen Zugriff, zusätzlich in den Einstellungen für gezieltes Nachschlagen (z. B. für Support-Anfragen)',
+    ],
+  },
+  {
     version: '2.13.0',
     title: 'Changelog im Benutzermenü',
     items: [
@@ -228,3 +236,6 @@ export const changelog = [
     ],
   },
 ]
+
+// Single Source of Truth für die im UI angezeigte Versionsnummer (Benutzermenü, Einstellungen).
+export const currentVersion = changelog[0].version

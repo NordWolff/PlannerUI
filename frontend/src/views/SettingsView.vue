@@ -3,8 +3,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseCard from '@/components/common/BaseCard.vue'
+import ChangelogModal from '@/components/common/ChangelogModal.vue'
 import { generateAvatar } from '@/utils/avatar'
+import { currentVersion } from '@/data/changelog'
 import api from '@/services/api'
+
+const showChangelog = ref(false)
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -184,5 +188,19 @@ async function saveProfile() {
         </button>
       </form>
     </BaseCard>
+
+    <BaseCard title="Über T-Compass">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Version</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-mono">v{{ currentVersion }}</p>
+        </div>
+        <button @click="showChangelog = true" class="text-sm text-primary dark:text-primary-dark hover:underline font-medium">
+          Changelog ansehen
+        </button>
+      </div>
+    </BaseCard>
   </div>
+
+  <ChangelogModal v-if="showChangelog" @close="showChangelog = false" />
 </template>

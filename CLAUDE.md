@@ -64,7 +64,7 @@ Tabs: Anfragen, **Alle Planner** (Planner anlegen/bearbeiten/löschen, Mitgliede
 Alle Stores liegen in `frontend/src/stores/`. Jeder Store ist selbstständig und ruft die API direkt über `api.js` auf.
 
 ### Changelog im Benutzermenü
-Benutzermenü → „Changelog" öffnet `ChangelogModal.vue`, das die Versionsliste aus `frontend/src/data/changelog.js` rendert. **Jede Änderung, die im README-Changelog dokumentiert wird, muss als neuer Eintrag (mit Versionsnummer, Titel, Punkten) auch in `changelog.js` ergänzt werden** — beide Quellen müssen synchron bleiben.
+Benutzermenü → „Changelog" öffnet `ChangelogModal.vue`, das die Versionsliste aus `frontend/src/data/changelog.js` rendert. **Jede Änderung, die im README-Changelog dokumentiert wird, muss als neuer Eintrag (mit Versionsnummer, Titel, Punkten) auch in `changelog.js` ergänzt werden** — beide Quellen müssen synchron bleiben. `currentVersion` (= `changelog[0].version`) ist die einzige Quelle für die im UI angezeigte Versionsnummer — Anzeige im Benutzermenü-Dropdown (neben „Changelog") und in `SettingsView.vue` („Über T-Compass").
 
 ### Composables (Singletons)
 - `useToast()` — Modulebene-Singleton (`toasts` ref außerhalb der Funktion). Überall importierbar, teilt denselben State.
