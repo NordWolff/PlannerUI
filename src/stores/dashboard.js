@@ -7,10 +7,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const activity = ref([])
   const loading = ref(false)
 
-  async function fetchStats() {
+  async function fetchStats(plannerId) {
     loading.value = true
     try {
-      const { data } = await api.get('/dashboard/stats')
+      const { data } = await api.get('/dashboard/stats', { params: plannerId ? { plannerId } : {} })
       stats.value = {
         teams: data.teams?.total ?? 0,
         projects: data.projects?.total ?? 0,
@@ -24,8 +24,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   }
 
-  async function fetchActivity() {
-    const { data } = await api.get('/dashboard/activity')
+  async function fetchActivity(plannerId) {
+    const { data } = await api.get('/dashboard/activity', { params: plannerId ? { plannerId } : {} })
     activity.value = data
   }
 
