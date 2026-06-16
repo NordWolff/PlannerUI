@@ -62,7 +62,10 @@ Alle Stores liegen in `frontend/src/stores/`. Jeder Store ist selbstständig und
 Avatare werden **lokal** via `@dicebear/avataaars@9` aus dem Benutzernamen generiert (`frontend/src/utils/avatar.js`). Kein CDN, keine HTTP-Anfragen — Seed = `username`, deterministisch.
 
 ### Design-System
-- **Primärfarbe:** `indigo-600` / Hover `indigo-700`
+- **Primärfarbe:** Telekom-Magenta-Palette, definiert in `frontend/tailwind.config.js` (`theme.extend.colors.primary`), ausgerichtet an den [Telekom Scale Design Guidelines](https://telekom.github.io/scale/?path=/docs/guidelines-colors--page):
+  - `primary` (`#E20074`, Telekom Magenta) · `primary-hover` (`#C70062`) · `primary-active` (`#A20050`) · `primary-light` (`#FCE5F1`) · `primary-disabled` (`#F1A8CE`)
+  - Dark-Mode-Varianten (aufgehellt für Kontrast auf `#0e0d14`): `primary-dark` (`#FF0A78`) · `primary-dark-hover` (`#FF4FA0`) · `primary-dark-active` (`#E2006A`)
+  - Verwendung app-weit über `bg-primary`, `text-primary`, `border-primary`, `ring-primary` (+ `dark:`-Varianten) statt der früheren `indigo-*`-Klassen — siehe `.btn-primary`/`.input-field` in `frontend/src/style.css` sowie `.brand-gradient`, `.app-header::after`, `.btn-create`, `.app-bg` für abgestimmte Magenta-Akzente.
 - **Dark Mode:** `gray-900` Background, `gray-800` Surface. **Standardmäßig aktiv** (`frontend/src/App.vue` setzt die `dark`-Klasse, außer `localStorage.darkMode === 'false'`); Toggle in `SettingsView.vue`.
 - **Status-Farben:** Draft=`gray-400`, Geplant=`blue-500`, In Arbeit=`yellow-500`, Review=`purple-500`, Abschlossen=`green-500`
 - Kein Footer, keine Sidebar — vollflächiger Content unter dem Header (`h-16`).

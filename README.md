@@ -309,6 +309,12 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.10.0 — Telekom-Magenta als Primärfarbe (app-weit)
+- Primärfarbe von Indigo auf **Telekom Magenta** (`#E20074`) umgestellt, ausgerichtet an den [Telekom Scale Design Guidelines](https://telekom.github.io/scale/?path=/docs/guidelines-colors--page)
+- Neue Farbpalette in `frontend/tailwind.config.js`: `primary` / `primary-hover` / `primary-active` / `primary-light` / `primary-disabled` (Light Mode) sowie aufgehellte `primary-dark` / `primary-dark-hover` / `primary-dark-active` (Dark Mode, für ausreichenden Kontrast auf dem dunklen App-Hintergrund)
+- Alle `indigo-*`-Tailwind-Klassen app-weit (Buttons, Links, Badges, Fokus-Ringe, Tab-Unterstreichungen) auf die neuen `primary-*`-Klassen migriert
+- Bestehende Magenta-Akzente (`.brand-gradient`, `.app-header::after`, `.btn-create`-Glow, `.app-bg`-Strahlverlauf) auf den einheitlichen Telekom-Magenta-Tonwert abgestimmt
+
 ### v2.9.0 — Planner-Verwaltung in den Admin-Bereich verschoben, mitgliedschaftsbasierte Sichtbarkeit, Dark Mode als Standard
 - **Planner-Verwaltung** aus der eigenständigen Seite `/planner-admin` entfernt und als neuer Tab **„Alle Planner"** in den Admin-Bereich (`/planner/:id/admin`) integriert; Route und View `PlannerAdminView.vue` gelöscht
 - **Mitgliedschaftsbasierte Planner-Sichtbarkeit:** `GET /api/planners` liefert jetzt für **alle Rollen** (auch Admin/Owner) standardmäßig nur Planner, in denen man Mitglied ist; `GET /api/planners?all=true` (Admin-only) liefert weiterhin alle Planner für die Systemverwaltung. Frontend-Store führt dafür zwei getrennte Listen (`planners` / `allPlanners`)

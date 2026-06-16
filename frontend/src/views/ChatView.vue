@@ -68,11 +68,11 @@ function escapeHtml(text) {
 function formatText(text, ticketRefs = []) {
   const refMap = Object.fromEntries((ticketRefs || []).map((r) => [r.ticketNumber, r]))
   return escapeHtml(text)
-    .replace(/@(\w+)/g, '<strong class="text-indigo-300">@$1</strong>')
+    .replace(/@(\w+)/g, '<strong class="text-primary-dark-hover">@$1</strong>')
     .replace(/#([A-Z]+-\d+)/g, (match, num) => {
       const ref = refMap[num]
       if (ref) {
-        return `<span data-ticket-id="${ref.ticketId}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 cursor-pointer hover:bg-indigo-200 dark:hover:bg-indigo-800/60 transition-colors" title="${escapeHtml(ref.title)}">#${num}</span>`
+        return `<span data-ticket-id="${ref.ticketId}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono font-semibold bg-primary-light dark:bg-primary-active/40 text-primary-hover dark:text-primary-dark-hover cursor-pointer hover:bg-primary-light dark:hover:bg-primary-active/60 transition-colors" title="${escapeHtml(ref.title)}">#${num}</span>`
       }
       return `<span class="font-mono text-xs text-gray-400 dark:text-gray-500">#${num}</span>`
     })
@@ -228,7 +228,7 @@ onUnmounted(() => clearInterval(pollingInterval))
             v-model="search"
             type="text"
             placeholder="Benutzer suchen…"
-            class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -243,7 +243,7 @@ onUnmounted(() => clearInterval(pollingInterval))
           :key="user.id"
           @click="selectUser(user)"
           class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left"
-          :class="selectedUser?.id === user.id ? 'bg-indigo-50 dark:bg-indigo-900/20 border-r-2 border-indigo-500' : ''"
+          :class="selectedUser?.id === user.id ? 'bg-primary-light dark:bg-primary-active/20 border-r-2 border-primary' : ''"
         >
           <!-- Avatar mit Status-Ampel (unten rechts) + Unread-Badge (oben rechts) -->
           <div class="relative shrink-0">
@@ -274,8 +274,8 @@ onUnmounted(() => clearInterval(pollingInterval))
 
       <!-- Kein Benutzer ausgewählt -->
       <div v-if="!selectedUser" class="flex-1 flex flex-col items-center justify-center text-center p-8">
-        <div class="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-4">
-          <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-16 h-16 rounded-full bg-primary-light dark:bg-primary-active/30 flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-primary-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
@@ -327,7 +327,7 @@ onUnmounted(() => clearInterval(pollingInterval))
               <div class="max-w-[65%]">
                 <div class="px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed"
                   :class="isOwn(msg)
-                    ? 'bg-indigo-600 text-white rounded-br-sm'
+                    ? 'bg-primary text-white rounded-br-sm'
                     : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-bl-sm shadow-sm'">
                   <span v-html="formatText(msg.text || '', msg.ticketRefs)" />
                 </div>
@@ -354,7 +354,7 @@ onUnmounted(() => clearInterval(pollingInterval))
             <button
               @click="send"
               :disabled="!newMessage.trim() || sending"
-              class="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors shrink-0"
+              class="p-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-40 transition-colors shrink-0"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

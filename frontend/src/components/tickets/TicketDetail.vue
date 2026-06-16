@@ -255,7 +255,7 @@ onMounted(async () => {
         <!-- ← Zurück -->
         <button
           @click="$emit('back')"
-          class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+          class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-dark transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -265,7 +265,7 @@ onMounted(async () => {
 
         <!-- Ticket number + type icon -->
         <div class="flex items-center gap-2 flex-1 min-w-0">
-          <span v-if="ticket.ticketNumber" class="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded shrink-0">
+          <span v-if="ticket.ticketNumber" class="font-mono text-xs font-semibold text-primary dark:text-primary-dark bg-primary-light dark:bg-primary-active/20 px-2 py-0.5 rounded shrink-0">
             {{ ticket.ticketNumber }}
           </span>
           <TicketTypeIcon :type="form.type" />
@@ -327,7 +327,7 @@ onMounted(async () => {
             ref="titleInputRef"
             v-model="form.title"
             class="w-full text-2xl font-bold text-gray-900 dark:text-white bg-transparent
-                   border-2 border-indigo-500 rounded-xl px-3 py-2 focus:outline-none"
+                   border-2 border-primary rounded-xl px-3 py-2 focus:outline-none"
             @blur="saveField('title')"
             @keydown.enter="saveField('title')"
             @keydown.escape="cancelEdit('title')"
@@ -341,7 +341,7 @@ onMounted(async () => {
           <div class="group relative" @click="startEdit('status')">
             <div
               v-if="editingField !== 'status'"
-              class="cursor-pointer rounded-full transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600"
+              class="cursor-pointer rounded-full transition-all hover:ring-2 hover:ring-primary-dark-hover dark:hover:ring-primary"
             >
               <StatusBadge :status="form.status" />
             </div>
@@ -351,7 +351,7 @@ onMounted(async () => {
               autofocus
               @change="saveSelect('status')"
               @blur="cancelEdit('status')"
-              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option v-for="o in STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
@@ -361,7 +361,7 @@ onMounted(async () => {
           <div class="group relative" @click="startEdit('priority')">
             <div
               v-if="editingField !== 'priority'"
-              class="cursor-pointer rounded-full transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600"
+              class="cursor-pointer rounded-full transition-all hover:ring-2 hover:ring-primary-dark-hover dark:hover:ring-primary"
             >
               <PriorityBadge :priority="form.priority" />
             </div>
@@ -371,7 +371,7 @@ onMounted(async () => {
               autofocus
               @change="saveSelect('priority')"
               @blur="cancelEdit('priority')"
-              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option v-for="o in PRIORITY_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
@@ -392,7 +392,7 @@ onMounted(async () => {
               autofocus
               @change="saveSelect('type')"
               @blur="cancelEdit('type')"
-              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option v-for="o in TYPE_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
@@ -419,7 +419,7 @@ onMounted(async () => {
               autofocus
               @change="saveSelect('projectId')"
               @blur="cancelEdit('projectId')"
-              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option :value="null">— Kein Projekt —</option>
               <option v-for="p in projectsStore.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
@@ -445,7 +445,7 @@ onMounted(async () => {
               autofocus
               @change="saveSelect('sprintId')"
               @blur="cancelEdit('sprintId')"
-              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option :value="null">— Kein Sprint —</option>
               <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -474,7 +474,7 @@ onMounted(async () => {
               ref="descriptionInputRef"
               v-model="form.description"
               rows="6"
-              class="w-full text-sm border-2 border-indigo-500 rounded-xl px-3 py-2.5 resize-none
+              class="w-full text-sm border-2 border-primary rounded-xl px-3 py-2.5 resize-none
                      focus:outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               @blur="saveField('description')"
               @keydown.escape="cancelEdit('description')"
@@ -493,7 +493,7 @@ onMounted(async () => {
               @click="activeTab = tab.id"
               class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
               :class="activeTab === tab.id
-                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                ? 'border-primary text-primary dark:border-primary-dark dark:text-primary-dark'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
             >
               {{ tab.label }}
@@ -512,7 +512,7 @@ onMounted(async () => {
                 <span>{{ checklistProgress }}%</span>
               </div>
               <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-indigo-600 rounded-full transition-all" :style="{ width: checklistProgress + '%' }" />
+                <div class="h-full bg-primary rounded-full transition-all" :style="{ width: checklistProgress + '%' }" />
               </div>
             </div>
             <div class="space-y-1">
@@ -560,8 +560,8 @@ onMounted(async () => {
                     @click="handleReaction(comment, emoji)"
                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors"
                     :class="myReaction(comment, emoji)
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
-                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500'"
+                      ? 'bg-primary-light dark:bg-primary-active/30 border-primary-dark-hover dark:border-primary text-primary-hover dark:text-primary-dark-hover'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-primary-dark-hover dark:hover:border-primary'"
                   >
                     <span>{{ emoji }}</span>
                     <span v-if="reactionCount(comment, emoji) > 0" class="font-medium">{{ reactionCount(comment, emoji) }}</span>
@@ -597,8 +597,8 @@ onMounted(async () => {
             <div
               class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
               :class="isDragOver
-                ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
-                : 'border-gray-300 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-500'"
+                ? 'border-primary-dark bg-primary-light dark:bg-primary-active/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-primary-dark-hover dark:hover:border-primary'"
               @dragover.prevent="isDragOver = true"
               @dragleave="isDragOver = false"
               @drop.prevent="onDrop"
@@ -610,7 +610,7 @@ onMounted(async () => {
             </div>
             <div v-if="uploadProgress !== null" class="flex items-center gap-3">
               <div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-indigo-500 rounded-full transition-all" :style="{ width: uploadProgress + '%' }" />
+                <div class="h-full bg-primary rounded-full transition-all" :style="{ width: uploadProgress + '%' }" />
               </div>
               <span class="text-xs text-gray-500 w-10 text-right">{{ uploadProgress }}%</span>
             </div>
@@ -645,12 +645,12 @@ onMounted(async () => {
           <div v-else class="space-y-3">
             <div v-if="!history.length" class="py-8 text-center text-sm text-gray-400">Keine Verlaufseinträge</div>
             <div v-for="entry in history" :key="entry.id" class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div class="w-2 h-2 mt-2 rounded-full bg-indigo-400 flex-none" />
+              <div class="w-2 h-2 mt-2 rounded-full bg-primary-dark flex-none" />
               <div>
                 <p class="text-sm text-gray-700 dark:text-gray-300">
                   <span class="font-medium">Status</span> geändert von
                   <span class="font-medium">{{ entry.from }}</span> zu
-                  <span class="font-medium text-indigo-600 dark:text-indigo-400">{{ entry.to }}</span>
+                  <span class="font-medium text-primary dark:text-primary-dark">{{ entry.to }}</span>
                 </p>
                 <p class="text-xs text-gray-400 mt-0.5">{{ new Date(entry.changedAt).toLocaleString('de-DE') }}</p>
               </div>

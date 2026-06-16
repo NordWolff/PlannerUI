@@ -280,7 +280,7 @@ function ticketDepLines() {
               @click="viewMode = m"
               class="px-3 py-1.5 transition-colors capitalize"
               :class="viewMode === m
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300'">
               {{ m === 'week' ? 'Woche' : m === 'month' ? 'Monat' : 'Quartal' }}
             </button>
@@ -290,7 +290,7 @@ function ticketDepLines() {
           <button @click="showDeps = !showDeps"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm transition-colors"
             :class="showDeps
-              ? 'bg-indigo-600 text-white border-indigo-600'
+              ? 'bg-primary text-white border-primary'
               : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -357,7 +357,7 @@ function ticketDepLines() {
                 <span class="text-white text-xs font-semibold truncate flex-1 pointer-events-none select-none">
                   {{ project.name }}
                 </span>
-                <span v-if="project.endDate" class="text-indigo-200 text-xs ml-1 shrink-0 pointer-events-none select-none">
+                <span v-if="project.endDate" class="text-primary-light text-xs ml-1 shrink-0 pointer-events-none select-none">
                   {{ new Date(project.endDate).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }) }}
                 </span>
                 <!-- Resize-Handle -->

@@ -132,8 +132,8 @@ async function onDrop(e, status) {
           </option>
         </select>
         <div class="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-          <button @click="viewMode = 'table'" class="px-3 py-2 text-sm transition-colors" :class="viewMode === 'table' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300'">Liste</button>
-          <button @click="viewMode = 'kanban'" class="px-3 py-2 text-sm transition-colors" :class="viewMode === 'kanban' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300'">Board</button>
+          <button @click="viewMode = 'table'" class="px-3 py-2 text-sm transition-colors" :class="viewMode === 'table' ? 'bg-primary text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300'">Liste</button>
+          <button @click="viewMode = 'kanban'" class="px-3 py-2 text-sm transition-colors" :class="viewMode === 'kanban' ? 'bg-primary text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300'">Board</button>
         </div>
       </div>
     </div>
@@ -175,7 +175,7 @@ async function onDrop(e, status) {
       <div v-for="status in allStatuses" :key="status"
         class="rounded-xl p-3 min-w-[240px] w-60 transition-colors"
         :class="dragOverStatus === status
-          ? 'bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-indigo-400'
+          ? 'bg-primary-light dark:bg-primary-active/30 ring-2 ring-primary-dark'
           : 'bg-gray-100 dark:bg-gray-800/50'"
         @dragover="onDragOver($event, status)"
         @dragleave="onDragLeave"
@@ -189,7 +189,7 @@ async function onDrop(e, status) {
             class="bg-white dark:bg-gray-700 rounded-lg p-3 text-sm cursor-grab active:cursor-grabbing hover:shadow-md border border-gray-200 dark:border-gray-600 transition-shadow">
             <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
-                <span v-if="ticket.ticketNumber" class="font-mono text-xs text-indigo-500 dark:text-indigo-400 block mb-0.5">{{ ticket.ticketNumber }}</span>
+                <span v-if="ticket.ticketNumber" class="font-mono text-xs text-primary dark:text-primary-dark block mb-0.5">{{ ticket.ticketNumber }}</span>
                 <p class="font-medium text-gray-900 dark:text-white line-clamp-2">{{ ticket.title }}</p>
               </div>
               <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="sm" class="mt-0.5" />

@@ -30,7 +30,7 @@ function onDragStart(e) {
     @click="emit('click', ticket)"
   >
     <div class="flex items-center gap-1.5 mb-1">
-      <span v-if="ticket.ticketNumber" class="font-mono text-xs text-indigo-500 dark:text-indigo-400">{{ ticket.ticketNumber }}</span>
+      <span v-if="ticket.ticketNumber" class="font-mono text-xs text-primary dark:text-primary-dark">{{ ticket.ticketNumber }}</span>
       <span
         v-if="ticket.type && ticket.type !== 'task'"
         class="text-xs font-medium px-1.5 py-0.5 rounded"

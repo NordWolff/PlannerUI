@@ -602,7 +602,7 @@ function formatDate(iso) {
         <button v-for="tab in tabs" :key="tab.key"
           class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors relative"
           :class="activeTab === tab.key
-            ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+            ? 'border-primary text-primary dark:text-primary-dark'
             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
           @click="activeTab = tab.key">
           {{ tab.label }}
@@ -664,7 +664,7 @@ function formatDate(iso) {
                   <select
                     :value="req.status"
                     @change="updateRequestStatus(req, $event.target.value)"
-                    class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     <option v-for="(s, key) in REQUEST_STATUS" :key="key" :value="key">{{ s.label }}</option>
                   </select>
@@ -696,11 +696,11 @@ function formatDate(iso) {
                   <input
                     v-model="req.adminNote"
                     type="text"
-                    class="flex-1 px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    class="flex-1 px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="Interne Notiz zur Anfrage…"
                     @keydown.enter="saveAdminNote(req)"
                   />
-                  <button @click="saveAdminNote(req)" class="px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                  <button @click="saveAdminNote(req)" class="px-2 py-1 text-xs text-primary dark:text-primary-dark border border-primary-light dark:border-primary-hover rounded-lg hover:bg-primary-light dark:hover:bg-primary-active/20 transition-colors">
                     Speichern
                   </button>
                 </div>
@@ -728,7 +728,7 @@ function formatDate(iso) {
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-primary-light dark:bg-primary-active/40 text-primary-hover dark:text-primary-dark-hover">
                   {{ planner.ticketPrefix ?? 'TKT' }}
                 </span>
                 <h2 class="font-semibold text-gray-900 dark:text-white truncate">{{ planner.name }}</h2>
@@ -745,7 +745,7 @@ function formatDate(iso) {
             </div>
             <div class="flex gap-2 shrink-0">
               <button @click="paOpenDetail(planner)"
-                class="text-xs px-2.5 py-1 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                class="text-xs px-2.5 py-1 rounded-lg border border-primary-dark-hover dark:border-primary-hover text-primary dark:text-primary-dark hover:bg-primary-light dark:hover:bg-primary-active/20 transition-colors">
                 Verwalten
               </button>
               <button @click="paDeletePlanner(planner)"
@@ -803,7 +803,7 @@ function formatDate(iso) {
             @click="paActiveTab = tab.id"
             class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors"
             :class="paActiveTab === tab.id
-              ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+              ? 'border-primary text-primary dark:border-primary-dark dark:text-primary-dark'
               : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">
             {{ tab.label }}
             <span v-if="tab.count !== undefined"
@@ -864,7 +864,7 @@ function formatDate(iso) {
                 </p>
               </div>
               <select :value="m.role" @change="paChangeMemberRole(m.userId, $event.target.value)"
-                class="text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:ring-indigo-500 focus:border-indigo-500">
+                class="text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:ring-primary focus:border-primary">
                 <option value="member">Mitglied</option>
                 <option value="owner">Verantwortlicher</option>
               </select>
@@ -882,7 +882,7 @@ function formatDate(iso) {
         <div v-if="paActiveTab === 'teams'" class="p-6 space-y-4">
 
           <details class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-            <summary class="px-4 py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer select-none hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg">
+            <summary class="px-4 py-3 text-sm font-medium text-primary dark:text-primary-dark cursor-pointer select-none hover:bg-primary-light dark:hover:bg-primary-active/10 rounded-lg">
               + Neues Team erstellen
             </summary>
             <div class="px-4 pb-4 pt-2 space-y-3">
@@ -927,7 +927,7 @@ function formatDate(iso) {
                     <button @click="paEditingTeam = null" class="text-xs text-gray-400 hover:underline">Abbrechen</button>
                   </template>
                   <template v-else>
-                    <button @click="paStartEditTeam(team)" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Bearbeiten</button>
+                    <button @click="paStartEditTeam(team)" class="text-xs text-primary dark:text-primary-dark hover:underline">Bearbeiten</button>
                     <button @click="paDeleteTeam(team.id)" class="text-xs text-red-500 hover:underline">Löschen</button>
                   </template>
                 </div>
@@ -963,7 +963,7 @@ function formatDate(iso) {
                   <button @click="paAddMemberTeamId = null; paNewTeamMember.userId = ''" class="btn-secondary text-sm py-1.5">Abbrechen</button>
                 </div>
                 <button v-else @click="paAddMemberTeamId = team.id; paNewTeamMember.userId = ''; paNewTeamMember.role = 'member'"
-                  class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                  class="text-xs text-primary dark:text-primary-dark hover:underline">
                   + Mitglied hinzufügen
                 </button>
               </div>
@@ -1009,15 +1009,15 @@ function formatDate(iso) {
       </div>
       <div v-else class="space-y-6">
         <!-- Planner-Info -->
-        <div class="flex items-center gap-3 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
-          <span class="font-mono text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 px-2 py-0.5 rounded">
+        <div class="flex items-center gap-3 p-4 rounded-xl bg-primary-light dark:bg-primary-active/20 border border-primary-light dark:border-primary-active">
+          <span class="font-mono text-sm font-semibold text-primary-hover dark:text-primary-dark-hover bg-primary-light dark:bg-primary-active/40 px-2 py-0.5 rounded">
             {{ activePlanner.ticketPrefix ?? 'TKT' }}
           </span>
           <div>
             <p class="font-semibold text-gray-900 dark:text-white">{{ activePlanner.name }}</p>
             <p v-if="activePlanner.description" class="text-xs text-gray-500 dark:text-gray-400">{{ activePlanner.description }}</p>
           </div>
-          <span class="ml-auto text-xs text-indigo-500 dark:text-indigo-400">{{ plannerMembers.length }} Mitglieder</span>
+          <span class="ml-auto text-xs text-primary dark:text-primary-dark">{{ plannerMembers.length }} Mitglieder</span>
         </div>
 
         <!-- Mitglied hinzufügen -->
@@ -1077,7 +1077,7 @@ function formatDate(iso) {
                 </td>
                 <td class="px-4 py-3">
                   <select :value="m.role" @change="changePlannerRole(m.userId, $event.target.value)"
-                    class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
                     <option value="member">Mitglied</option>
                     <option value="owner">Verantwortlicher</option>
                   </select>
@@ -1133,7 +1133,7 @@ function formatDate(iso) {
               </td>
               <td class="px-4 py-3">
                 <select :value="u.role" @change="changeRole(u, $event.target.value)"
-                  class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
                   <option v-for="r in ROLE_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</option>
                 </select>
               </td>
@@ -1160,7 +1160,7 @@ function formatDate(iso) {
             <option value="all">Alle Planner</option>
             <option v-for="p in plannersStore.allPlanners" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
-          <button @click="openCreateTeam" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shrink-0">
+          <button @click="openCreateTeam" class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
             + Team erstellen
           </button>
         </div>
@@ -1174,7 +1174,7 @@ function formatDate(iso) {
             <div class="flex items-center gap-2 flex-wrap">
               <p class="font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
               <span v-if="teamsFilterPlannerId === 'all'"
-                class="text-xs px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                class="text-xs px-1.5 py-0.5 rounded bg-primary-light dark:bg-primary-active/30 text-primary dark:text-primary-dark">
                 {{ plannerName(team.plannerId) }}
               </span>
             </div>
@@ -1182,7 +1182,7 @@ function formatDate(iso) {
             <p class="text-xs text-gray-400 mt-0.5">{{ team.members?.length ?? 0 }} Mitglieder</p>
           </div>
           <div class="flex gap-2 shrink-0">
-            <button @click="openEditTeam(team)" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-medium">Bearbeiten</button>
+            <button @click="openEditTeam(team)" class="text-sm text-primary dark:text-primary-dark hover:text-primary-active font-medium">Bearbeiten</button>
             <button @click="deleteTeam(team.id)" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 font-medium">Löschen</button>
           </div>
         </li>
@@ -1193,7 +1193,7 @@ function formatDate(iso) {
     <div v-else-if="activeTab === 'boards'">
       <div class="flex items-center justify-between mb-4">
         <p class="text-sm text-gray-500 dark:text-gray-400">Boards erstellen, bearbeiten und löschen.</p>
-        <button @click="openCreateBoard" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+        <button @click="openCreateBoard" class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors">
           + Board erstellen
         </button>
       </div>
@@ -1210,7 +1210,7 @@ function formatDate(iso) {
             </p>
           </div>
           <div class="flex gap-2 shrink-0">
-            <button @click="openEditBoard(board)" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-medium">Bearbeiten</button>
+            <button @click="openEditBoard(board)" class="text-sm text-primary dark:text-primary-dark hover:text-primary-active font-medium">Bearbeiten</button>
             <button @click="deleteBoard(board.id)" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 font-medium">Löschen</button>
           </div>
         </li>
@@ -1236,7 +1236,7 @@ function formatDate(iso) {
               <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ planner.name }}</p>
               <p class="text-xs text-gray-400 mt-0.5">
                 Zählerstand: <span class="font-mono">{{ planner.ticketCounter ?? 1 }}</span>
-                · Nächste Nr.: <span class="font-mono text-indigo-500">{{ (plannerPrefixEdits[planner.id] || planner.ticketPrefix || 'TKT').toUpperCase().replace(/[^A-Z0-9]/g,'') }}-{{ String(planner.ticketCounter ?? 1).padStart(4, '0') }}</span>
+                · Nächste Nr.: <span class="font-mono text-primary">{{ (plannerPrefixEdits[planner.id] || planner.ticketPrefix || 'TKT').toUpperCase().replace(/[^A-Z0-9]/g,'') }}-{{ String(planner.ticketCounter ?? 1).padStart(4, '0') }}</span>
               </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -1290,7 +1290,7 @@ function formatDate(iso) {
         </div>
         <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Vorschau nächste Ticketnummer</p>
-          <span class="inline-block font-mono text-lg font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-lg">
+          <span class="inline-block font-mono text-lg font-bold text-primary dark:text-primary-dark bg-primary-light dark:bg-primary-active/20 px-3 py-1 rounded-lg">
             {{ ticketSettings ? ticketSettings.nextTicketNumber : previewNumber(prefixInput, counterInput) }}
           </span>
         </div>
