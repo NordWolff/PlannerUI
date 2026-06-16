@@ -311,6 +311,12 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+> Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
+
+### v2.13.0 — Changelog im Benutzermenü
+- Neuer Menüpunkt **„Changelog"** im Benutzermenü öffnet ein Modal mit allen Versionen und ihren Änderungen
+- Datenquelle `frontend/src/data/changelog.js` — wird ab jetzt bei jeder dokumentierten Änderung parallel zu diesem README-Abschnitt gepflegt
+
 ### v2.12.0 — Rebranding: App heißt jetzt „T-Compass"
 - Header-Logo (`AppHeader.vue`), Login- und Register-Seite sowie der Browser-Tab-Titel (`frontend/index.html`) zeigen jetzt **„T-Compass"** statt „Planner"
 - Repo-Name (`PlannerUI`) und der fachliche Begriff „Planner" (Organisationseinheit im Multi-Planner-Konzept — Routen `/planners`, „Alle Planner"-Tab usw.) bleiben unverändert, da es sich um eine Domänen-Entität und nicht um den Produktnamen handelt

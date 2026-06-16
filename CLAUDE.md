@@ -63,6 +63,9 @@ Tabs: Anfragen, **Alle Planner** (Planner anlegen/bearbeiten/löschen, Mitgliede
 ### Frontend-State (Pinia Stores)
 Alle Stores liegen in `frontend/src/stores/`. Jeder Store ist selbstständig und ruft die API direkt über `api.js` auf.
 
+### Changelog im Benutzermenü
+Benutzermenü → „Changelog" öffnet `ChangelogModal.vue`, das die Versionsliste aus `frontend/src/data/changelog.js` rendert. **Jede Änderung, die im README-Changelog dokumentiert wird, muss als neuer Eintrag (mit Versionsnummer, Titel, Punkten) auch in `changelog.js` ergänzt werden** — beide Quellen müssen synchron bleiben.
+
 ### Composables (Singletons)
 - `useToast()` — Modulebene-Singleton (`toasts` ref außerhalb der Funktion). Überall importierbar, teilt denselben State.
 - `useUsers()` — Benutzer-Cache-Singleton (`fetched`-Flag verhindert doppelte API-Calls). Enthält `avatarUrl()` (generiert via `@dicebear/avataaars@9`) und `getOnlineStatus()`.
