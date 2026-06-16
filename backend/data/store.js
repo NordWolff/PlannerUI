@@ -48,12 +48,10 @@ export async function seedData() {
   const now = new Date().toISOString();
   const today = new Date();
 
-  const adminHash  = await bcrypt.hash('admin123', 10);
   const ownerHash  = await bcrypt.hash('owner123', 10);
   const userHash   = await bcrypt.hash('user123',  10);
 
   // ── IDs ──────────────────────────────────────────────────────────────────
-  const adminId        = uuidv4();
   const miladId        = uuidv4();
   const kayId          = uuidv4();
   const thomasWolffId  = uuidv4();
@@ -83,10 +81,9 @@ export async function seedData() {
   });
 
   store.users.push(
-    makeUser(adminId,        'admin',             'admin@planner.dev',             adminHash,  'admin'),
     makeUser(miladId,        'Milad',             'milad@planner.dev',             ownerHash,  'owner'),
     makeUser(kayId,          'Kay',               'kay@planner.dev',               ownerHash,  'owner'),
-    makeUser(thomasWolffId,  'Thomas Wolff',      'thomas.wolff@planner.dev',      userHash,   'user'),
+    makeUser(thomasWolffId,  'Thomas Wolff',      'thomas.wolff@planner.dev',      userHash,   'admin'),
     makeUser(torstenKloseId, 'Torsten Klose',     'torsten.klose@planner.dev',     userHash,   'user'),
     makeUser(cindyId,        'Cindy Scholka',     'cindy.scholka@planner.dev',     userHash,   'user'),
     makeUser(haraldId,       'Harald Hübner',     'harald.huebner@planner.dev',    userHash,   'user'),
@@ -414,7 +411,7 @@ export async function seedData() {
       title: 'API-Dokumentation',
       description: 'Alle Endpunkte dokumentieren',
       status: 'draft', priority: 'low',
-      assigneeId: null, createdBy: adminId, projectId: project3Id, boardId: null, sprintId: null, teamId: team1Id,
+      assigneeId: null, createdBy: thomasWolffId, projectId: project3Id, boardId: null, sprintId: null, teamId: team1Id,
       checklist: [], dependencies: [ids[0]], comments: [], chatRefs: [], history: [],
       createdAt: now, updatedAt: now,
     },

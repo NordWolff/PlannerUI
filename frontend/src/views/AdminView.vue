@@ -8,6 +8,9 @@ import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 import { generateAvatar } from '@/utils/avatar'
+import BaseModal from '@/components/common/BaseModal.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -23,12 +26,13 @@ const adminRequests = ref([])
 const loadingRequests = ref(false)
 
 const tabs = [
-  { key: 'requests',  label: 'Anfragen' },
-  { key: 'planner',   label: 'Planner-Zugang' },
-  { key: 'users',     label: 'Benutzer' },
-  { key: 'teams',     label: 'Teams' },
-  { key: 'boards',    label: 'Boards' },
-  { key: 'settings',  label: 'Einstellungen' },
+  { key: 'requests',     label: 'Anfragen' },
+  { key: 'alle-planner', label: 'Alle Planner' },
+  { key: 'planner',      label: 'Planner-Zugang' },
+  { key: 'users',        label: 'Benutzer' },
+  { key: 'teams',        label: 'Teams' },
+  { key: 'boards',       label: 'Boards' },
+  { key: 'settings',     label: 'Einstellungen' },
 ]
 
 const ROLE_OPTIONS = [
@@ -67,7 +71,7 @@ const plannerPrefixEdits = ref({})
 const savingPlannerPrefixId = ref(null)
 
 function initPlannerPrefixEdits() {
-  plannersStore.planners.forEach(p => {
+  plannersStore.allPlanners.forEach(p => {
     plannerPrefixEdits.value[p.id] = p.ticketPrefix ?? 'TKT'
   })
 }
@@ -190,11 +194,207 @@ function plannerUserEmail(userId) {
 
 onMounted(async () => {
   const pid = route.params.plannerId
-  await Promise.all([loadUsers(), loadRequests(), teamsStore.fetchTeams(pid ? { plannerId: pid } : {}), boardsStore.fetchBoards(pid ? { plannerId: pid } : {}), loadSettings(), plannersStore.fetchPlanners()])
+  await Promise.all([loadUsers(), loadRequests(), loadTeamsForFilter(), boardsStore.fetchBoards(pid ? { plannerId: pid } : {}), loadSettings(), plannersStore.fetchPlanners(), plannersStore.fetchAllPlanners()])
   initPlannerPrefixEdits()
 })
 
+// ─── Alle Planner (Planner anlegen/verwalten) ──────────────────────────────────
+
+const paSearch = ref('')
+const paFiltered = computed(() => {
+  const q = paSearch.value.toLowerCase()
+  const list = plannersStore.allPlanners.filter(p => p.name.toLowerCase().includes(q))
+  const mine = list.filter(p => p.createdBy === authStore.user?.id)
+  const others = list.filter(p => p.createdBy !== authStore.user?.id)
+  return [...mine, ...others]
+})
+
+const paShowCreateModal = ref(false)
+const paCreateForm = reactive({ name: '', description: '' })
+
+async function paSaveCreate() {
+  if (!paCreateForm.name.trim()) return
+  try {
+    await plannersStore.createPlanner({ name: paCreateForm.name, description: paCreateForm.description, members: [] })
+    toast.success('Planner erstellt')
+    paShowCreateModal.value = false
+    Object.assign(paCreateForm, { name: '', description: '' })
+  } catch { toast.error('Fehler beim Erstellen') }
+}
+
+const paDetailPlanner = ref(null)
+const paActiveTab = ref('info')
+const paInfoForm = reactive({ name: '', description: '' })
+const paNewMember = reactive({ userId: '', role: 'member' })
+const paExpandedTeamId = ref(null)
+const paEditingTeam = ref(null)
+const paEditTeamForm = reactive({ name: '', description: '' })
+const paNewTeamForm = reactive({ name: '', description: '' })
+const paAddMemberTeamId = ref(null)
+const paNewTeamMember = reactive({ userId: '', role: 'member' })
+const paTicketPrefixInput = ref('')
+
+function paOpenDetail(planner) {
+  paDetailPlanner.value = planner
+  paActiveTab.value = 'info'
+  Object.assign(paInfoForm, { name: planner.name, description: planner.description || '' })
+  paNewMember.userId = ''
+  paNewMember.role = 'member'
+  paNewTeamForm.name = ''
+  paNewTeamForm.description = ''
+  paTicketPrefixInput.value = planner.ticketPrefix ?? 'TKT'
+  teamsStore.fetchTeams({ plannerId: planner.id })
+}
+
+function paCloseDetail() {
+  paDetailPlanner.value = null
+  const pid = route.params.plannerId
+  teamsStore.fetchTeams(pid ? { plannerId: pid } : {})
+}
+
+async function paSaveInfo() {
+  try {
+    await plannersStore.updatePlanner(paDetailPlanner.value.id, { name: paInfoForm.name, description: paInfoForm.description })
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    toast.success('Gespeichert')
+  } catch { toast.error('Fehler beim Speichern') }
+}
+
+const paPlannerMembers = computed(() => paDetailPlanner.value?.members ?? [])
+
+const paAvailableUsersToAdd = computed(() => {
+  const existing = paPlannerMembers.value.map(m => m.userId)
+  return users.value.filter(u => u.role !== 'admin' && !existing.includes(u.id))
+})
+
+async function paAddMember() {
+  if (!paNewMember.userId) return
+  const updated = [...paPlannerMembers.value, { userId: paNewMember.userId, role: paNewMember.role }]
+  try {
+    await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    paNewMember.userId = ''
+    paNewMember.role = 'member'
+    toast.success('Mitglied hinzugefügt')
+  } catch { toast.error('Fehler') }
+}
+
+async function paRemoveMember(userId) {
+  const updated = paPlannerMembers.value.filter(m => m.userId !== userId)
+  try {
+    await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    toast.info('Mitglied entfernt')
+  } catch { toast.error('Fehler') }
+}
+
+async function paChangeMemberRole(userId, role) {
+  const updated = paPlannerMembers.value.map(m => m.userId === userId ? { ...m, role } : m)
+  try {
+    await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+  } catch { toast.error('Fehler') }
+}
+
+const paPlannerTeams = computed(() => teamsStore.teams)
+
+function paStartEditTeam(team) {
+  paEditingTeam.value = team.id
+  Object.assign(paEditTeamForm, { name: team.name, description: team.description || '' })
+}
+
+async function paSaveEditTeam(teamId) {
+  try {
+    await teamsStore.updateTeam(teamId, { name: paEditTeamForm.name, description: paEditTeamForm.description })
+    paEditingTeam.value = null
+    toast.success('Team aktualisiert')
+  } catch { toast.error('Fehler') }
+}
+
+async function paCreateTeam() {
+  if (!paNewTeamForm.name.trim()) return
+  try {
+    await teamsStore.createTeam({
+      name: paNewTeamForm.name,
+      description: paNewTeamForm.description,
+      plannerId: paDetailPlanner.value.id,
+    })
+    await plannersStore.fetchAllPlanners()
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    paNewTeamForm.name = ''
+    paNewTeamForm.description = ''
+    toast.success('Team erstellt')
+  } catch { toast.error('Fehler') }
+}
+
+async function paDeleteTeam(teamId) {
+  if (!confirm('Team wirklich löschen?')) return
+  try {
+    await teamsStore.deleteTeam(teamId)
+    await plannersStore.fetchAllPlanners()
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    toast.info('Team gelöscht')
+  } catch { toast.error('Fehler') }
+}
+
+async function paAddTeamMember(teamId) {
+  if (!paNewTeamMember.userId) return
+  try {
+    await teamsStore.addMember(teamId, paNewTeamMember.userId, paNewTeamMember.role)
+    paNewTeamMember.userId = ''
+    paNewTeamMember.role = 'member'
+    paAddMemberTeamId.value = null
+    toast.success('Mitglied hinzugefügt')
+  } catch { toast.error('Fehler') }
+}
+
+async function paRemoveTeamMember(teamId, userId) {
+  try {
+    await teamsStore.removeMember(teamId, userId)
+    toast.info('Mitglied entfernt')
+  } catch { toast.error('Fehler') }
+}
+
+function paUsersNotInTeam(team) {
+  const existing = (team.members ?? []).map(m => m.userId)
+  return users.value.filter(u => u.role !== 'admin' && !existing.includes(u.id))
+}
+
+async function paSaveSettings() {
+  const val = paTicketPrefixInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (!val) { toast.error('Präfix darf nicht leer sein'); return }
+  try {
+    await plannersStore.updateSettings(paDetailPlanner.value.id, { ticketPrefix: val })
+    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    paTicketPrefixInput.value = paDetailPlanner.value.ticketPrefix
+    toast.success('Einstellungen gespeichert')
+  } catch { toast.error('Fehler') }
+}
+
+async function paDeletePlanner(planner) {
+  if (!confirm(`Planner „${planner.name}" wirklich löschen?`)) return
+  try {
+    await plannersStore.deletePlanner(planner.id)
+    if (paDetailPlanner.value?.id === planner.id) paCloseDetail()
+    toast.info('Planner gelöscht')
+  } catch { toast.error('Fehler') }
+}
+
+const PA_ROLE_LABELS = { owner: 'Verantwortlicher', member: 'Mitglied' }
+
+function paUserName(id) { return users.value.find(u => u.id === id)?.username ?? id }
+
 // ─── Benutzer ─────────────────────────────────────────────────────────────────
+
+const userSearch = ref('')
+
+const filteredUsers = computed(() => {
+  const q = userSearch.value.trim().toLowerCase()
+  if (!q) return users.value
+  return users.value.filter(u =>
+    u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+  )
+})
 
 async function changeRole(user, newRole) {
   const prevRole = user.role
@@ -244,6 +444,21 @@ const openRequests = () => adminRequests.value.filter(r => r.status === 'open').
 
 // ─── Teams ────────────────────────────────────────────────────────────────────
 
+// Planner-Filter: 'all' zeigt Teams aller Planner, sonst nur die des gewählten Planners.
+// Default ist der aktuell aktive Planner (Kontext, in dem der Admin-Bereich geöffnet wurde).
+const teamsFilterPlannerId = ref(route.params.plannerId || 'all')
+
+function plannerName(plannerId) {
+  return plannersStore.allPlanners.find(p => p.id === plannerId)?.name ?? '—'
+}
+
+async function loadTeamsForFilter() {
+  const pid = teamsFilterPlannerId.value
+  await teamsStore.fetchTeams(pid && pid !== 'all' ? { plannerId: pid } : {})
+}
+
+watch(teamsFilterPlannerId, loadTeamsForFilter)
+
 function openCreateTeam() {
   editingTeam.value = null
   teamForm.name = ''
@@ -260,7 +475,7 @@ function openEditTeam(team) {
 
 async function saveTeam() {
   if (!teamForm.name.trim()) return
-  const pid = route.params.plannerId
+  const pid = teamsFilterPlannerId.value !== 'all' ? teamsFilterPlannerId.value : route.params.plannerId
   try {
     if (editingTeam.value) {
       await teamsStore.updateTeam(editingTeam.value.id, { name: teamForm.name, description: teamForm.description })
@@ -270,6 +485,7 @@ async function saveTeam() {
       toast.success('Team erstellt')
     }
     showTeamModal.value = false
+    await loadTeamsForFilter()
   } catch {
     toast.error('Fehler beim Speichern')
   }
@@ -495,6 +711,297 @@ function formatDate(iso) {
       </div>
     </div>
 
+    <!-- ── Alle Planner ─────────────────────────────────────────────────────── -->
+    <div v-else-if="activeTab === 'alle-planner'" class="space-y-6">
+      <div class="flex items-center justify-between gap-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Planner anlegen, Zugänge und Teams verwalten.</p>
+        <button @click="paShowCreateModal = true" class="btn-primary shrink-0">+ Neuer Planner</button>
+      </div>
+
+      <SearchInput v-model="paSearch" placeholder="Planner suchen..." />
+
+      <div v-if="plannersStore.loading" class="py-8 text-center text-gray-400 text-sm">Lade…</div>
+      <div v-else-if="!paFiltered.length" class="py-12 text-center text-sm text-gray-400">Keine Planner vorhanden</div>
+
+      <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div v-for="planner in paFiltered" :key="planner.id" class="card flex flex-col gap-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                  {{ planner.ticketPrefix ?? 'TKT' }}
+                </span>
+                <h2 class="font-semibold text-gray-900 dark:text-white truncate">{{ planner.name }}</h2>
+                <span v-if="planner.createdBy === authStore.user?.id"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                  Mein Planner
+                </span>
+              </div>
+              <p v-if="planner.description" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ planner.description }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                Erstellt von:
+                <span class="font-medium text-gray-600 dark:text-gray-300">{{ paUserName(planner.createdBy) }}</span>
+              </p>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button @click="paOpenDetail(planner)"
+                class="text-xs px-2.5 py-1 rounded-lg border border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                Verwalten
+              </button>
+              <button @click="paDeletePlanner(planner)"
+                class="text-xs px-2.5 py-1 rounded-lg border border-red-300 dark:border-red-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                Löschen
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-3 text-xs text-gray-400">
+            <span>{{ planner.members?.length ?? 0 }} Mitglieder</span>
+            <span>·</span>
+            <span>{{ planner.teamCount ?? 0 }} Teams</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <UserAvatar v-for="m in (planner.members ?? []).slice(0, 8)" :key="m.userId"
+              :username="paUserName(m.userId)" size="xs" :title="`${paUserName(m.userId)} (${PA_ROLE_LABELS[m.role] ?? m.role})`" />
+            <span v-if="(planner.members?.length ?? 0) > 8" class="text-xs text-gray-400">
+              +{{ planner.members.length - 8 }}
+            </span>
+            <span v-if="!(planner.members?.length)" class="text-xs text-gray-400 italic">Keine Mitglieder</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Erstell-Modal ──────────────────────────────────────────────── -->
+      <BaseModal v-if="paShowCreateModal" title="Neuer Planner" @close="paShowCreateModal = false">
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+            <input v-model="paCreateForm.name" type="text" class="input-field" placeholder="z. B. Entwicklungs-Planner" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
+            <textarea v-model="paCreateForm.description" rows="2" class="input-field resize-none" />
+          </div>
+        </div>
+        <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <button @click="paShowCreateModal = false" class="btn-secondary">Abbrechen</button>
+          <button @click="paSaveCreate" :disabled="!paCreateForm.name.trim()" class="btn-primary">Erstellen</button>
+        </div>
+      </BaseModal>
+
+      <!-- ── Detail-Modal ───────────────────────────────────────────────── -->
+      <BaseModal v-if="paDetailPlanner" :title="`${paDetailPlanner.name} — Verwaltung`" size="xl" @close="paCloseDetail">
+
+        <div class="flex border-b border-gray-200 dark:border-gray-700 px-6 pt-1 gap-1 overflow-x-auto">
+          <button v-for="tab in [
+              { id: 'info',       label: 'Info' },
+              { id: 'members',    label: 'Mitglieder', count: paDetailPlanner.members?.length },
+              { id: 'teams',      label: 'Teams',      count: paDetailPlanner.teamCount ?? 0 },
+              { id: 'settings',   label: 'Einstellungen' },
+            ]" :key="tab.id"
+            @click="paActiveTab = tab.id"
+            class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors"
+            :class="paActiveTab === tab.id
+              ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'">
+            {{ tab.label }}
+            <span v-if="tab.count !== undefined"
+              class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-1.5 py-0.5">
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+
+        <!-- ── Tab: Info ────────────────────────────────────────────────── -->
+        <div v-if="paActiveTab === 'info'" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+            <input v-model="paInfoForm.name" type="text" class="input-field" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
+            <textarea v-model="paInfoForm.description" rows="3" class="input-field resize-none" />
+          </div>
+          <div class="flex justify-end">
+            <button @click="paSaveInfo" :disabled="!paInfoForm.name.trim()" class="btn-primary">Speichern</button>
+          </div>
+        </div>
+
+        <!-- ── Tab: Mitglieder ──────────────────────────────────────────── -->
+        <div v-if="paActiveTab === 'members'" class="p-6 space-y-4">
+          <div class="flex gap-2 flex-wrap items-end">
+            <div class="flex-1 min-w-40">
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Benutzer</label>
+              <select v-model="paNewMember.userId" class="input-field">
+                <option value="">-- Benutzer wählen --</option>
+                <option v-for="u in paAvailableUsersToAdd" :key="u.id" :value="u.id">
+                  {{ u.username }} ({{ u.email }})
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rolle</label>
+              <select v-model="paNewMember.role" class="input-field w-40">
+                <option value="member">Mitglied</option>
+                <option value="owner">Verantwortlicher</option>
+              </select>
+            </div>
+            <button @click="paAddMember" :disabled="!paNewMember.userId" class="btn-primary">Hinzufügen</button>
+          </div>
+
+          <div class="rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+            <div v-if="!paPlannerMembers.length" class="px-4 py-6 text-sm text-gray-400 text-center italic">
+              Keine Mitglieder
+            </div>
+            <div v-for="m in paPlannerMembers" :key="m.userId"
+              class="flex items-center gap-3 px-4 py-3">
+              <UserAvatar :username="paUserName(m.userId)" size="sm" />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ paUserName(m.userId) }}</p>
+                <p class="text-xs text-gray-400">
+                  {{ users.find(u => u.id === m.userId)?.email ?? '' }}
+                </p>
+              </div>
+              <select :value="m.role" @change="paChangeMemberRole(m.userId, $event.target.value)"
+                class="text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="member">Mitglied</option>
+                <option value="owner">Verantwortlicher</option>
+              </select>
+              <button @click="paRemoveMember(m.userId)"
+                class="text-red-400 hover:text-red-600 transition-colors p-1 rounded">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tab: Teams ───────────────────────────────────────────────── -->
+        <div v-if="paActiveTab === 'teams'" class="p-6 space-y-4">
+
+          <details class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
+            <summary class="px-4 py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer select-none hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg">
+              + Neues Team erstellen
+            </summary>
+            <div class="px-4 pb-4 pt-2 space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Team-Name *</label>
+                <input v-model="paNewTeamForm.name" type="text" class="input-field" placeholder="z. B. Backend-Team" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Beschreibung</label>
+                <input v-model="paNewTeamForm.description" type="text" class="input-field" />
+              </div>
+              <button @click="paCreateTeam" :disabled="!paNewTeamForm.name.trim()" class="btn-primary text-sm">Team erstellen</button>
+            </div>
+          </details>
+
+          <div v-if="paPlannerTeams.length" class="space-y-2">
+            <div v-for="team in paPlannerTeams" :key="team.id"
+              class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+
+              <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700/50">
+                <button @click="paExpandedTeamId = paExpandedTeamId === team.id ? null : team.id"
+                  class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                  <svg class="w-4 h-4 transition-transform" :class="paExpandedTeamId === team.id ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+                <div class="flex-1 min-w-0">
+                  <template v-if="paEditingTeam === team.id">
+                    <div class="flex gap-2">
+                      <input v-model="paEditTeamForm.name" class="input-field text-sm py-1 flex-1" @keyup.enter="paSaveEditTeam(team.id)" />
+                      <input v-model="paEditTeamForm.description" class="input-field text-sm py-1 flex-1" placeholder="Beschreibung" />
+                    </div>
+                  </template>
+                  <template v-else>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
+                    <p v-if="team.description" class="text-xs text-gray-400 truncate">{{ team.description }}</p>
+                  </template>
+                </div>
+                <div class="flex gap-1.5 shrink-0">
+                  <template v-if="paEditingTeam === team.id">
+                    <button @click="paSaveEditTeam(team.id)" class="text-xs text-green-600 hover:underline">Speichern</button>
+                    <button @click="paEditingTeam = null" class="text-xs text-gray-400 hover:underline">Abbrechen</button>
+                  </template>
+                  <template v-else>
+                    <button @click="paStartEditTeam(team)" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Bearbeiten</button>
+                    <button @click="paDeleteTeam(team.id)" class="text-xs text-red-500 hover:underline">Löschen</button>
+                  </template>
+                </div>
+              </div>
+
+              <div v-if="paExpandedTeamId === team.id" class="px-4 pb-3 pt-2 space-y-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div v-for="m in (team.members ?? [])" :key="m.userId"
+                    class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs">
+                    <UserAvatar :username="paUserName(m.userId)" size="xs" />
+                    <span class="text-gray-700 dark:text-gray-300">{{ paUserName(m.userId) }}</span>
+                    <span class="text-gray-400">· {{ m.role === 'owner' ? 'Owner' : 'Mitglied' }}</span>
+                    <button @click="paRemoveTeamMember(team.id, m.userId)"
+                      class="text-red-400 hover:text-red-600 ml-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <span v-if="!(team.members?.length)" class="text-xs text-gray-400 italic">Keine Mitglieder</span>
+                </div>
+
+                <div v-if="paAddMemberTeamId === team.id" class="flex gap-2 flex-wrap items-end pt-1">
+                  <select v-model="paNewTeamMember.userId" class="input-field text-sm flex-1 min-w-36">
+                    <option value="">-- Benutzer wählen --</option>
+                    <option v-for="u in paUsersNotInTeam(team)" :key="u.id" :value="u.id">{{ u.username }}</option>
+                  </select>
+                  <select v-model="paNewTeamMember.role" class="input-field text-sm w-32">
+                    <option value="member">Mitglied</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                  <button @click="paAddTeamMember(team.id)" :disabled="!paNewTeamMember.userId" class="btn-primary text-sm py-1.5">Hinzufügen</button>
+                  <button @click="paAddMemberTeamId = null; paNewTeamMember.userId = ''" class="btn-secondary text-sm py-1.5">Abbrechen</button>
+                </div>
+                <button v-else @click="paAddMemberTeamId = team.id; paNewTeamMember.userId = ''; paNewTeamMember.role = 'member'"
+                  class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                  + Mitglied hinzufügen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="!teamsStore.loading" class="py-8 text-center text-sm text-gray-400 italic">
+            Noch keine Teams in diesem Planner
+          </div>
+          <div v-else class="py-4 text-center text-sm text-gray-400">Lade Teams…</div>
+        </div>
+
+        <!-- ── Tab: Einstellungen ────────────────────────────────────────── -->
+        <div v-if="paActiveTab === 'settings'" class="p-6 space-y-6">
+          <div class="max-w-sm">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ticket-Präfix</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              Präfix für neue Ticket-Nummern in diesem Planner, z. B. <code class="font-mono bg-gray-100 dark:bg-gray-700 px-1 rounded">ENT</code> → <code class="font-mono bg-gray-100 dark:bg-gray-700 px-1 rounded">ENT-0042</code>
+            </p>
+            <div class="flex gap-2">
+              <input v-model="paTicketPrefixInput" type="text" maxlength="8"
+                class="input-field w-32 font-mono uppercase"
+                placeholder="TKT"
+                @input="paTicketPrefixInput = paTicketPrefixInput.toUpperCase().replace(/[^A-Z0-9]/g, '')" />
+              <button @click="paSaveSettings" class="btn-primary">Speichern</button>
+            </div>
+            <p class="text-xs text-gray-400 mt-1.5">
+              Aktueller Zähler: <span class="font-mono">{{ paDetailPlanner.ticketCounter ?? 1 }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <button @click="paCloseDetail" class="btn-secondary">Schließen</button>
+        </div>
+      </BaseModal>
+    </div>
+
     <!-- ── Planner-Zugang ─────────────────────────────────────────────────── -->
     <div v-else-if="activeTab === 'planner'">
       <div v-if="!activePlanner" class="py-12 text-center text-sm text-gray-400">
@@ -596,7 +1103,9 @@ function formatDate(iso) {
         <strong>Owner</strong> kann Teams und Projekte verwalten,
         <strong>Benutzer</strong> hat Standardzugriff.
       </p>
+      <SearchInput v-model="userSearch" placeholder="Benutzer oder E-Mail suchen..." class="mb-4 max-w-sm" />
       <p v-if="loadingUsers" class="text-gray-400 text-sm">Lade Benutzer…</p>
+      <p v-else-if="!filteredUsers.length" class="py-8 text-center text-sm text-gray-400 italic">Keine Benutzer gefunden</p>
       <div v-else class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
         <table class="w-full">
           <thead class="bg-gray-50 dark:bg-gray-700/50">
@@ -608,7 +1117,7 @@ function formatDate(iso) {
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-            <tr v-for="u in users" :key="u.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <tr v-for="u in filteredUsers" :key="u.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <img :src="generateAvatar(u.username)"
@@ -643,11 +1152,18 @@ function formatDate(iso) {
 
     <!-- ── Teams ────────────────────────────────────────────────────────────── -->
     <div v-else-if="activeTab === 'teams'">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <p class="text-sm text-gray-500 dark:text-gray-400">Teams erstellen, bearbeiten und löschen.</p>
-        <button @click="openCreateTeam" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
-          + Team erstellen
-        </button>
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Planner</label>
+          <select v-model="teamsFilterPlannerId" class="input-field text-sm py-1.5 w-56">
+            <option value="all">Alle Planner</option>
+            <option v-for="p in plannersStore.allPlanners" :key="p.id" :value="p.id">{{ p.name }}</option>
+          </select>
+          <button @click="openCreateTeam" class="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shrink-0">
+            + Team erstellen
+          </button>
+        </div>
       </div>
       <p v-if="teamsStore.loading" class="text-gray-400 text-sm">Lade Teams…</p>
       <p v-else-if="!teamsStore.teams.length" class="text-gray-400 text-sm">Keine Teams vorhanden.</p>
@@ -655,7 +1171,13 @@ function formatDate(iso) {
         <li v-for="team in teamsStore.teams" :key="team.id"
           class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="font-medium text-gray-900 dark:text-white">{{ team.name }}</p>
+              <span v-if="teamsFilterPlannerId === 'all'"
+                class="text-xs px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                {{ plannerName(team.plannerId) }}
+              </span>
+            </div>
             <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ team.description || '' }}</p>
             <p class="text-xs text-gray-400 mt-0.5">{{ team.members?.length ?? 0 }} Mitglieder</p>
           </div>
@@ -705,10 +1227,10 @@ function formatDate(iso) {
           <p class="text-xs text-gray-400 mt-0.5">Jeder Planner hat eine eigene Ticket-Nummerierung. Der Zähler läuft unabhängig.</p>
         </div>
         <div class="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div v-if="!plannersStore.planners.length" class="px-4 py-4 text-sm text-gray-400 italic text-center">
+          <div v-if="!plannersStore.allPlanners.length" class="px-4 py-4 text-sm text-gray-400 italic text-center">
             Keine Planner vorhanden
           </div>
-          <div v-for="planner in plannersStore.planners" :key="planner.id"
+          <div v-for="planner in plannersStore.allPlanners" :key="planner.id"
             class="flex items-center gap-4 px-4 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ planner.name }}</p>

@@ -26,7 +26,7 @@ Das Backend nutzt einen **In-Memory-Store** (`backend/data/store.js`). Es gibt k
 ### Authentifizierung
 - Token wird als `planner_token` Cookie (30 Tage, bei „Angemeldet bleiben") oder in `sessionStorage` gespeichert.
 - Axios-Interceptor in `frontend/src/services/api.js` hängt den Token an alle Requests. Bei 401 → automatischer Logout + Redirect zu `/login`.
-- Router-Guard in `frontend/src/router/index.js` prüft Token und Admin-Rolle. `/planner/:id/admin` und `/planner-admin` sind nur für `role === 'admin'` zugänglich.
+- Router-Guard in `frontend/src/router/index.js` prüft Token und Admin-Rolle. `/planner/:id/admin` ist nur für `role === 'admin'` zugänglich.
 - Backend-Middleware: `authenticateToken` (alle geschützten Routes), `requireAdmin`, `requireAdminOrOwner` (Sprint-Schreibzugriff).
 
 ### Rollen
@@ -43,9 +43,12 @@ Das Backend nutzt einen **In-Memory-Store** (`backend/data/store.js`). Es gibt k
 - URL-Struktur: `/planners` (Auswahl) → `/planner/:plannerId/dashboard` (Inhalt).
 - Aktiver Planner wird in `localStorage` als `planner_active_id` gespeichert.
 - Beim Planner-Wechsel (`setActivePlanner`) werden Projects, Boards, Sprints und Tickets-Stores automatisch geleert.
-- Admin-Verwaltung unter `/planner-admin` (nur für `role === 'admin'`).
 - Alle Fetch-Funktionen der Stores akzeptieren `filters`-Objekt, das `plannerId` weitergeben kann.
 - Seed-Daten: 3 Planner (Entwicklung, Design, Management), je mit eigenen Teams, Projekten und Tickets.
+- **Sichtbarkeit:** `GET /api/planners` liefert standardmäßig nur Planner, in denen der angefragende Benutzer Mitglied ist — das gilt auch für `admin`/`owner`. Nur `GET /api/planners?all=true` (admin-only) liefert wirklich alle Planner; das nutzt ausschließlich der Admin-Bereich zur Systemverwaltung (`frontend/src/stores/planners.js`: `planners` = eigene Mitgliedschaft, `allPlanners` = alle Planner für Admin-Verwaltung, beide werden bei Mutationen synchron gehalten).
+
+### Admin-Bereich (`AdminView.vue`, unter `/planner/:plannerId/admin`)
+Tabs: Anfragen, **Alle Planner** (Planner anlegen/bearbeiten/löschen, Mitglieder, Teams, Ticket-Präfix pro Planner — system­weit, unabhängig von eigener Mitgliedschaft), Planner-Zugang (Mitglieder des aktuell aktiven Planners), Benutzer (Rollenverwaltung, mit Such­feld für Benutzername/E-Mail), Teams (Planner-Filter-Dropdown „Alle Planner“ oder ein bestimmter Planner, um Teams systemweit zu verwalten), Boards, Einstellungen (globaler Ticket-Präfix-Fallback + Präfix je Planner).
 
 ### Frontend-State (Pinia Stores)
 Alle Stores liegen in `frontend/src/stores/`. Jeder Store ist selbstständig und ruft die API direkt über `api.js` auf.
@@ -60,7 +63,7 @@ Avatare werden **lokal** via `@dicebear/avataaars@9` aus dem Benutzernamen gener
 
 ### Design-System
 - **Primärfarbe:** `indigo-600` / Hover `indigo-700`
-- **Dark Mode:** `gray-900` Background, `gray-800` Surface
+- **Dark Mode:** `gray-900` Background, `gray-800` Surface. **Standardmäßig aktiv** (`frontend/src/App.vue` setzt die `dark`-Klasse, außer `localStorage.darkMode === 'false'`); Toggle in `SettingsView.vue`.
 - **Status-Farben:** Draft=`gray-400`, Geplant=`blue-500`, In Arbeit=`yellow-500`, Review=`purple-500`, Abschlossen=`green-500`
 - Kein Footer, keine Sidebar — vollflächiger Content unter dem Header (`h-16`).
 - Komponentenstruktur: `components/common/` für wiederverwendbare Elemente, `components/kanban/` und `components/tickets/` für domänenspezifische Komponenten, `views/` für Seitenkomponenten.
@@ -75,7 +78,6 @@ Avatare werden **lokal** via `@dicebear/avataaars@9` aus dem Benutzernamen gener
 
 | Rolle | E-Mail | Passwort | Planner-Zugang |
 |---|---|---|---|
-| Admin | admin@planner.dev | admin123 | alle Planner |
 | Owner | milad@planner.dev | owner123 | Entwicklungs-Planner, Management-Planner |
 | Owner | kay@planner.dev | owner123 | Design-Planner |
-| User | thomas.wolff@planner.dev | user123 | Entwicklungs-Planner |
+| Admin | thomas.wolff@planner.dev | user123 | Entwicklungs-Planner (Mitglied) |

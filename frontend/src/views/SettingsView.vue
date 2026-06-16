@@ -9,7 +9,7 @@ import api from '@/services/api'
 const authStore = useAuthStore()
 const toast = useToast()
 
-const darkMode = ref(localStorage.getItem('darkMode') === 'true')
+const darkMode = ref(localStorage.getItem('darkMode') !== 'false')
 function toggleDarkMode() {
   darkMode.value = !darkMode.value
   localStorage.setItem('darkMode', darkMode.value)

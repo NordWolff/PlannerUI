@@ -143,23 +143,6 @@ async function login() {
         </p>
       </div>
 
-      <!-- Demo-Zugangsdaten -->
-      <div class="mt-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Demo-Zugangsdaten</p>
-        <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <div class="space-y-1">
-            <p><span class="font-medium text-gray-700 dark:text-gray-300">Admin</span></p>
-            <p>admin@planner.dev</p>
-            <p class="font-mono">admin123</p>
-          </div>
-          <div class="space-y-1">
-            <p><span class="font-medium text-gray-700 dark:text-gray-300">Owner (Milad)</span></p>
-            <p>milad@planner.dev</p>
-            <p class="font-mono">owner123</p>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </template>

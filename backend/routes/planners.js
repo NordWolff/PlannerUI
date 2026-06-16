@@ -19,9 +19,12 @@ function enrich(planner) {
   };
 }
 
-// GET /api/planners — Admin: alle; andere: nur eigene
+// GET /api/planners — standardmäßig nur Planner, in denen der Benutzer Mitglied ist (gilt auch für Admin/Owner).
+// GET /api/planners?all=true — nur für Admin: alle Planner (Systemverwaltung im Admin-Bereich).
 router.get('/', (req, res) => {
-  if (req.user.role === 'admin') return res.json(store.planners.map(enrich));
+  if (req.user.role === 'admin' && req.query.all === 'true') {
+    return res.json(store.planners.map(enrich));
+  }
   return res.json(store.planners.filter(p => memberIds(p).includes(req.user.id)).map(enrich));
 });
 

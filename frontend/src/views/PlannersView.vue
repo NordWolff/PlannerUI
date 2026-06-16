@@ -54,16 +54,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Admin: neuen Planner erstellen -->
-    <div v-if="authStore.isAdmin" class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-      <router-link
-        to="/planner-admin"
-        class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-      >
-        + Planner verwalten (Admin)
-      </router-link>
-    </div>
   </div>
 </template>
 
