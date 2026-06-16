@@ -203,7 +203,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
   <header class="app-header fixed top-0 left-0 right-0 z-40 h-16 bg-white/70 dark:bg-[#0e0d14]/60 backdrop-blur-xl flex items-center px-4 sm:px-6">
     <!-- Logo + Planner-Kontext -->
     <div class="flex-none flex items-center gap-3 mr-6">
-      <span class="text-lg font-bold brand-gradient">Planner</span>
+      <span class="text-lg font-bold brand-gradient">T-Compass</span>
       <template v-if="plannersStore.activePlanner">
         <span class="text-gray-300 dark:text-gray-600">|</span>
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[140px] truncate">
