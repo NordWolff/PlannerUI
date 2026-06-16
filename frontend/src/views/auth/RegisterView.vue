@@ -17,7 +17,7 @@ async function register() {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-primary dark:text-primary-dark">Planner</h1>
+        <h1 class="text-3xl font-bold text-primary dark:text-primary-dark">T-Compass</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-2">Neues Konto erstellen</p>
       </div>
 

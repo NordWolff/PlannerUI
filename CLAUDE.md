@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Produktname
+
+Die App heißt im UI **„T-Compass"** (Header-Logo `AppHeader.vue`, Login-/Register-Seite, Browser-Tab-Titel in `frontend/index.html`). Repo-Name (`PlannerUI`) und der Domänenbegriff **„Planner"** (die einzelne Organisationseinheit im Multi-Planner-Konzept, z. B. „Planner-Zugang", „Alle Planner", Route `/planners`) bleiben davon unberührt — das ist ein fachlicher Begriff innerhalb der App, kein Produktname.
+
 ## Commands
 
 ### Backend starten

@@ -1,6 +1,8 @@
-# PlannerUI
+# PlannerUI (App-Name im UI: „T-Compass")
 
 Projektmanagement-Anwendung mit Vue 3 Frontend und Node.js Backend — entwickelt als MVP für Team-Planung, Kanban-Boards, Ticketsystem und Teamverwaltung.
+
+> Im UI heißt die App **„T-Compass"** (Header, Login-/Register-Seite, Browser-Tab). Der Repo-/Projektname `PlannerUI` und der fachliche Begriff „Planner" (die einzelne Organisationseinheit im Multi-Planner-Konzept) bleiben unverändert — das ist kein Produktname, sondern eine Domänen-Entität innerhalb von T-Compass.
 
 ---
 
@@ -308,6 +310,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v2.12.0 — Rebranding: App heißt jetzt „T-Compass"
+- Header-Logo (`AppHeader.vue`), Login- und Register-Seite sowie der Browser-Tab-Titel (`frontend/index.html`) zeigen jetzt **„T-Compass"** statt „Planner"
+- Repo-Name (`PlannerUI`) und der fachliche Begriff „Planner" (Organisationseinheit im Multi-Planner-Konzept — Routen `/planners`, „Alle Planner"-Tab usw.) bleiben unverändert, da es sich um eine Domänen-Entität und nicht um den Produktnamen handelt
 
 ### v2.11.0 — Dashboard, Reports & Admin-Boards: korrektes Planner-Scoping
 - **Dashboard:** KPI-Kacheln, aktueller Sprint, Ticket-Statusverteilung und „Neueste Tickets" zeigten bisher Daten **aller** Planner systemweit, statt nur des aktiven Planners. `GET /api/dashboard/stats` und `/activity` akzeptieren jetzt `?plannerId=` und filtern Teams/Projekte/Boards/Sprints/Tickets serverseitig

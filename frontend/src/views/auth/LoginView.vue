@@ -44,7 +44,7 @@ async function login() {
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Planner</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">T-Compass</h1>
         <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Melde dich an, um fortzufahren</p>
       </div>
 
