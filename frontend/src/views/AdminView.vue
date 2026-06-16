@@ -97,7 +97,7 @@ const teamForm = reactive({ name: '', description: '' })
 // Board-Modal
 const showBoardModal = ref(false)
 const editingBoard = ref(null)
-const boardForm = reactive({ name: '', description: '', startDate: '', endDate: '' })
+const boardForm = reactive({ name: '', description: '', startDate: '', endDate: '', plannerId: '' })
 
 // ─── Laden ────────────────────────────────────────────────────────────────────
 
@@ -193,8 +193,7 @@ function plannerUserEmail(userId) {
 }
 
 onMounted(async () => {
-  const pid = route.params.plannerId
-  await Promise.all([loadUsers(), loadRequests(), loadTeamsForFilter(), boardsStore.fetchBoards(pid ? { plannerId: pid } : {}), loadSettings(), plannersStore.fetchPlanners(), plannersStore.fetchAllPlanners()])
+  await Promise.all([loadUsers(), loadRequests(), loadTeamsForFilter(), loadBoardsForFilter(), loadSettings(), plannersStore.fetchPlanners(), plannersStore.fetchAllPlanners()])
   initPlannerPrefixEdits()
 })
 
@@ -503,12 +502,23 @@ async function deleteTeam(id) {
 
 // ─── Boards ───────────────────────────────────────────────────────────────────
 
+// Planner-Filter: 'all' zeigt Boards aller Planner (auch ohne eigene Mitgliedschaft), sonst nur die des gewählten Planners.
+const boardsFilterPlannerId = ref(route.params.plannerId || 'all')
+
+async function loadBoardsForFilter() {
+  const pid = boardsFilterPlannerId.value
+  await boardsStore.fetchBoards(pid && pid !== 'all' ? { plannerId: pid } : {})
+}
+
+watch(boardsFilterPlannerId, loadBoardsForFilter)
+
 function openCreateBoard() {
   editingBoard.value = null
   boardForm.name = ''
   boardForm.description = ''
   boardForm.startDate = ''
   boardForm.endDate = ''
+  boardForm.plannerId = boardsFilterPlannerId.value !== 'all' ? boardsFilterPlannerId.value : (route.params.plannerId || '')
   showBoardModal.value = true
 }
 
@@ -518,6 +528,7 @@ function openEditBoard(board) {
   boardForm.description = board.description || ''
   boardForm.startDate = board.startDate?.substring(0, 10) || ''
   boardForm.endDate = board.endDate?.substring(0, 10) || ''
+  boardForm.plannerId = board.plannerId || ''
   showBoardModal.value = true
 }
 
@@ -532,6 +543,7 @@ async function saveBoard() {
       toast.success('Board erstellt')
     }
     showBoardModal.value = false
+    await loadBoardsForFilter()
   } catch (e) {
     toast.error(e.response?.data?.error || 'Fehler beim Speichern')
   }
@@ -1191,11 +1203,18 @@ function formatDate(iso) {
 
     <!-- ── Boards ───────────────────────────────────────────────────────────── -->
     <div v-else-if="activeTab === 'boards'">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <p class="text-sm text-gray-500 dark:text-gray-400">Boards erstellen, bearbeiten und löschen.</p>
-        <button @click="openCreateBoard" class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors">
-          + Board erstellen
-        </button>
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Planner</label>
+          <select v-model="boardsFilterPlannerId" class="input-field text-sm py-1.5 w-56">
+            <option value="all">Alle Planner</option>
+            <option v-for="p in plannersStore.allPlanners" :key="p.id" :value="p.id">{{ p.name }}</option>
+          </select>
+          <button @click="openCreateBoard" class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+            + Board erstellen
+          </button>
+        </div>
       </div>
       <p v-if="boardsStore.loading" class="text-gray-400 text-sm">Lade Boards…</p>
       <p v-else-if="!boardsStore.boards.length" class="text-gray-400 text-sm">Keine Boards vorhanden.</p>
@@ -1203,7 +1222,13 @@ function formatDate(iso) {
         <li v-for="board in boardsStore.boards" :key="board.id"
           class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-medium text-gray-900 dark:text-white">{{ board.name }}</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="font-medium text-gray-900 dark:text-white">{{ board.name }}</p>
+              <span v-if="boardsFilterPlannerId === 'all'"
+                class="text-xs px-1.5 py-0.5 rounded bg-primary-light dark:bg-primary-active/20 text-primary dark:text-primary-dark">
+                {{ plannerName(board.plannerId) }}
+              </span>
+            </div>
             <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ board.description }}</p>
             <p v-if="board.startDate || board.endDate" class="text-xs text-gray-400 mt-0.5">
               {{ board.startDate?.substring(0, 10) }} – {{ board.endDate?.substring(0, 10) }}
@@ -1348,6 +1373,13 @@ function formatDate(iso) {
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Beschreibung</label>
             <textarea v-model="boardForm.description" rows="2" class="input-field resize-none" placeholder="Optionale Beschreibung…" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Planner</label>
+            <select v-model="boardForm.plannerId" class="input-field">
+              <option value="">— Kein Planner —</option>
+              <option v-for="p in plannersStore.allPlanners" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>

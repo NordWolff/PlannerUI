@@ -309,6 +309,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.11.0 — Dashboard, Reports & Admin-Boards: korrektes Planner-Scoping
+- **Dashboard:** KPI-Kacheln, aktueller Sprint, Ticket-Statusverteilung und „Neueste Tickets" zeigten bisher Daten **aller** Planner systemweit, statt nur des aktiven Planners. `GET /api/dashboard/stats` und `/activity` akzeptieren jetzt `?plannerId=` und filtern Teams/Projekte/Boards/Sprints/Tickets serverseitig
+- **Reports:** neuer Planner-Filter — „Alle meine Planner" (eigene Mitgliedschaften aggregiert) oder ein bestimmter eigener Planner; KPI-Kacheln und Ticket-Tabelle sind jetzt planner-scoped statt global
+- **Admin-Bereich → Boards:** Planner-Filter-Dropdown analog zum Teams-Tab („Alle Planner" oder ein bestimmter, auch ohne eigene Mitgliedschaft) inkl. Planner-Badge pro Board; Board-Modal hat jetzt ein Planner-Auswahlfeld
+
 ### v2.10.0 — Telekom-Magenta als Primärfarbe (app-weit)
 - Primärfarbe von Indigo auf **Telekom Magenta** (`#E20074`) umgestellt, ausgerichtet an den [Telekom Scale Design Guidelines](https://telekom.github.io/scale/?path=/docs/guidelines-colors--page)
 - Neue Farbpalette in `frontend/tailwind.config.js`: `primary` / `primary-hover` / `primary-active` / `primary-light` / `primary-disabled` (Light Mode) sowie aufgehellte `primary-dark` / `primary-dark-hover` / `primary-dark-active` (Dark Mode, für ausreichenden Kontrast auf dem dunklen App-Hintergrund)

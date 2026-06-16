@@ -20,8 +20,8 @@ const boardForm = reactive({ name: '', description: '', startDate: '', endDate: 
 onMounted(() => {
   const plannerId = route.params.plannerId
   return Promise.all([
-    dashboardStore.fetchStats(),
-    dashboardStore.fetchActivity(),
+    dashboardStore.fetchStats(plannerId),
+    dashboardStore.fetchActivity(plannerId),
     boardsStore.fetchBoards(plannerId ? { plannerId } : {}),
   ])
 })
@@ -61,13 +61,13 @@ async function saveBoard() {
     await boardsStore.createBoard({ ...boardForm, plannerId })
   }
   showBoardModal.value = false
-  dashboardStore.fetchStats()
+  dashboardStore.fetchStats(plannerId)
 }
 
 async function deleteBoard(id) {
   if (!confirm('Board wirklich löschen?')) return
   await boardsStore.deleteBoard(id)
-  dashboardStore.fetchStats()
+  dashboardStore.fetchStats(route.params.plannerId)
 }
 </script>
 
