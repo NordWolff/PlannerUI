@@ -48,7 +48,7 @@ PlannerUI/
 │       │   ├── useToast.js       # Toast-Singleton
 │       │   └── useUsers.js       # Benutzer-Cache (Singleton, einmalig geladen)
 │       ├── router/
-│       │   └── index.js          # Vue Router mit Auth-Guard + Admin-Guard (/admin)
+│       │   └── index.js          # Vue Router mit Auth-Guard + Admin-Guard (/planner/:id/admin)
 │       ├── services/
 │       │   └── api.js            # Axios-Instanz mit Token-Interceptor
 │       ├── stores/               # Pinia Stores (auth, teams, boards, tickets …)
@@ -90,10 +90,9 @@ npm run dev
 
 | Rolle | E-Mail | Passwort | Planner-Zugang |
 |---|---|---|---|
-| Admin | admin@planner.dev | admin123 | alle Planner |
+| Admin | thomas.wolff@planner.dev | user123 | Entwicklungs-Planner (Mitglied) |
 | Owner (Milad) | milad@planner.dev | owner123 | Entwicklungs-Planner, Management-Planner |
 | Owner (Kay) | kay@planner.dev | owner123 | Design-Planner |
-| Benutzer | thomas.wolff@planner.dev | user123 | Entwicklungs-Planner |
 | Benutzer | torsten.klose@planner.dev | user123 | Entwicklungs-Planner |
 | Benutzer | cindy.scholka@planner.dev | user123 | Design-Planner |
 
@@ -203,21 +202,13 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - URL-Struktur: `/planner/:plannerId/dashboard`, `/planner/:plannerId/kanban` usw.
 - **Ticket-Nummerierung je Planner:** jeder Planner hat eigenen Präfix (`ENT-`, `DSN-`, `MGT-`) und unabhängigen Zähler
 - Seed-Daten: 3 Planner (Entwicklung, Design, Management) mit eigenen Teams, Projekten und Tickets
+- **Sichtbarkeit:** Die Planner-Auswahl zeigt für **jede Rolle** (auch Admin/Owner) nur Planner, in denen man selbst Mitglied ist. Die systemweite Sicht auf alle Planner gibt es ausschließlich in der Admin-Verwaltung (siehe „Alle Planner"-Tab im Admin-Bereich)
 
 ### Favorit-Planner
 - Jeder Benutzer kann einen Planner als **Startplanner** markieren (Stern-Icon auf der Auswahlseite)
 - Der Favorit erscheint auf der Planner-Auswahl immer ganz oben und ist mit goldenem Rahmen + **„Startplanner"**-Label gekennzeichnet
 - Nach dem Login wird bei gesetztem Favoriten direkt zum Planner-Dashboard weitergeleitet — ohne Umweg über die Auswahlseite
 - Stern erscheint beim Hover, Klick toggelt den Favoriten; ein weiterer Klick hebt ihn wieder auf
-
-### Planner-Verwaltung (`/planner-admin` — nur Admins)
-- Alle Planner auf einen Blick mit Ticket-Präfix, Mitglieder-Avataren, Teamanzahl und **Ersteller**
-- Eigene (erstellte) Planner werden oben sortiert und mit **„Mein Planner"**-Badge gekennzeichnet
-- **Verwalten-Modal** mit 4 Tabs:
-  - **Info:** Name und Beschreibung bearbeiten
-  - **Mitglieder:** Benutzer hinzufügen (mit Planner-Rolle), Rolle ändern, entfernen
-  - **Teams:** Planner-eigene Teams erstellen, umbenennen, löschen; Team-Mitglieder verwalten (hinzufügen / entfernen)
-  - **Einstellungen:** Ticket-Präfix pro Planner konfigurieren (z. B. `ENT` → `ENT-0015`)
 
 ### Admin-Bereich (`/planner/:id/admin` — nur Admins)
 - Route ist durch Router-Guard gesichert — Nicht-Admins werden zur Planner-Auswahl weitergeleitet
@@ -226,9 +217,15 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
   - Typ-Badge (`✨ Feature` / `🐛 Bug`), Avatar und Zeitstempel des Absenders
   - Status-Dropdown pro Anfrage: Offen → In Arbeit → Erledigt → Abgelehnt
   - Admin-Notiz-Feld (interne Kommentare), Anfrage löschen
-- **Planner-Zugang:** Mitglieder des aktuellen Planners verwalten (hinzufügen, Rolle ändern, entfernen)
-- **Benutzer:** Systemrollen (admin / owner / user) per Dropdown vergeben
-- **Teams:** Teams des aktuellen Planners erstellen, bearbeiten und löschen
+- **Alle Planner:** systemweite Planner-Verwaltung, unabhängig von eigener Mitgliedschaft
+  - Alle Planner auf einen Blick mit Ticket-Präfix, Mitglieder-Avataren, Teamanzahl und **Ersteller**
+  - Eigene (erstellte) Planner werden oben sortiert und mit **„Mein Planner"**-Badge gekennzeichnet
+  - Suchfeld über alle Planner; **„+ Neuer Planner"** öffnet Erstell-Modal (Name, Beschreibung)
+  - **Verwalten-Modal** mit 4 Tabs: Info (Name/Beschreibung), Mitglieder (hinzufügen/Rolle ändern/entfernen), Teams (erstellen/umbenennen/löschen, Mitglieder verwalten), Einstellungen (Ticket-Präfix)
+  - Planner löschen direkt aus der Kartenansicht
+- **Planner-Zugang:** Mitglieder des aktuell aktiven Planners verwalten (hinzufügen, Rolle ändern, entfernen)
+- **Benutzer:** Systemrollen (admin / owner / user) per Dropdown vergeben; Suchfeld für Benutzername/E-Mail
+- **Teams:** Planner-Filter-Dropdown (**„Alle Planner“** oder ein bestimmter Planner) zur planner­übergreifenden Teamverwaltung; bei „Alle Planner“ zeigt jedes Team ein Planner-Badge; erstellen, bearbeiten, löschen
 - **Boards:** erstellen (mit Datum), bearbeiten und löschen
 - **Einstellungen:**
   - **Ticket-Präfix je Planner** — alle Planner auf einen Blick mit editierbarem Präfix-Input und aktuellem Zählerstand
@@ -253,7 +250,7 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - Sichtbar in: Chat-Kontaktliste, Chat-Header, Ticket-Detailansicht (Assignee), Mein-Team-Liste und Board
 
 ### Weitere
-- Dark / Light Mode
+- Dark / Light Mode — **Dark Mode ist Standard**, umschaltbar in den Einstellungen (Präferenz wird in `localStorage` gespeichert)
 - Toast-Benachrichtigungen (Erfolg, Fehler, Info, Warnung)
 - Responsive Design
 
@@ -270,7 +267,8 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 | GET | `/api/users/search?q=` | Benutzer suchen |
 | PUT | `/api/users/:id/role` | Rolle setzen (Admin) |
 | PUT | `/api/users/:id/favorites` | Favoriten setzen (teamId, projectId, boardId, plannerId) |
-| GET | `/api/planners` | Alle zugänglichen Planner abrufen |
+| GET | `/api/planners` | Eigene Planner abrufen (mitgliedschaftsbasiert, gilt auch für Admin) |
+| GET | `/api/planners?all=true` | Alle Planner abrufen (Admin-only, Systemverwaltung) |
 | POST | `/api/planners` | Neuen Planner erstellen (Admin) |
 | PUT | `/api/planners/:id` | Planner-Info aktualisieren (Admin) |
 | DELETE | `/api/planners/:id` | Planner löschen (Admin) |
@@ -310,6 +308,14 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 ---
 
 ## Changelog
+
+### v2.9.0 — Planner-Verwaltung in den Admin-Bereich verschoben, mitgliedschaftsbasierte Sichtbarkeit, Dark Mode als Standard
+- **Planner-Verwaltung** aus der eigenständigen Seite `/planner-admin` entfernt und als neuer Tab **„Alle Planner"** in den Admin-Bereich (`/planner/:id/admin`) integriert; Route und View `PlannerAdminView.vue` gelöscht
+- **Mitgliedschaftsbasierte Planner-Sichtbarkeit:** `GET /api/planners` liefert jetzt für **alle Rollen** (auch Admin/Owner) standardmäßig nur Planner, in denen man Mitglied ist; `GET /api/planners?all=true` (Admin-only) liefert weiterhin alle Planner für die Systemverwaltung. Frontend-Store führt dafür zwei getrennte Listen (`planners` / `allPlanners`)
+- **Teams-Tab im Admin-Bereich:** neuer Planner-Filter-Dropdown („Alle Planner" oder ein bestimmter Planner) zur planner­übergreifenden Teamverwaltung, inkl. Planner-Badge pro Team in der „Alle Planner"-Ansicht
+- **Benutzer-Tab im Admin-Bereich:** Suchfeld für Benutzername/E-Mail ergänzt
+- **Demo-Account-Bereinigung:** separater `admin@planner.dev`-Account entfernt; `thomas.wolff@planner.dev` ist jetzt Admin und bleibt zugleich Mitglied im Entwicklungs-Planner (Admin kann Planner besitzen und Mitglied sein). Demo-Zugangsdaten-Block auf der Login-Seite entfernt
+- **Dark Mode ist jetzt Standard** für neue Sitzungen ohne gespeicherte Präferenz (Toggle in den Einstellungen bleibt unverändert)
 
 ### v2.8.0 — Fix: Erstellen-Dropdown & Sprint-Dropdown schließen bei Klick daneben
 - **Erstellen-Button im Header:** Der schließende Vollbild-Overlay lag im Stacking-Kontext über dem Button selbst (höherer `z-index`), wodurch ein erneuter Klick auf den Button den eigenen Toggle-Handler nicht mehr erreichte — Schließen war nur über einen zusätzlichen Klick daneben möglich. Fix: Klick-außerhalb-Erkennung per `document`-Click-Listener + Ref-Containment-Check statt Overlay-Div; der Button toggelt jetzt wieder normal per Klick auf/zu
