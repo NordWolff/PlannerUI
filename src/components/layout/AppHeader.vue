@@ -6,6 +6,7 @@ import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
 import TicketModal from '@/components/tickets/TicketModal.vue'
+import ChangelogModal from '@/components/common/ChangelogModal.vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useProjectsStore } from '@/stores/projects'
 import { useBoardsStore } from '@/stores/boards'
@@ -103,6 +104,7 @@ async function submitProject() {
 }
 
 const showDropdown = ref(false)
+const showChangelog = ref(false)
 const submittingRequest = ref(false)
 
 // Mein-Team-Dropdown
@@ -349,12 +351,18 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           class="flex items-center gap-2 px-4 py-2 text-sm text-primary dark:text-primary-dark hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
           Admin-Bereich
         </router-link>
+        <button @click="showChangelog = true; showDropdown = false"
+          class="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
+          Changelog
+        </button>
         <hr class="border-black/[0.06] dark:border-white/[0.06] my-1" />
         <button @click="logout" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/[0.08] dark:hover:bg-red-500/[0.12] transition-colors">
           Abmelden
         </button>
       </div>
     </div>
+
+    <ChangelogModal v-if="showChangelog" @close="showChangelog = false" />
 
     <div v-if="showDropdown" class="fixed inset-0 z-30" @click="showDropdown = false" />
     <div v-if="showTeamDropdown" class="fixed inset-0 z-30" @click="showTeamDropdown = false" />
