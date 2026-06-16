@@ -311,6 +311,12 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 ## Changelog
 
+### v2.6.0 — Einklappbare linke Spalte im Zeitstrahl
+- Linke fixe Spalte (Projekt-/Ticket-Namen) im Zeitstrahl ist jetzt ein-/ausklappbar
+- Sichtbarer Toggle-Button (Chevron-Icon) sitzt direkt auf der Grenze zwischen Spalte und Zeitstrahl, dreht sich beim Umschalten
+- Eingeklappt übernimmt der Zeitstrahl die volle Breite — Projektnamen bleiben auf den Balken sichtbar, Ticket-Status/-Titel bleiben an ihrer Timeline-Position sichtbar
+- Zustand wird in `localStorage` (`ganttSidebarCollapsed`) gespeichert und bleibt nach Reload erhalten
+
 ### v2.5.0 — Glassmorphism-Header
 - **AppHeader** komplett auf Glassmorphism-Design umgestellt: `backdrop-blur-xl` + semi-transparente Hintergründe (`bg-white/70 dark:bg-[#0e0d14]/60`)
 - Alle Dropdowns (Team, Erstellen, User-Profil) mit frosted-glass-Stil: `bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl`, `rounded-xl`, `ring-1`-Rahmen
