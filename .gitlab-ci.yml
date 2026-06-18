@@ -1,0 +1,14 @@
+include:
+  - project: future-diagnostics/infrastructure/goals
+    ref: v4
+    file:
+      - /init-goals.yml
+      - /services/npm-application.yml
+      - /deployment/to-minio.yml
+      - /deployment/minio/testing/dev.yml
+
+variables:
+  NODEJS_BUILD_IMAGE: $LATEST_NODE_20_BUILD_IMAGE
+  APP_FILE_NAME: app.js
+  GOAL_FEATURE_SWITCHES: >-
+    ENABLE_MINIO_DEPLOY
