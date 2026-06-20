@@ -313,6 +313,19 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.16.0 — Rollentrennung, Berechtigungskorrekturen & Teams/Boards-Zugriff
+- **Fix: Rollen-Editing nur für Planner-Admins (Mitglieder-Reiter):** `paCanManageRoles` entfernte fälschlicherweise den `createdBy`-Bypass — Rollenbearbeitung war für Planner-Ersteller ohne Admin-Rolle zugänglich; jetzt korrekt: nur System-Admin oder Planner-Mitglied mit Rolle `admin`
+- **Fix: Planner-Zugang-Tab hatte keine Rollenprüfung:** Hinzufügen, Rollen-Select und Entfernen im „Planner-Zugang"-Tab waren für alle Nutzer ohne Einschränkung sichtbar; jetzt genauso durch `canManageActivePlannerRoles` gesichert
+- **Fix: Seed-Daten — Planner-Ersteller als `admin`:** Erstellereinträge in den 3 Seed-Plannern hatten `role: 'owner'` statt `role: 'admin'`; nach Entfernung des `createdBy`-Bypasses hätten sie keinen Verwaltungszugriff mehr gehabt
+- **„Meine Planner"-Tab zeigt alle Planner mit Mitgliedschaft:** Reguläre Nutzer sahen bisher nur eigene und Admin-Planner; jetzt alle Planner aus `plannersStore.planners` (API-seitig bereits auf eigene Mitgliedschaft gefiltert); Karten zeigen Rollen-Badge (Mitglied / Admin / Verantwortlicher); „Verwalten" und „Löschen" nur wenn Nutzer Planner verwalten darf
+- **Benutzernamen im Planner-Zugang-Tab:** `loadUsers()` wurde nur für System-Admins aufgerufen — reguläre Nutzer sahen rohe UUIDs; jetzt für alle Nutzer geladen
+- **Teams- und Boards-Tab: rollenbasierter Zugriff für Nicht-Admins:**
+  - Planner-Dropdown zeigt eigene Planner (`plannersStore.planners`) statt `allPlanners` (nur Admins geladen)
+  - `GET /api/teams|boards` ohne `?plannerId=` liefert für Nicht-Admins nur Teams/Boards aus eigenen Plannern
+  - `POST /api/teams|boards` und `DELETE /api/teams|boards/:id`: `requireAdmin` entfernt; Planner-Ersteller dürfen Teams/Boards in ihrem eigenen Planner anlegen/bearbeiten/löschen
+  - „Bearbeiten"- und „Löschen"-Buttons pro Eintrag nur sichtbar wenn Nutzer Ersteller des zugehörigen Planners (oder System-Admin)
+  - „+ Team erstellen" / „+ Board erstellen" nur sichtbar wenn ein konkreter eigener Planner im Filter gewählt ist
+
 ### v2.15.0 — Selbstverwaltete Planner, Verwaltungsseite & Benachrichtigungen
 - **Selbstverwaltete Planner:** Jeder Benutzer kann eigene Planner erstellen; Ersteller erhält automatisch die Planner-Rolle `admin` und ist damit sofort Verwaltungsberechtigter
 - **Neue Planner-Mitgliederrollen:** `user` (Mitglied), `admin` (Admin — kann Planner verwalten, Mitglieder und Rollen bearbeiten), `owner` (Verantwortlicher); alle Seed-Daten auf `user` migriert (vorher `member`)

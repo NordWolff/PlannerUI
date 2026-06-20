@@ -210,9 +210,9 @@ function plannerUserEmail(userId) {
 onMounted(async () => {
   activeTab.value = authStore.isAdmin ? 'requests' : 'alle-planner'
 
-  const base = [plannersStore.fetchPlanners(), loadTeamsForFilter(), loadBoardsForFilter()]
+  const base = [plannersStore.fetchPlanners(), loadTeamsForFilter(), loadBoardsForFilter(), loadUsers()]
   if (authStore.isAdmin) {
-    await Promise.all([...base, loadUsers(), loadRequests(), loadSettings(), plannersStore.fetchAllPlanners()])
+    await Promise.all([...base, loadRequests(), loadSettings(), plannersStore.fetchAllPlanners()])
   } else {
     await Promise.all(base)
   }
@@ -225,13 +225,21 @@ onMounted(async () => {
 // Erstellt von ihm ODER Mitglied-Rolle 'admin' im Planner
 const managedPlanners = computed(() => {
   if (authStore.isAdmin) return plannersStore.allPlanners
-  const uid = authStore.user?.id
-  return plannersStore.planners.filter(p => {
-    if (p.createdBy === uid) return true
-    const member = (p.members ?? []).find(m => m.userId === uid)
-    return member?.role === 'admin'
-  })
+  return plannersStore.planners
 })
+
+function paUserCanManage(planner) {
+  if (authStore.isAdmin) return true
+  const uid = authStore.user?.id
+  const member = (planner.members ?? []).find(m => m.userId === uid)
+  return member?.role === 'admin'
+}
+
+function paUserRole(planner) {
+  const uid = authStore.user?.id
+  const member = (planner.members ?? []).find(m => m.userId === uid)
+  return member?.role ?? null
+}
 
 const paSearch = ref('')
 const paFiltered = computed(() => {
@@ -320,8 +328,15 @@ const paCanManageRoles = computed(() => {
   if (authStore.isAdmin) return true
   if (!paDetailPlanner.value) return false
   const uid = authStore.user?.id
-  if (paDetailPlanner.value.createdBy === uid) return true
   const member = (paDetailPlanner.value.members ?? []).find(m => m.userId === uid)
+  return member?.role === 'admin'
+})
+
+const canManageActivePlannerRoles = computed(() => {
+  if (authStore.isAdmin) return true
+  if (!activePlanner.value) return false
+  const uid = authStore.user?.id
+  const member = (activePlanner.value.members ?? []).find(m => m.userId === uid)
   return member?.role === 'admin'
 })
 
@@ -511,9 +526,28 @@ const openRequests = () => adminRequests.value.filter(r => r.status === 'open').
 // Default ist der aktuell aktive Planner (Kontext, in dem der Admin-Bereich geöffnet wurde).
 const teamsFilterPlannerId = ref(route.params.plannerId || 'all')
 
+const teamsFilterPlannerOptions = computed(() =>
+  authStore.isAdmin ? plannersStore.allPlanners : plannersStore.planners
+)
+
 function plannerName(plannerId) {
-  return plannersStore.allPlanners.find(p => p.id === plannerId)?.name ?? '—'
+  const list = authStore.isAdmin ? plannersStore.allPlanners : plannersStore.planners
+  return list.find(p => p.id === plannerId)?.name ?? '—'
 }
+
+function canManageTeam(team) {
+  if (authStore.isAdmin) return true
+  if (!team.plannerId) return false
+  const planner = plannersStore.planners.find(p => p.id === team.plannerId)
+  return planner?.createdBy === authStore.user?.id
+}
+
+const canCreateTeamForCurrentFilter = computed(() => {
+  if (authStore.isAdmin) return true
+  if (teamsFilterPlannerId.value === 'all') return false
+  const planner = plannersStore.planners.find(p => p.id === teamsFilterPlannerId.value)
+  return planner?.createdBy === authStore.user?.id
+})
 
 async function loadTeamsForFilter() {
   const pid = teamsFilterPlannerId.value
@@ -566,8 +600,25 @@ async function deleteTeam(id) {
 
 // ─── Boards ───────────────────────────────────────────────────────────────────
 
-// Planner-Filter: 'all' zeigt Boards aller Planner (auch ohne eigene Mitgliedschaft), sonst nur die des gewählten Planners.
 const boardsFilterPlannerId = ref(route.params.plannerId || 'all')
+
+const boardsFilterPlannerOptions = computed(() =>
+  authStore.isAdmin ? plannersStore.allPlanners : plannersStore.planners
+)
+
+function canManageBoard(board) {
+  if (authStore.isAdmin) return true
+  if (!board.plannerId) return false
+  const planner = plannersStore.planners.find(p => p.id === board.plannerId)
+  return planner?.createdBy === authStore.user?.id
+}
+
+const canCreateBoardForCurrentFilter = computed(() => {
+  if (authStore.isAdmin) return true
+  if (boardsFilterPlannerId.value === 'all') return false
+  const planner = plannersStore.planners.find(p => p.id === boardsFilterPlannerId.value)
+  return planner?.createdBy === authStore.user?.id
+})
 
 async function loadBoardsForFilter() {
   const pid = boardsFilterPlannerId.value
@@ -814,6 +865,15 @@ function formatDate(iso) {
                   class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                   Mein Planner
                 </span>
+                <span v-else-if="paUserRole(planner)"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
+                  :class="{
+                    'bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark': paUserRole(planner) === 'admin',
+                    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': paUserRole(planner) === 'owner',
+                    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': paUserRole(planner) === 'user',
+                  }">
+                  {{ PA_ROLE_LABELS[paUserRole(planner)] ?? paUserRole(planner) }}
+                </span>
               </div>
               <p v-if="planner.description" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ planner.description }}</p>
               <p class="text-xs text-gray-400 mt-0.5">
@@ -821,7 +881,7 @@ function formatDate(iso) {
                 <span class="font-medium text-gray-600 dark:text-gray-300">{{ paUserName(planner.createdBy) }}</span>
               </p>
             </div>
-            <div class="flex gap-2 shrink-0">
+            <div v-if="paUserCanManage(planner)" class="flex gap-2 shrink-0">
               <button @click="paOpenDetail(planner)"
                 class="text-xs px-2.5 py-1 rounded-lg border border-primary-dark-hover dark:border-primary-hover text-primary dark:text-primary-dark hover:bg-primary-light dark:hover:bg-primary-active/20 transition-colors">
                 Verwalten
@@ -1150,8 +1210,8 @@ function formatDate(iso) {
           <span class="ml-auto text-xs text-primary dark:text-primary-dark">{{ plannerMembers.length }} Mitglieder</span>
         </div>
 
-        <!-- Mitglied hinzufügen -->
-        <div class="flex flex-wrap gap-2 items-end">
+        <!-- Mitglied hinzufügen — nur für Planner-Admins -->
+        <div v-if="canManageActivePlannerRoles" class="flex flex-wrap gap-2 items-end">
           <div class="flex-1 min-w-48">
             <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Benutzer hinzufügen</label>
             <select v-model="newPlannerMember.userId" class="input-field">
@@ -1205,13 +1265,24 @@ function formatDate(iso) {
                   </span>
                 </td>
                 <td class="px-4 py-3">
-                  <select :value="m.role" @change="changePlannerRole(m.userId, $event.target.value)"
+                  <select v-if="canManageActivePlannerRoles"
+                    :value="m.role" @change="changePlannerRole(m.userId, $event.target.value)"
                     class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
                     <option v-for="r in PLANNER_MEMBER_ROLE_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</option>
                   </select>
+                  <span v-else
+                    class="text-xs px-2.5 py-1 rounded-full font-medium"
+                    :class="{
+                      'bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark': m.role === 'admin',
+                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': m.role === 'owner',
+                      'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': m.role === 'user' || m.role === 'member',
+                    }">
+                    {{ PA_ROLE_LABELS[m.role] ?? m.role }}
+                  </span>
                 </td>
                 <td class="px-4 py-3 text-right">
-                  <button @click="removePlannerMember(m.userId)"
+                  <button v-if="canManageActivePlannerRoles"
+                    @click="removePlannerMember(m.userId)"
                     class="text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors">
                     Entfernen
                   </button>
@@ -1286,9 +1357,10 @@ function formatDate(iso) {
           <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Planner</label>
           <select v-model="teamsFilterPlannerId" class="input-field text-sm py-1.5 w-56">
             <option value="all">Alle Planner</option>
-            <option v-for="p in plannersStore.allPlanners" :key="p.id" :value="p.id">{{ p.name }}</option>
+            <option v-for="p in teamsFilterPlannerOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
-          <button @click="openCreateTeam" class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+          <button v-if="canCreateTeamForCurrentFilter" @click="openCreateTeam"
+            class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
             + Team erstellen
           </button>
         </div>
@@ -1309,7 +1381,7 @@ function formatDate(iso) {
             <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ team.description || '' }}</p>
             <p class="text-xs text-gray-400 mt-0.5">{{ team.members?.length ?? 0 }} Mitglieder</p>
           </div>
-          <div class="flex gap-2 shrink-0">
+          <div v-if="canManageTeam(team)" class="flex gap-2 shrink-0">
             <button @click="openEditTeam(team)" class="text-sm text-primary dark:text-primary-dark hover:text-primary-active font-medium">Bearbeiten</button>
             <button @click="deleteTeam(team.id)" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 font-medium">Löschen</button>
           </div>
@@ -1325,9 +1397,10 @@ function formatDate(iso) {
           <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Planner</label>
           <select v-model="boardsFilterPlannerId" class="input-field text-sm py-1.5 w-56">
             <option value="all">Alle Planner</option>
-            <option v-for="p in plannersStore.allPlanners" :key="p.id" :value="p.id">{{ p.name }}</option>
+            <option v-for="p in boardsFilterPlannerOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
-          <button @click="openCreateBoard" class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
+          <button v-if="canCreateBoardForCurrentFilter" @click="openCreateBoard"
+            class="px-3 py-1.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors shrink-0">
             + Board erstellen
           </button>
         </div>
@@ -1350,7 +1423,7 @@ function formatDate(iso) {
               {{ board.startDate?.substring(0, 10) }} – {{ board.endDate?.substring(0, 10) }}
             </p>
           </div>
-          <div class="flex gap-2 shrink-0">
+          <div v-if="canManageBoard(board)" class="flex gap-2 shrink-0">
             <button @click="openEditBoard(board)" class="text-sm text-primary dark:text-primary-dark hover:text-primary-active font-medium">Bearbeiten</button>
             <button @click="deleteBoard(board.id)" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 font-medium">Löschen</button>
           </div>

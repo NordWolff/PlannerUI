@@ -3,6 +3,20 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.16.0',
+    title: 'Rollentrennung, Berechtigungskorrekturen & Teams/Boards-Zugriff',
+    items: [
+      'Fix: Rollen-Editing im Mitglieder-Reiter war durch createdBy-Bypass auch für Nicht-Admins zugänglich — jetzt korrekt auf Planner-Mitglied mit Rolle "Admin" beschränkt',
+      'Fix: Planner-Zugang-Tab hatte keine Rollenprüfung — Hinzufügen, Rolle ändern und Entfernen nun ebenfalls nur für Planner-Admins',
+      'Fix: Seed-Daten korrigiert — Planner-Ersteller haben jetzt korrekt role: "admin" statt role: "owner"',
+      '"Meine Planner"-Tab zeigt alle Planner mit Mitgliedschaft; Karten zeigen Rollen-Badge; Verwalten/Löschen-Buttons nur für berechtigte Nutzer',
+      'Benutzernamen im Planner-Zugang-Tab wurden als rohe UUIDs angezeigt — Benutzerliste wird jetzt für alle Nutzer geladen',
+      'Teams- und Boards-Tab: Planner-Dropdown für Nicht-Admins auf eigene Planner beschränkt',
+      'Teams/Boards erstellen, bearbeiten, löschen: jetzt auch für Ersteller des Planners erlaubt (nicht mehr admin-only im Backend)',
+      'Bearbeiten/Löschen-Buttons pro Team/Board nur sichtbar wenn Nutzer Ersteller des Planners ist; Erstellen-Button nur bei eigenem Planner im Filter',
+    ],
+  },
+  {
     version: '2.15.0',
     title: 'Selbstverwaltete Planner, Verwaltungsseite & Benachrichtigungen',
     items: [

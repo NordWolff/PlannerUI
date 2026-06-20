@@ -8,14 +8,30 @@ router.use(authenticateToken);
 
 router.get('/', (req, res) => {
   let teams = store.teams;
-  if (req.query.plannerId) teams = teams.filter(t => t.plannerId === req.query.plannerId);
+  if (req.query.plannerId) {
+    teams = teams.filter(t => t.plannerId === req.query.plannerId);
+  } else if (req.user.role !== 'admin') {
+    const memberPlannerIds = store.planners
+      .filter(p => (p.members ?? []).some(m => m.userId === req.user.id))
+      .map(p => p.id);
+    teams = teams.filter(t => !t.plannerId || memberPlannerIds.includes(t.plannerId));
+  }
   return res.json(teams);
 });
 
-// Admin erstellt Team — optional ownerId und plannerId
-router.post('/', requireAdmin, (req, res) => {
+function canManagePlannerTeam(user, plannerId) {
+  if (user.role === 'admin') return true;
+  if (!plannerId) return false;
+  const planner = store.planners.find(p => p.id === plannerId);
+  return planner?.createdBy === user.id;
+}
+
+router.post('/', (req, res) => {
   const { name, description, ownerId, plannerId } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
+  if (!canManagePlannerTeam(req.user, plannerId)) {
+    return res.status(403).json({ error: 'Nur System-Admins oder Ersteller des Planners können Teams anlegen' });
+  }
 
   const members = [];
   if (ownerId) {
@@ -49,8 +65,12 @@ router.put('/:id', (req, res) => {
   const index = store.teams.findIndex((t) => t.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Team not found' });
 
-  const { name, description, boardId } = req.body;
   const team = store.teams[index];
+  if (!canManagePlannerTeam(req.user, team.plannerId)) {
+    return res.status(403).json({ error: 'Nur System-Admins oder Ersteller des Planners können Teams bearbeiten' });
+  }
+
+  const { name, description, boardId } = req.body;
   if (name) team.name = name;
   if (description !== undefined) team.description = description;
   if (boardId !== undefined) team.boardId = boardId;
@@ -59,9 +79,15 @@ router.put('/:id', (req, res) => {
   return res.json(team);
 });
 
-router.delete('/:id', requireAdmin, (req, res) => {
+router.delete('/:id', (req, res) => {
   const index = store.teams.findIndex((t) => t.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Team not found' });
+
+  const team = store.teams[index];
+  if (!canManagePlannerTeam(req.user, team.plannerId)) {
+    return res.status(403).json({ error: 'Nur System-Admins oder Ersteller des Planners können Teams löschen' });
+  }
+
   store.teams.splice(index, 1);
   return res.status(204).send();
 });
