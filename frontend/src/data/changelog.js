@@ -3,6 +3,21 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.15.0',
+    title: 'Selbstverwaltete Planner, Verwaltungsseite & Benachrichtigungen',
+    items: [
+      'Jeder Benutzer kann eigene private Planner erstellen — Ersteller erhält automatisch die Rolle Admin',
+      'Admin-Seite zu "Verwaltung" umbenannt und für alle Nutzer zugänglich (Navigation + Benutzermenü)',
+      'Neue Planner-Mitgliederrollen: Mitglied (user), Admin (admin), Verantwortlicher (owner)',
+      'Verwaltung zeigt eigene Planner und Planner mit Admin-Rolle getrennt von reinen Mitgliedschaften',
+      'Planner-Übersicht (/planners) mit visueller Trennung "Meine Planner" vs. "Mitgliedschaften", Farbstreifen und Aktionsbuttons',
+      'Erstellen-Modal mit Farbwahl und Auto-Ticket-Präfix — identisch in Planner-Übersicht und Verwaltung',
+      'Info-Reiter im Planner-Detail ergänzt um Farbwähler',
+      'Benachrichtigungs-Glocke im Header: Nutzer werden informiert wenn sie zu einem Planner hinzugefügt werden',
+      'Rollen-Anpassung im Mitglieder-Reiter nur für Planner-Admins sichtbar, andere sehen Lese-Badge',
+    ],
+  },
+  {
     version: '2.14.0',
     title: 'Versionsnummer im UI sichtbar',
     items: [

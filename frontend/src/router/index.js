@@ -29,7 +29,7 @@ const routes = [
       { path: 'reports',    component: () => import('@/views/ReportsView.vue') },
       { path: 'settings',   component: () => import('@/views/SettingsView.vue') },
       { path: 'chat',       component: () => import('@/views/ChatView.vue') },
-      { path: 'admin',      component: () => import('@/views/AdminView.vue'), meta: { requiresAdmin: true } },
+      { path: 'admin',      component: () => import('@/views/AdminView.vue') },
     ]
   },
   // Fallback: / leitet zu /planners (Planner-Auswahl)
@@ -54,12 +54,6 @@ router.beforeEach((to) => {
 
   // Eingeloggt und Login-Seite → Planner-Auswahl
   if (to.path === '/login' && token) return '/planners'
-
-  // Admin-Guard
-  if (to.meta.requiresAdmin) {
-    const authStore = useAuthStore()
-    if (!authStore.isAdmin) return '/planners'
-  }
 
   // Planner-Kontext-Guard: plannerId in URL muss zum aktiven Planner passen
   if (to.meta.requiresPlanner && to.params.plannerId) {

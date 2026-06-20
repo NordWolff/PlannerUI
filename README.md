@@ -313,6 +313,17 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.15.0 — Selbstverwaltete Planner, Verwaltungsseite & Benachrichtigungen
+- **Selbstverwaltete Planner:** Jeder Benutzer kann eigene Planner erstellen; Ersteller erhält automatisch die Planner-Rolle `admin` und ist damit sofort Verwaltungsberechtigter
+- **Neue Planner-Mitgliederrollen:** `user` (Mitglied), `admin` (Admin — kann Planner verwalten, Mitglieder und Rollen bearbeiten), `owner` (Verantwortlicher); alle Seed-Daten auf `user` migriert (vorher `member`)
+- **"Admin"-Seite → "Verwaltung":** Zugänglich für alle authentifizierten Nutzer; zeigt eigene Planner und Planner mit Admin-Rolle; system-exklusive Tabs (Anfragen, Benutzer, Einstellungen) nur für System-Admins
+- **Planner-Übersicht `/planners`:** Neue Karten-Ansicht mit visueller Trennung "Meine Planner" (eigene) vs. "Mitgliedschaften"; Farbstreifen, Erstellen/Bearbeiten/Löschen-Aktionen; Modal mit Farbwahl (10 Farben) und Auto-Ticket-Präfix
+- **Verwaltung — Erstellen-Modal:** Übernimmt alle Felder aus der Planner-Übersicht (Farbwahl, Ticket-Präfix)
+- **Verwaltung — Info-Reiter:** Farbwähler für bestehende Planner ergänzt
+- **Verwaltung — Mitglieder-Reiter:** Rollen-Select und Hinzufügen/Entfernen nur für Planner-Admins sichtbar; andere Mitglieder sehen Rollen-Badge (read-only)
+- **Benachrichtigungs-Glocke im Header:** Neues Notification-System (`GET/PUT/DELETE /api/notifications`); Nutzer erhalten automatisch eine Nachricht wenn sie zu einem Planner hinzugefügt werden; Glocke mit Ungelesen-Badge, Dropdown mit Zeitstempel, Einzeln/Alle-gelesen und Löschen; pollt alle 30 s
+- **Backend:** `POST /api/planners` ohne `requireAdmin`; `PUT`/`DELETE` für Ersteller und Planner-Admin freigegeben; `canManagePlanner()` prüft System-Admin, Ersteller oder Planner-Mitglied mit Rolle `admin`
+
 ### v2.14.0 — Versionsnummer im UI sichtbar
 - Aktuelle Versionsnummer wird jetzt angezeigt: dezent im Benutzermenü (rechts neben „Changelog") sowie in den Einstellungen im neuen Abschnitt **„Über T-Compass"** (mit Link zum Changelog-Modal)
 - Single Source of Truth: `currentVersion` in `frontend/src/data/changelog.js` (= Version des neuesten Einträgs) — Platzierung basiert auf Empfehlung des Webdesigners (Benutzermenü für schnellen Zugriff, Einstellungen für gezieltes Nachschlagen z. B. bei Support-Anfragen)

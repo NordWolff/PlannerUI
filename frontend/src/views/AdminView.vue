@@ -19,26 +19,41 @@ const boardsStore = useBoardsStore()
 const plannersStore = usePlannersStore()
 const toast = useToast()
 
-const activeTab = ref('requests')
+const activeTab = ref(null) // wird in onMounted gesetzt
 const users = ref([])
 const loadingUsers = ref(false)
 const adminRequests = ref([])
 const loadingRequests = ref(false)
 
-const tabs = [
-  { key: 'requests',     label: 'Anfragen' },
-  { key: 'alle-planner', label: 'Alle Planner' },
-  { key: 'planner',      label: 'Planner-Zugang' },
-  { key: 'users',        label: 'Benutzer' },
-  { key: 'teams',        label: 'Teams' },
-  { key: 'boards',       label: 'Boards' },
-  { key: 'settings',     label: 'Einstellungen' },
-]
+const tabs = computed(() => {
+  const base = [
+    { key: 'alle-planner', label: authStore.isAdmin ? 'Alle Planner' : 'Meine Planner' },
+    { key: 'planner',      label: 'Planner-Zugang' },
+    { key: 'teams',        label: 'Teams' },
+    { key: 'boards',       label: 'Boards' },
+  ]
+  if (authStore.isAdmin) {
+    return [
+      { key: 'requests',  label: 'Anfragen' },
+      ...base,
+      { key: 'users',     label: 'Benutzer' },
+      { key: 'settings',  label: 'Einstellungen' },
+    ]
+  }
+  return base
+})
 
 const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Admin',    desc: 'Vollzugriff auf alle Bereiche' },
-  { value: 'owner', label: 'Owner',    desc: 'Kann Teams und Projekte verwalten' },
-  { value: 'user',  label: 'Benutzer', desc: 'Standardzugriff' },
+  { value: 'admin', label: 'Admin',           desc: 'Vollzugriff auf alle Bereiche' },
+  { value: 'owner', label: 'Owner',           desc: 'Kann Teams und Projekte verwalten' },
+  { value: 'user',  label: 'Benutzer',        desc: 'Standardzugriff' },
+]
+
+// Rollen für Planner-Mitgliedschaft (planner-level, unabhängig von globaler Rolle)
+const PLANNER_MEMBER_ROLE_OPTIONS = [
+  { value: 'owner', label: 'Verantwortlicher', desc: 'Kann den Planner vollständig verwalten' },
+  { value: 'admin', label: 'Admin',            desc: 'Kann Mitglieder und Einstellungen verwalten' },
+  { value: 'user',  label: 'Mitglied',         desc: 'Standardzugriff auf den Planner' },
 ]
 
 const ROLE_COLORS = {
@@ -154,7 +169,7 @@ const usersNotInPlanner = computed(() => {
   return users.value.filter(u => u.role !== 'admin' && !existing.includes(u.id))
 })
 
-const newPlannerMember = reactive({ userId: '', role: 'member' })
+const newPlannerMember = reactive({ userId: '', role: 'user' })
 
 async function addPlannerMember() {
   if (!newPlannerMember.userId || !activePlanner.value) return
@@ -162,7 +177,7 @@ async function addPlannerMember() {
   try {
     await plannersStore.updateMembers(activePlanner.value.id, updated)
     newPlannerMember.userId = ''
-    newPlannerMember.role = 'member'
+    newPlannerMember.role = 'user'
     toast.success('Mitglied hinzugefügt')
   } catch { toast.error('Fehler beim Hinzufügen') }
 }
@@ -193,52 +208,90 @@ function plannerUserEmail(userId) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadUsers(), loadRequests(), loadTeamsForFilter(), loadBoardsForFilter(), loadSettings(), plannersStore.fetchPlanners(), plannersStore.fetchAllPlanners()])
+  activeTab.value = authStore.isAdmin ? 'requests' : 'alle-planner'
+
+  const base = [plannersStore.fetchPlanners(), loadTeamsForFilter(), loadBoardsForFilter()]
+  if (authStore.isAdmin) {
+    await Promise.all([...base, loadUsers(), loadRequests(), loadSettings(), plannersStore.fetchAllPlanners()])
+  } else {
+    await Promise.all(base)
+  }
   initPlannerPrefixEdits()
 })
 
 // ─── Alle Planner (Planner anlegen/verwalten) ──────────────────────────────────
 
+// Planner, die der aktuelle User verwalten darf:
+// Erstellt von ihm ODER Mitglied-Rolle 'admin' im Planner
+const managedPlanners = computed(() => {
+  if (authStore.isAdmin) return plannersStore.allPlanners
+  const uid = authStore.user?.id
+  return plannersStore.planners.filter(p => {
+    if (p.createdBy === uid) return true
+    const member = (p.members ?? []).find(m => m.userId === uid)
+    return member?.role === 'admin'
+  })
+})
+
 const paSearch = ref('')
 const paFiltered = computed(() => {
   const q = paSearch.value.toLowerCase()
-  const list = plannersStore.allPlanners.filter(p => p.name.toLowerCase().includes(q))
+  const list = managedPlanners.value.filter(p => p.name.toLowerCase().includes(q))
   const mine = list.filter(p => p.createdBy === authStore.user?.id)
   const others = list.filter(p => p.createdBy !== authStore.user?.id)
   return [...mine, ...others]
 })
 
 const paShowCreateModal = ref(false)
-const paCreateForm = reactive({ name: '', description: '' })
+const paCreateForm = reactive({ name: '', description: '', ticketPrefix: '', color: '#E20074' })
+
+const paCreateColors = ['#E20074', '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b']
+
+function paAutoPrefix() {
+  const words = paCreateForm.name.trim().split(/\s+/).filter(Boolean)
+  if (words.length >= 2) {
+    paCreateForm.ticketPrefix = words.slice(0, 3).map(w => w[0]).join('').toUpperCase()
+  } else if (words.length === 1) {
+    paCreateForm.ticketPrefix = words[0].slice(0, 3).toUpperCase()
+  } else {
+    paCreateForm.ticketPrefix = ''
+  }
+}
 
 async function paSaveCreate() {
   if (!paCreateForm.name.trim()) return
   try {
-    await plannersStore.createPlanner({ name: paCreateForm.name, description: paCreateForm.description, members: [] })
+    await plannersStore.createPlanner({
+      name: paCreateForm.name,
+      description: paCreateForm.description,
+      ticketPrefix: paCreateForm.ticketPrefix || undefined,
+      color: paCreateForm.color,
+    })
     toast.success('Planner erstellt')
     paShowCreateModal.value = false
-    Object.assign(paCreateForm, { name: '', description: '' })
+    Object.assign(paCreateForm, { name: '', description: '', ticketPrefix: '', color: '#E20074' })
   } catch { toast.error('Fehler beim Erstellen') }
 }
 
 const paDetailPlanner = ref(null)
 const paActiveTab = ref('info')
-const paInfoForm = reactive({ name: '', description: '' })
-const paNewMember = reactive({ userId: '', role: 'member' })
+const paInfoForm = reactive({ name: '', description: '', color: '#E20074' })
+const paInfoColors = ['#E20074', '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b']
+const paNewMember = reactive({ userId: '', role: 'user' })
 const paExpandedTeamId = ref(null)
 const paEditingTeam = ref(null)
 const paEditTeamForm = reactive({ name: '', description: '' })
 const paNewTeamForm = reactive({ name: '', description: '' })
 const paAddMemberTeamId = ref(null)
-const paNewTeamMember = reactive({ userId: '', role: 'member' })
+const paNewTeamMember = reactive({ userId: '', role: 'user' })
 const paTicketPrefixInput = ref('')
 
 function paOpenDetail(planner) {
   paDetailPlanner.value = planner
   paActiveTab.value = 'info'
-  Object.assign(paInfoForm, { name: planner.name, description: planner.description || '' })
+  Object.assign(paInfoForm, { name: planner.name, description: planner.description || '', color: planner.color || '#E20074' })
   paNewMember.userId = ''
-  paNewMember.role = 'member'
+  paNewMember.role = 'user'
   paNewTeamForm.name = ''
   paNewTeamForm.description = ''
   paTicketPrefixInput.value = planner.ticketPrefix ?? 'TKT'
@@ -253,13 +306,24 @@ function paCloseDetail() {
 
 async function paSaveInfo() {
   try {
-    await plannersStore.updatePlanner(paDetailPlanner.value.id, { name: paInfoForm.name, description: paInfoForm.description })
+    await plannersStore.updatePlanner(paDetailPlanner.value.id, { name: paInfoForm.name, description: paInfoForm.description, color: paInfoForm.color })
     paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
     toast.success('Gespeichert')
   } catch { toast.error('Fehler beim Speichern') }
 }
 
 const paPlannerMembers = computed(() => paDetailPlanner.value?.members ?? [])
+
+// Darf der aktuelle User Rollen in diesem Planner verwalten?
+// Ja wenn: System-Admin ODER Ersteller des Planners ODER Planner-Mitglied mit Rolle 'admin'
+const paCanManageRoles = computed(() => {
+  if (authStore.isAdmin) return true
+  if (!paDetailPlanner.value) return false
+  const uid = authStore.user?.id
+  if (paDetailPlanner.value.createdBy === uid) return true
+  const member = (paDetailPlanner.value.members ?? []).find(m => m.userId === uid)
+  return member?.role === 'admin'
+})
 
 const paAvailableUsersToAdd = computed(() => {
   const existing = paPlannerMembers.value.map(m => m.userId)
@@ -273,7 +337,7 @@ async function paAddMember() {
     await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
     paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
     paNewMember.userId = ''
-    paNewMember.role = 'member'
+    paNewMember.role = 'user'
     toast.success('Mitglied hinzugefügt')
   } catch { toast.error('Fehler') }
 }
@@ -341,7 +405,7 @@ async function paAddTeamMember(teamId) {
   try {
     await teamsStore.addMember(teamId, paNewTeamMember.userId, paNewTeamMember.role)
     paNewTeamMember.userId = ''
-    paNewTeamMember.role = 'member'
+    paNewTeamMember.role = 'user'
     paAddMemberTeamId.value = null
     toast.success('Mitglied hinzugefügt')
   } catch { toast.error('Fehler') }
@@ -379,7 +443,7 @@ async function paDeletePlanner(planner) {
   } catch { toast.error('Fehler') }
 }
 
-const PA_ROLE_LABELS = { owner: 'Verantwortlicher', member: 'Mitglied' }
+const PA_ROLE_LABELS = { owner: 'Verantwortlicher', admin: 'Admin', user: 'Mitglied', member: 'Mitglied' }
 
 function paUserName(id) { return users.value.find(u => u.id === id)?.username ?? id }
 
@@ -600,11 +664,13 @@ function formatDate(iso) {
   <div class="max-w-5xl">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Admin-Bereich</h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-0.5 text-sm">Systemverwaltung und Benutzeranfragen</p>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Verwaltung</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-0.5 text-sm">
+          {{ authStore.isAdmin ? 'Systemverwaltung und Benutzeranfragen' : 'Deine Planner und Mitgliedschaften verwalten' }}
+        </p>
       </div>
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-        Admin
+      <span v-if="authStore.isAdmin" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+        System-Admin
       </span>
     </div>
 
@@ -788,12 +854,32 @@ function formatDate(iso) {
       <BaseModal v-if="paShowCreateModal" title="Neuer Planner" @close="paShowCreateModal = false">
         <div class="p-6 space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
-            <input v-model="paCreateForm.name" type="text" class="input-field" placeholder="z. B. Entwicklungs-Planner" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name <span class="text-red-500">*</span></label>
+            <input v-model="paCreateForm.name" type="text" class="input-field" placeholder="z. B. Entwicklungs-Planner" autofocus @input="paAutoPrefix" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
             <textarea v-model="paCreateForm.description" rows="2" class="input-field resize-none" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ticket-Präfix</label>
+            <input v-model="paCreateForm.ticketPrefix" type="text" maxlength="5" class="input-field uppercase" placeholder="z. B. DEV"
+              @input="paCreateForm.ticketPrefix = paCreateForm.ticketPrefix.toUpperCase()" />
+            <p class="text-xs text-gray-400 mt-1">Präfix für Ticket-IDs (z. B. DEV-123)</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Farbe</label>
+            <div class="flex flex-wrap gap-2">
+              <button v-for="c in paCreateColors" :key="c" type="button"
+                @click="paCreateForm.color = c"
+                class="w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center"
+                :class="paCreateForm.color === c ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent hover:scale-105'"
+                :style="{ backgroundColor: c }">
+                <svg v-if="paCreateForm.color === c" class="w-3.5 h-3.5 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -835,6 +921,23 @@ function formatDate(iso) {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
             <textarea v-model="paInfoForm.description" rows="3" class="input-field resize-none" />
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Farbe</label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="c in paInfoColors" :key="c"
+                type="button"
+                @click="paInfoForm.color = c"
+                class="w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center"
+                :class="paInfoForm.color === c ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent hover:scale-105'"
+                :style="{ backgroundColor: c }"
+              >
+                <svg v-if="paInfoForm.color === c" class="w-3.5 h-3.5 text-white drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+          </div>
           <div class="flex justify-end">
             <button @click="paSaveInfo" :disabled="!paInfoForm.name.trim()" class="btn-primary">Speichern</button>
           </div>
@@ -842,7 +945,8 @@ function formatDate(iso) {
 
         <!-- ── Tab: Mitglieder ──────────────────────────────────────────── -->
         <div v-if="paActiveTab === 'members'" class="p-6 space-y-4">
-          <div class="flex gap-2 flex-wrap items-end">
+          <!-- Mitglied hinzufügen — nur für Planner-Admins -->
+          <div v-if="paCanManageRoles" class="flex gap-2 flex-wrap items-end">
             <div class="flex-1 min-w-40">
               <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Benutzer</label>
               <select v-model="paNewMember.userId" class="input-field">
@@ -854,9 +958,8 @@ function formatDate(iso) {
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rolle</label>
-              <select v-model="paNewMember.role" class="input-field w-40">
-                <option value="member">Mitglied</option>
-                <option value="owner">Verantwortlicher</option>
+              <select v-model="paNewMember.role" class="input-field w-44">
+                <option v-for="r in PLANNER_MEMBER_ROLE_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</option>
               </select>
             </div>
             <button @click="paAddMember" :disabled="!paNewMember.userId" class="btn-primary">Hinzufügen</button>
@@ -875,12 +978,27 @@ function formatDate(iso) {
                   {{ users.find(u => u.id === m.userId)?.email ?? '' }}
                 </p>
               </div>
-              <select :value="m.role" @change="paChangeMemberRole(m.userId, $event.target.value)"
+
+              <!-- Rolle ändern: nur für Planner-Admins -->
+              <select v-if="paCanManageRoles"
+                :value="m.role" @change="paChangeMemberRole(m.userId, $event.target.value)"
                 class="text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:ring-primary focus:border-primary">
-                <option value="member">Mitglied</option>
-                <option value="owner">Verantwortlicher</option>
+                <option v-for="r in PLANNER_MEMBER_ROLE_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</option>
               </select>
-              <button @click="paRemoveMember(m.userId)"
+              <!-- Lesend: Rolle als Badge -->
+              <span v-else
+                class="text-xs px-2.5 py-1 rounded-full font-medium"
+                :class="{
+                  'bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark': m.role === 'admin',
+                  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': m.role === 'owner',
+                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': m.role === 'user' || m.role === 'member',
+                }">
+                {{ PA_ROLE_LABELS[m.role] ?? m.role }}
+              </span>
+
+              <!-- Entfernen: nur für Planner-Admins -->
+              <button v-if="paCanManageRoles"
+                @click="paRemoveMember(m.userId)"
                 class="text-red-400 hover:text-red-600 transition-colors p-1 rounded">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -974,7 +1092,7 @@ function formatDate(iso) {
                   <button @click="paAddTeamMember(team.id)" :disabled="!paNewTeamMember.userId" class="btn-primary text-sm py-1.5">Hinzufügen</button>
                   <button @click="paAddMemberTeamId = null; paNewTeamMember.userId = ''" class="btn-secondary text-sm py-1.5">Abbrechen</button>
                 </div>
-                <button v-else @click="paAddMemberTeamId = team.id; paNewTeamMember.userId = ''; paNewTeamMember.role = 'member'"
+                <button v-else @click="paAddMemberTeamId = team.id; paNewTeamMember.userId = ''; paNewTeamMember.role = 'user'"
                   class="text-xs text-primary dark:text-primary-dark hover:underline">
                   + Mitglied hinzufügen
                 </button>
@@ -1046,8 +1164,7 @@ function formatDate(iso) {
           <div>
             <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rolle</label>
             <select v-model="newPlannerMember.role" class="input-field w-44">
-              <option value="member">Mitglied</option>
-              <option value="owner">Verantwortlicher</option>
+              <option v-for="r in PLANNER_MEMBER_ROLE_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</option>
             </select>
           </div>
           <button @click="addPlannerMember" :disabled="!newPlannerMember.userId" class="btn-primary">
@@ -1090,8 +1207,7 @@ function formatDate(iso) {
                 <td class="px-4 py-3">
                   <select :value="m.role" @change="changePlannerRole(m.userId, $event.target.value)"
                     class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option value="member">Mitglied</option>
-                    <option value="owner">Verantwortlicher</option>
+                    <option v-for="r in PLANNER_MEMBER_ROLE_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</option>
                   </select>
                 </td>
                 <td class="px-4 py-3 text-right">

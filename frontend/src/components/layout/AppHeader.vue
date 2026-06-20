@@ -15,6 +15,7 @@ import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
 import { useUsers } from '@/composables/useUsers'
 import { generateAvatar } from '@/utils/avatar'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const authStore     = useAuthStore()
 const plannersStore = usePlannersStore()
@@ -42,8 +43,15 @@ function onCreateDropdownDocClick(e) {
     showCreateDropdown.value = false
   }
 }
-onMounted(() => document.addEventListener('click', onCreateDropdownDocClick))
-onUnmounted(() => document.removeEventListener('click', onCreateDropdownDocClick))
+onMounted(() => {
+  document.addEventListener('click', onCreateDropdownDocClick)
+  notificationsStore.fetchNotifications()
+  notificationPollInterval = setInterval(() => notificationsStore.fetchNotifications(), 30000)
+})
+onUnmounted(() => {
+  document.removeEventListener('click', onCreateDropdownDocClick)
+  clearInterval(notificationPollInterval)
+})
 const createTab          = ref('ticket')
 const creatingItem       = ref(false)
 
@@ -108,6 +116,29 @@ const showDropdown = ref(false)
 const showChangelog = ref(false)
 const submittingRequest = ref(false)
 
+// ─── Benachrichtigungen ───────────────────────────────────────────────────────
+const notificationsStore = useNotificationsStore()
+const showNotifications = ref(false)
+
+let notificationPollInterval = null
+
+function toggleNotifications() {
+  showNotifications.value = !showNotifications.value
+  if (showNotifications.value) notificationsStore.fetchNotifications()
+}
+
+function formatNotificationTime(iso) {
+  const d = new Date(iso)
+  const now = new Date()
+  const diffMs = now - d
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return 'Gerade eben'
+  if (diffMin < 60) return `vor ${diffMin} Min.`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `vor ${diffH} Std.`
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+}
+
 // Mein-Team-Dropdown
 const showTeamDropdown = ref(false)
 const recentTickets    = ref([])
@@ -171,9 +202,7 @@ const baseLinks = computed(() => {
 const navLinks = computed(() => {
   const pid = plannersStore.activePlannerId
   if (!pid) return []
-  return authStore.isAdmin
-    ? [...baseLinks.value, { to: `/planner/${pid}/admin`, label: 'Admin' }]
-    : baseLinks.value
+  return [...baseLinks.value, { to: `/planner/${pid}/admin`, label: 'Verwaltung' }]
 })
 
 function isActive(path) {
@@ -332,6 +361,93 @@ const avatarUrl = (user) => generateAvatar(user?.username)
       </div>
     </div>
 
+    <!-- Notification Bell -->
+    <div class="flex-none relative">
+      <button
+        @click="toggleNotifications"
+        class="relative p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        title="Benachrichtigungen"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        <span v-if="notificationsStore.unreadCount > 0"
+          class="absolute top-1 right-1 min-w-[1rem] h-4 px-0.5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center leading-none">
+          {{ notificationsStore.unreadCount > 9 ? '9+' : notificationsStore.unreadCount }}
+        </span>
+      </button>
+
+      <!-- Notification Dropdown -->
+      <div v-if="showNotifications"
+        class="absolute right-0 mt-1 w-80 bg-white/90 dark:bg-[#1a1825]/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 dark:border-white/[0.06] ring-1 ring-black/[0.05] dark:ring-white/[0.08] z-50 overflow-hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700/60">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Benachrichtigungen</h3>
+          <button v-if="notificationsStore.unreadCount > 0"
+            @click="notificationsStore.markAllRead()"
+            class="text-xs text-primary dark:text-primary-dark hover:underline">
+            Alle gelesen
+          </button>
+        </div>
+
+        <!-- Liste -->
+        <div class="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700/40">
+          <div v-if="!notificationsStore.notifications.length"
+            class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+            <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            Keine Benachrichtigungen
+          </div>
+
+          <div v-for="n in notificationsStore.notifications" :key="n.id"
+            class="flex items-start gap-3 px-4 py-3 transition-colors"
+            :class="n.read ? 'bg-transparent' : 'bg-primary/5 dark:bg-primary-dark/5'">
+
+            <!-- Icon -->
+            <div class="mt-0.5 flex-shrink-0">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                :class="n.read ? 'bg-gray-100 dark:bg-gray-700' : 'bg-primary/10 dark:bg-primary-dark/10'">
+                <svg class="w-4 h-4" :class="n.read ? 'text-gray-400' : 'text-primary dark:text-primary-dark'"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0" @click="!n.read && notificationsStore.markRead(n.id)">
+              <p class="text-sm font-medium text-gray-900 dark:text-white leading-snug">{{ n.title }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">{{ n.message }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatNotificationTime(n.createdAt) }}</p>
+            </div>
+
+            <!-- Unread dot + delete -->
+            <div class="flex flex-col items-center gap-2 flex-shrink-0">
+              <div v-if="!n.read" class="w-2 h-2 rounded-full bg-primary dark:bg-primary-dark mt-1"></div>
+              <button @click="notificationsStore.remove(n.id)"
+                class="text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400 transition-colors"
+                title="Löschen">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer: Navigation zum Planner wenn invite -->
+        <div v-if="notificationsStore.notifications.some(n => n.meta?.plannerId && !n.read)"
+          class="px-4 py-2.5 border-t border-gray-100 dark:border-gray-700/60 bg-gray-50/50 dark:bg-white/[0.02]">
+          <p class="text-xs text-gray-400 dark:text-gray-500">Klicke auf eine Einladung um sie als gelesen zu markieren.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- User-Profil -->
     <div class="flex-none relative">
       <button @click="showDropdown = !showDropdown" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
@@ -346,11 +462,11 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
           Einstellungen
         </router-link>
-        <router-link v-if="authStore.isAdmin"
+        <router-link
           :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/admin` : '/planners'"
           @click="showDropdown = false"
           class="flex items-center gap-2 px-4 py-2 text-sm text-primary dark:text-primary-dark hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
-          Admin-Bereich
+          Verwaltung
         </router-link>
         <button @click="showChangelog = true; showDropdown = false"
           class="flex items-center justify-between gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -368,6 +484,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 
     <div v-if="showDropdown" class="fixed inset-0 z-30" @click="showDropdown = false" />
     <div v-if="showTeamDropdown" class="fixed inset-0 z-30" @click="showTeamDropdown = false" />
+    <div v-if="showNotifications" class="fixed inset-0 z-30" @click="showNotifications = false" />
   </header>
 
   <!-- Ticket-Modal aus Header-Dropdown -->
