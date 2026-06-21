@@ -3,6 +3,14 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.22.0',
+    title: 'Ticket-Clone Planner-Präfix & Verlauf-User sichtbar',
+    items: [
+      'Ticket klonen: Präfix und Zähler werden jetzt korrekt aus Projekt → Planner abgeleitet — ein geklontes ENT-Ticket bleibt ENT-xxxx statt den globalen Fallback zu verwenden',
+      'Verlauf-Tab: changedBy wird zum Benutzernamen aufgelöst und mit Avatar angezeigt — „Thomas Wolff änderte Status von Geplant zu In Arbeit"',
+    ],
+  },
+  {
     version: '2.21.0',
     title: 'Kernfluss-Fixes: Team-Tickets, teamId & Kanban-Teamfilter',
     items: [

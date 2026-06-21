@@ -313,6 +313,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.22.0 — Ticket-Clone Planner-Präfix & Verlauf-User sichtbar
+- **Ticket-Clone:** Präfix und Counter werden jetzt aus `projectId → planner` abgeleitet (identisch zur POST-Logik) — geklonte ENT-Tickets bleiben `ENT-xxxx`, kein globaler Fallback mehr
+- **Verlauf-Tab:** `changedBy` wird zum Benutzernamen aufgelöst und mit `UserAvatar` angezeigt — *„Thomas Wolff änderte Status von Geplant zu In Arbeit"* inkl. Zeitstempel
+
 ### v2.21.0 — Kernfluss-Fixes: Team-Tickets, teamId & Kanban-Teamfilter
 - **Mein Team:** zeigt jetzt alle Tickets des Teams (nicht mehr nur persönlich zugewiesene); eigene Tickets per „Ich"-Badge in der Zugewiesen-Spalte hervorgehoben
 - **TicketDetail:** Team-Dropdown in der Options-Leiste (planner-gefiltert, sofort speichernd); `teamId` im Form, `filteredTeams` computed
