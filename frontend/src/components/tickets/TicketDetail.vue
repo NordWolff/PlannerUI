@@ -1,10 +1,12 @@
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTicketsStore } from '@/stores/tickets'
 import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
 import { useTeamsStore } from '@/stores/teams'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 import { useUsers } from '@/composables/useUsers'
 import { generateAvatar } from '@/utils/avatar'
 import StatusBadge from '@/components/common/StatusBadge.vue'
@@ -16,11 +18,13 @@ import ChecklistItem from './ChecklistItem.vue'
 const props = defineProps({ ticket: { type: Object, required: true } })
 const emit = defineEmits(['back', 'saved', 'deleted'])
 
+const route = useRoute()
 const ticketsStore = useTicketsStore()
 const projectsStore = useProjectsStore()
 const sprintsStore = useSprintsStore()
 const teamsStore = useTeamsStore()
 const authStore = useAuthStore()
+const plannersStore = usePlannersStore()
 const { users: allUsers, fetchUsers, getUser, avatarUrl } = useUsers()
 
 // ── Form state ──────────────────────────────────────────────────────────
@@ -90,6 +94,15 @@ const filteredTeams = computed(() => {
   const pid = ticketPlannerId.value
   if (!pid) return teamsStore.teams
   return teamsStore.teams.filter(t => t.plannerId === pid)
+})
+
+const plannerMembers = computed(() => {
+  const pid = ticketPlannerId.value
+  if (!pid) return allUsers.value
+  const all = [...plannersStore.planners, ...plannersStore.allPlanners]
+  const planner = all.find(p => p.id === pid)
+  if (!planner) return allUsers.value
+  return allUsers.value.filter(u => planner.members?.some(m => m.userId === u.id))
 })
 
 // ── Options ───────────────────────────────────────────────────────────
@@ -253,10 +266,11 @@ const tabs = computed(() => [
 
 // ── Lifecycle ───────────────────────────────────────────────────────────
 onMounted(async () => {
-  await Promise.all([fetchUsers(), projectsStore.fetchProjects(), sprintsStore.fetchSprints()])
+  const plannerId = route.params.plannerId || null
+  const plannerFilter = plannerId ? { plannerId } : {}
+  await Promise.all([fetchUsers(), projectsStore.fetchProjects(plannerFilter), sprintsStore.fetchSprints(plannerFilter)])
   if (!teamsStore.teams.length) {
-    const pid = ticketPlannerId.value
-    await teamsStore.fetchTeams(pid ? { plannerId: pid } : {})
+    await teamsStore.fetchTeams(plannerFilter)
   }
   const [hist, cmts, atts] = await Promise.all([
     ticketsStore.fetchHistory(props.ticket.id),
@@ -324,7 +338,7 @@ onMounted(async () => {
             class="input-field text-sm w-44"
           >
             <option :value="null">— Nicht zugewiesen —</option>
-            <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
+            <option v-for="u in plannerMembers" :key="u.id" :value="u.id">{{ u.username }}</option>
           </select>
         </div>
       </div>
