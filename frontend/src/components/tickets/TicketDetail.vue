@@ -698,10 +698,12 @@ onMounted(async () => {
           <div v-else class="space-y-3">
             <div v-if="!history.length" class="py-8 text-center text-sm text-gray-400">Keine Verlaufseinträge</div>
             <div v-for="entry in history" :key="entry.id" class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div class="w-2 h-2 mt-2 rounded-full bg-primary-dark flex-none" />
+              <UserAvatar v-if="entry.changedBy" :user-id="entry.changedBy" size="sm" class="flex-none mt-0.5" />
+              <div v-else class="w-6 h-6 flex-none" />
               <div>
                 <p class="text-sm text-gray-700 dark:text-gray-300">
-                  <span class="font-medium">Status</span> geändert von
+                  <span class="font-medium">{{ getUser(entry.changedBy)?.username || 'Unbekannt' }}</span>
+                  änderte <span class="font-medium">Status</span> von
                   <span class="font-medium">{{ entry.from }}</span> zu
                   <span class="font-medium text-primary dark:text-primary-dark">{{ entry.to }}</span>
                 </p>

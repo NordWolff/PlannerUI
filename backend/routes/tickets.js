@@ -381,9 +381,18 @@ router.post('/:id/clone', (req, res) => {
   const original = store.tickets.find((t) => t.id === req.params.id);
   if (!original) return res.status(404).json({ error: 'Ticket not found' });
 
-  const { ticketPrefix, ticketCounter } = store.settings;
-  const ticketNumber = `${ticketPrefix}-${String(ticketCounter).padStart(4, '0')}`;
-  store.settings.ticketCounter += 1;
+  let prefix = store.settings.ticketPrefix;
+  let counter = store.settings.ticketCounter;
+  const project = original.projectId ? store.projects.find(p => p.id === original.projectId) : null;
+  const planner = project ? store.planners.find(p => p.id === project.plannerId) : null;
+  if (planner?.ticketPrefix) {
+    prefix = planner.ticketPrefix;
+    counter = planner.ticketCounter ?? 1;
+    planner.ticketCounter = counter + 1;
+  } else {
+    store.settings.ticketCounter += 1;
+  }
+  const ticketNumber = `${prefix}-${String(counter).padStart(4, '0')}`;
 
   const now = new Date().toISOString();
   const cloned = { ...original, id: uuidv4(), ticketNumber, title: original.title + ' (Kopie)', status: 'draft', createdBy: req.user.id, history: [], comments: [], chatRefs: [], createdAt: now, updatedAt: now };
