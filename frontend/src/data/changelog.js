@@ -3,6 +3,17 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.20.0',
+    title: 'Dashboard: Meine Tickets — Liste & Vollansicht',
+    items: [
+      'Neuer Abschnitt „Meine Tickets" auf dem Dashboard: alle Tickets, bei denen der angemeldete Benutzer Ersteller oder Assignee ist',
+      'Status-Filter-Tabs (Alle / Entwurf / Geplant / In Arbeit / Review / Erledigt) mit Anzahl-Badge pro Status',
+      'Tabelle mit Ticket-Nummer (monospace), Typ-Icon, Titel, Status-Badge, Priorität und Aktualisierungsdatum',
+      'Klick auf eine Zeile öffnet die vollständige Ticket-Detailansicht (TicketDetail) — alle Felder bearbeitbar, Kommentare, Checklisten, Anhänge',
+      'Nach Speichern wird das Ticket in der Liste automatisch aktualisiert; nach Löschen aus der Liste entfernt',
+    ],
+  },
+  {
     version: '2.19.0',
     title: 'Support-Tickets: Verwaltung & Bearbeitung',
     items: [

@@ -313,6 +313,12 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.20.0 — Dashboard: Meine Tickets — Liste & Vollansicht
+- **„Meine Tickets"-Abschnitt:** Zeigt alle Tickets des angemeldeten Benutzers (Ersteller oder Assignee) für den aktiven Planner; Backend: neuer Filter `?myTickets=true` auf `GET /api/tickets`
+- **Status-Filter-Tabs:** Alle / Entwurf / Geplant / In Arbeit / Review / Erledigt — mit Anzahl-Badge pro Status; aktiver Tab mit Magenta-Unterrand
+- **Tabelle:** Ticket-Nummer (monospace, `text-primary`), Typ-Icon, Titel, `StatusBadge`, `PriorityBadge`, Aktualisierungsdatum — responsive (Priorität ab `sm`, Datum ab `md`)
+- **Vollansicht:** Klick auf Zeile ersetzt die Dashboard-Seite mit `TicketDetail` — alle Felder inline bearbeitbar, Kommentare, Checklisten, Anhänge; `@back` kehrt zum Dashboard zurück; `@saved` aktualisiert die Zeile in der Liste; `@deleted` entfernt das Ticket
+
 ### v2.19.0 — Support-Tickets: Verwaltung & Bearbeitung
 - **Neuer Tab „Support-Tickets" (Admin):** Tabelle aller SUP-Tickets mit Ticket-Nummer (monospace, `text-primary`), Titel, Einreicher-Avatar, Status-Badge, Priorität, Datum und Assignee-Avatar
 - **Slide-over Panel:** Klick auf eine Tabellenzeile öffnet ein `w-[560px]`-Panel von rechts (`bg-gray-900`, `border-l border-gray-700`); zeigt Einreicher-Info und Originaltext read-only, Status-Dropdown, Assignee-Picker (Mitglieder des Support-Planners), Sprint-Dropdown

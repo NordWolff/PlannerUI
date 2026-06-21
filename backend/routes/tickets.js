@@ -53,6 +53,10 @@ router.get('/', (req, res) => {
   if (req.query.sprintId) tickets = tickets.filter((t) => t.sprintId === req.query.sprintId);
   if (req.query.projectId) tickets = tickets.filter((t) => t.projectId === req.query.projectId);
   if (req.query.assigneeId) tickets = tickets.filter((t) => t.assigneeId === req.query.assigneeId);
+  if (req.query.myTickets === 'true') {
+    const uid = req.user.id;
+    tickets = tickets.filter(t => t.assigneeId === uid || t.createdBy === uid);
+  }
 
   return res.json(tickets);
 });
