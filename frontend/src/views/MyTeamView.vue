@@ -48,8 +48,8 @@ watch(
 
 onMounted(async () => {
   const plannerId = route.params.plannerId
-  const sprintFilter = plannerId ? { plannerId } : {}
-  await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints(sprintFilter), fetchUsers()])
+  const filter = plannerId ? { plannerId } : {}
+  await Promise.all([teamsStore.fetchTeams(filter), sprintsStore.fetchSprints(filter), fetchUsers()])
   const current = await sprintsStore.fetchCurrentSprint(plannerId || null)
   if (current) selectedSprintId.value = current.id
   await loadTickets()
@@ -125,7 +125,7 @@ async function onDrop(e, status) {
       <div class="flex flex-wrap gap-3">
         <select v-model="selectedTeamId" @change="loadTickets" class="input-field w-auto">
           <option :value="null">Alle Teams</option>
-          <option v-for="team in teamsStore.teams.filter(t => !route.params.plannerId || t.plannerId === route.params.plannerId)" :key="team.id" :value="team.id">{{ team.name }}</option>
+          <option v-for="team in teamsStore.teams" :key="team.id" :value="team.id">{{ team.name }}</option>
         </select>
         <select v-model="selectedSprintId" @change="loadTickets" class="input-field w-auto">
           <option :value="null">Alle Sprints</option>
@@ -197,8 +197,11 @@ async function onDrop(e, status) {
                 <span v-if="ticket.ticketNumber" class="font-mono text-xs text-primary dark:text-primary-dark block mb-0.5">{{ ticket.ticketNumber }}</span>
                 <p class="font-medium text-gray-900 dark:text-white line-clamp-2">{{ ticket.title }}</p>
               </div>
-              <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="sm" class="mt-0.5" />
-              <div v-else class="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500 shrink-0 mt-0.5" title="Nicht zugewiesen" />
+              <div class="flex flex-col items-center shrink-0 mt-0.5 gap-0.5">
+                <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="sm" />
+                <div v-else class="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500" title="Nicht zugewiesen" />
+                <span v-if="ticket.assigneeId === authStore.user?.id" class="text-[9px] font-medium text-primary dark:text-primary-dark bg-primary-light dark:bg-primary-active/20 px-1 py-0.5 rounded-full leading-none">Ich</span>
+              </div>
             </div>
             <div class="flex items-center justify-between mt-2">
               <PriorityBadge v-if="ticket.priority" :priority="ticket.priority" />
