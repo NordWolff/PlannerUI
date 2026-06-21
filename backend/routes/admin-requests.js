@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { store } from '../data/store.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { createNotification } from './notifications.js';
 
 const router = Router();
 router.use(authenticateToken);
@@ -13,19 +14,78 @@ router.post('/', (req, res) => {
   const { title, description, type } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
 
+  const resolvedType = VALID_TYPES.includes(type) ? type : 'feature';
+  const now = new Date().toISOString();
+
   const request = {
     id: uuidv4(),
     title,
     description: description || '',
-    type: VALID_TYPES.includes(type) ? type : 'feature',
+    type: resolvedType,
     status: 'open',
     submittedBy: req.user.id,
     adminNote: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
 
   store.adminRequests.push(request);
+
+  // Ticket im System-Support Planner anlegen
+  const supportPlanner = store.planners.find(p => p.isSystemSupport);
+  if (supportPlanner) {
+    const supportProject = store.projects.find(p => p.plannerId === supportPlanner.id);
+    const submitter = store.users.find(u => u.id === req.user.id);
+
+    const prefix = supportPlanner.ticketPrefix ?? 'SUP';
+    const counter = supportPlanner.ticketCounter ?? 1;
+    const ticketNumber = `${prefix}-${String(counter).padStart(4, '0')}`;
+    supportPlanner.ticketCounter = counter + 1;
+
+    const submitterInfo = submitter
+      ? `${submitter.username} (${submitter.email})`
+      : 'Unbekannt';
+    const ticketDescription = description
+      ? `${description}\n\n---\n*Eingereicht von: ${submitterInfo}*`
+      : `*Eingereicht von: ${submitterInfo}*`;
+
+    const ticket = {
+      id: uuidv4(),
+      ticketNumber,
+      title: `[${resolvedType === 'bug' ? 'Bug' : 'Feature'}] ${title}`,
+      description: ticketDescription,
+      status: 'planned',
+      priority: resolvedType === 'bug' ? 'high' : 'medium',
+      type: resolvedType,
+      assigneeId: null,
+      createdBy: req.user.id,
+      projectId: supportProject?.id ?? null,
+      boardId: null,
+      sprintId: null,
+      teamId: null,
+      checklist: [],
+      dependencies: [],
+      attachments: [],
+      history: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    store.tickets.push(ticket);
+
+    // Alle System-Admins über die neue Anfrage benachrichtigen
+    store.users
+      .filter(u => u.role === 'admin' && u.id !== req.user.id)
+      .forEach(admin => {
+        createNotification(admin.id, {
+          title: 'Neue Support-Anfrage',
+          message: `${submitter?.username ?? 'Unbekannt'} hat eine ${resolvedType === 'bug' ? 'Bug-Meldung' : 'Feature-Anfrage'} eingereicht: „${title}"`,
+          type: 'info',
+          meta: { ticketId: ticket.id, requestId: request.id, ticketNumber },
+        });
+      });
+  }
+
   return res.status(201).json(request);
 });
 

@@ -313,6 +313,15 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.17.0 — Ticket-Erstellung: Planner, Pflicht-Projekt & Assignee-Suche
+- **Ticket erstellen — Planner-Dropdown:** Erstes Feld im Schnell-Erstellen-Modal; zeigt nur eigene Planner (`plannersStore.planners`); beim Wechsel werden Boards, Projekte, Teams und Sprints für den neuen Planner nachgeladen; Board-/Projekt-/Assignee-Auswahl wird zurückgesetzt
+- **Ticket erstellen — Pflicht-Projekt:** Neues Projekt-Dropdown (neben Planner in 2-Spalten-Layout); deaktiviert solange kein Planner gewählt; „Ticket erstellen"-Button und Submit-Guard blockieren ohne Projektauswahl (`*`-Pflichtfeld)
+- **Ticket erstellen — Suchfeld „Zugewiesen an":** `<select>` durch Custom-Combobox ersetzt; filtert live nach Name/E-Mail; listet nur Mitglieder des gewählten Planners; Avatar-Vorschau in der Trefferliste; × zum Zurücksetzen; Overlay schließt bei Klick außerhalb
+- **Projekt erstellen — Planner-Dropdown:** Read-only-Anzeige durch echtes `<select>` aus `plannersStore.planners` ersetzt; beim Planner-Wechsel werden Sprints des neuen Planners geladen und Sprint-Auswahl zurückgesetzt
+- **System-Support Planner:** Neuer Systemstandard-Planner (`SUP`, Farbe Indigo) in Seed-Daten; alle Nutzer mit System-Rolle `admin` sind automatisch Mitglied
+- **Anfrage → Ticket:** `POST /api/admin-requests` legt automatisch ein Ticket im Support-Projekt des System-Support Planners an (`[Bug] / [Feature]`-Präfix, Priorität hoch/mittel, Einreicher-Info in Beschreibung); Ticket-Zähler läuft mit Planner-Präfix (`SUP-0001` …)
+- **Admin-Benachrichtigung bei Anfragen:** Alle System-Admins erhalten beim Eingang einer neuen Anfrage eine Glocken-Benachrichtigung mit Typ und Titel
+
 ### v2.16.0 — Rollentrennung, Berechtigungskorrekturen & Teams/Boards-Zugriff
 - **Fix: Rollen-Editing nur für Planner-Admins (Mitglieder-Reiter):** `paCanManageRoles` entfernte fälschlicherweise den `createdBy`-Bypass — Rollenbearbeitung war für Planner-Ersteller ohne Admin-Rolle zugänglich; jetzt korrekt: nur System-Admin oder Planner-Mitglied mit Rolle `admin`
 - **Fix: Planner-Zugang-Tab hatte keine Rollenprüfung:** Hinzufügen, Rollen-Select und Entfernen im „Planner-Zugang"-Tab waren für alle Nutzer ohne Einschränkung sichtbar; jetzt genauso durch `canManageActivePlannerRoles` gesichert

@@ -100,6 +100,7 @@ export async function seedData() {
   const planner1Id = uuidv4(); // Entwicklungs-Planner
   const planner2Id = uuidv4(); // Design-Planner
   const planner3Id = uuidv4(); // Management-Planner
+  const systemSupportPlannerId = uuidv4(); // System-Support Planner (Systemstandard)
 
   // ── Teams ─────────────────────────────────────────────────────────────────
   const team1Id = uuidv4(); // Entwicklung
@@ -217,7 +218,35 @@ export async function seedData() {
       ticketCounter: 1,
       createdAt: now,
     },
+    {
+      id: systemSupportPlannerId,
+      name: 'System-Support',
+      description: 'Systemstandard-Planner für Support-Anfragen und internes Feedback. Alle System-Admins sind automatisch Mitglied.',
+      createdBy: thomasWolffId,
+      isSystemSupport: true,
+      members: [
+        { userId: thomasWolffId, role: 'admin' },
+      ],
+      ticketPrefix: 'SUP',
+      ticketCounter: 1,
+      color: '#6366f1',
+      createdAt: now,
+    },
   );
+
+  // ── System-Support Projekt ────────────────────────────────────────────────
+  const supportProjectId = uuidv4();
+  store.projects.push({
+    id: supportProjectId,
+    name: 'Support-Anfragen',
+    description: 'Eingehende Benutzeranfragen und Feedback aus dem Anfrage-Formular',
+    status: 'active',
+    plannerId: systemSupportPlannerId,
+    sprintIds: [],
+    startDate: null,
+    endDate: null,
+    createdAt: now,
+  });
 
   // ── Sprints ───────────────────────────────────────────────────────────────
   const sprint1Id = uuidv4(); // für planner1

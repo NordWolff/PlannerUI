@@ -3,6 +3,19 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.17.0',
+    title: 'Ticket-Erstellung: Planner, Pflicht-Projekt & Assignee-Suche',
+    items: [
+      'Ticket erstellen: neues Planner-Dropdown — zeigt nur eigene Planner; beim Wechsel werden Boards, Projekte, Teams und Sprints automatisch nachgeladen',
+      'Ticket erstellen: Pflicht-Projekt-Dropdown — Ticket kann nur mit gewähltem Projekt erstellt werden; deaktiviert solange kein Planner ausgewählt',
+      'Ticket erstellen: "Zugewiesen an" ist jetzt ein Suchfeld — filtert Planner-Mitglieder live nach Name/E-Mail; Avatare in der Trefferliste; × zum Zurücksetzen',
+      'Projekt erstellen: Planner-Dropdown ersetzt read-only Feld — zeigt alle eigenen Planner; beim Wechsel werden zugehörige Sprints nachgeladen',
+      'System-Support Planner: neuer Systemstandard-Planner (Präfix SUP); alle System-Admins sind automatisch Mitglied',
+      'Anfrage senden erstellt automatisch ein Ticket im System-Support Planner (SUP-XXXX) mit Typ, Priorität und Einreicher-Info',
+      'Alle System-Admins erhalten eine Glocken-Benachrichtigung bei jeder neuen Support-Anfrage',
+    ],
+  },
+  {
     version: '2.16.0',
     title: 'Rollentrennung, Berechtigungskorrekturen & Teams/Boards-Zugriff',
     items: [

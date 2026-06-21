@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePlannersStore } from '@/stores/planners'
@@ -55,8 +55,61 @@ onUnmounted(() => {
 const createTab          = ref('ticket')
 const creatingItem       = ref(false)
 
-const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null })
+const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null, plannerId: null, projectId: null })
 const projectForm = reactive({ name: '', description: '', status: 'active', plannerId: null, sprintIds: [] })
+
+const ticketAssigneeSearch  = ref('')
+const showAssigneeDropdown  = ref(false)
+
+const ticketPlannerMembers = computed(() => {
+  const planner = plannersStore.planners.find(p => p.id === ticketForm.plannerId)
+  if (!planner) return allUsers.value
+  const ids = new Set((planner.members ?? []).map(m => m.userId))
+  return allUsers.value.filter(u => ids.has(u.id))
+})
+
+const filteredAssignees = computed(() => {
+  const q = ticketAssigneeSearch.value.toLowerCase()
+  if (!q) return ticketPlannerMembers.value
+  return ticketPlannerMembers.value.filter(u =>
+    u.username.toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q)
+  )
+})
+
+const selectedAssigneeName = computed(() =>
+  allUsers.value.find(u => u.id === ticketForm.assigneeId)?.username ?? ''
+)
+
+function selectAssignee(user) {
+  ticketForm.assigneeId = user ? user.id : null
+  ticketAssigneeSearch.value = user ? user.username : ''
+  showAssigneeDropdown.value = false
+}
+
+watch(() => ticketForm.plannerId, async (pid) => {
+  ticketForm.boardId = null
+  ticketForm.projectId = null
+  ticketForm.assigneeId = null
+  ticketAssigneeSearch.value = ''
+  if (pid) {
+    const f = { plannerId: pid }
+    await Promise.all([
+      boardsStore.fetchBoards(f),
+      teamsStore.fetchTeams(f),
+      sprintsStore.fetchSprints(f),
+      projectsStore.fetchProjects(f),
+    ])
+    if (boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
+  } else {
+    projectsStore.clear()
+  }
+})
+
+watch(() => projectForm.plannerId, async (pid) => {
+  projectForm.sprintIds = []
+  if (pid) await sprintsStore.fetchSprints({ plannerId: pid })
+  else sprintsStore.sprints = []
+})
 
 async function openCreate(tab) {
   createTab.value = tab
@@ -72,13 +125,16 @@ async function openCreate(tab) {
     const pid = plannersStore.activePlannerId
     const plannerFilter = pid ? { plannerId: pid } : {}
     await Promise.all([fetchUsers(), teamsStore.fetchTeams(plannerFilter), boardsStore.fetchBoards(plannerFilter), sprintsStore.fetchSprints(plannerFilter)])
+    ticketForm.plannerId = pid
     if (!ticketForm.boardId && boardsStore.boards.length) ticketForm.boardId = boardsStore.boards[0].id
     projectForm.plannerId = pid
   }
 }
 
 function resetTicketForm() {
-  Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null })
+  Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null, plannerId: plannersStore.activePlannerId, projectId: null })
+  ticketAssigneeSearch.value = ''
+  showAssigneeDropdown.value = false
 }
 function resetProjectForm() {
   Object.assign(projectForm, { name: '', description: '', status: 'active', plannerId: plannersStore.activePlannerId, sprintIds: [] })
@@ -91,7 +147,7 @@ function toggleHeaderSprint(sprintId) {
 }
 
 async function submitTicket() {
-  if (!ticketForm.title.trim() || creatingItem.value) return
+  if (!ticketForm.title.trim() || !ticketForm.projectId || creatingItem.value) return
   creatingItem.value = true
   try {
     await ticketsStore.createTicket({ ...ticketForm })
@@ -522,6 +578,23 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 
         <!-- Ticket-Formular -->
         <div v-if="createTab === 'ticket'" class="p-6 space-y-4 overflow-y-auto">
+          <!-- Planner + Projekt -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Planner</label>
+              <select v-model="ticketForm.plannerId" class="input-field">
+                <option :value="null">— Kein Planner —</option>
+                <option v-for="p in plannersStore.planners" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Projekt <span class="text-red-500">*</span></label>
+              <select v-model="ticketForm.projectId" class="input-field" :disabled="!ticketForm.plannerId">
+                <option :value="null">— Projekt wählen —</option>
+                <option v-for="p in projectsStore.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Titel *</label>
             <input v-model="ticketForm.title" type="text" class="input-field" placeholder="Ticket-Titel…" @keydown.enter="submitTicket" />
@@ -553,12 +626,45 @@ const avatarUrl = (user) => generateAvatar(user?.username)
             </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
+            <!-- Zugewiesen an — Suchfeld -->
             <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Zugewiesen an</label>
-              <select v-model="ticketForm.assigneeId" class="input-field">
-                <option :value="null">— Nicht zugewiesen —</option>
-                <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
-              </select>
+              <div class="relative">
+                <!-- Overlay zum Schließen bei Klick außerhalb -->
+                <div v-if="showAssigneeDropdown" class="fixed inset-0 z-[199]" @click="showAssigneeDropdown = false" />
+                <div class="relative z-[200]">
+                  <input
+                    :value="showAssigneeDropdown ? ticketAssigneeSearch : (selectedAssigneeName || ticketAssigneeSearch)"
+                    @input="e => { ticketAssigneeSearch = e.target.value; ticketForm.assigneeId = null; showAssigneeDropdown = true }"
+                    @focus="showAssigneeDropdown = true; if (ticketForm.assigneeId) ticketAssigneeSearch = ''"
+                    type="text"
+                    class="input-field pr-7"
+                    :placeholder="ticketForm.assigneeId ? selectedAssigneeName : '— Suchen oder wählen —'"
+                  />
+                  <button v-if="ticketForm.assigneeId"
+                    @click="selectAssignee(null)"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-lg leading-none">
+                    &times;
+                  </button>
+                  <!-- Dropdown-Liste -->
+                  <div v-if="showAssigneeDropdown"
+                    class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-44 overflow-y-auto">
+                    <button
+                      @click="selectAssignee(null)"
+                      class="w-full text-left px-3 py-2 text-sm text-gray-400 italic hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      — Nicht zugewiesen —
+                    </button>
+                    <button
+                      v-for="u in filteredAssignees" :key="u.id"
+                      @click="selectAssignee(u)"
+                      class="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <img :src="generateAvatar(u.username)" class="w-6 h-6 rounded-full shrink-0" />
+                      <span class="text-sm text-gray-800 dark:text-gray-200">{{ u.username }}</span>
+                    </button>
+                    <div v-if="!filteredAssignees.length" class="px-3 py-2 text-sm text-gray-400 italic">Keine Treffer</div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Board</label>
@@ -591,9 +697,10 @@ const avatarUrl = (user) => generateAvatar(user?.username)
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Planner</label>
-              <div class="input-field bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 select-none">
-                {{ plannersStore.activePlanner?.name || '— Kein Planner —' }}
-              </div>
+              <select v-model="projectForm.plannerId" class="input-field">
+                <option :value="null">— Kein Planner —</option>
+                <option v-for="p in plannersStore.planners" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
             </div>
           </div>
           <div>
@@ -637,7 +744,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
         <!-- Modal-Footer -->
         <div class="flex gap-3 justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
           <button @click="showCreateModal = false" class="btn-secondary">Abbrechen</button>
-          <button v-if="createTab === 'ticket'" @click="submitTicket" :disabled="!ticketForm.title.trim() || creatingItem" class="btn-primary">
+          <button v-if="createTab === 'ticket'" @click="submitTicket" :disabled="!ticketForm.title.trim() || !ticketForm.projectId || creatingItem" class="btn-primary">
             {{ creatingItem ? 'Erstellen…' : 'Ticket erstellen' }}
           </button>
           <button v-else-if="createTab === 'project'" @click="submitProject" :disabled="!projectForm.name.trim() || creatingItem" class="btn-primary">
