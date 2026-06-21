@@ -71,6 +71,18 @@ async function saveSelect(field) {
   await saveField(field)
 }
 
+// ── Planner-gefilterte Sprints ─────────────────────────────────────────
+const ticketPlannerId = computed(() => {
+  if (!form.projectId) return null
+  return projectsStore.projects.find(p => p.id === form.projectId)?.plannerId ?? null
+})
+
+const filteredSprints = computed(() => {
+  const pid = ticketPlannerId.value
+  if (!pid) return sprintsStore.sprints
+  return sprintsStore.sprints.filter(s => s.plannerId === pid)
+})
+
 // ── Options ───────────────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
@@ -448,7 +460,7 @@ onMounted(async () => {
               class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option :value="null">— Kein Sprint —</option>
-              <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
+              <option v-for="s in filteredSprints" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
           </div>
         </div>
