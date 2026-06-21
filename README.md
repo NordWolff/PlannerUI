@@ -313,12 +313,19 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.18.0 — Dateianhänge im Anfrage-Formular
+- **Anfrage senden — Dateianhänge:** Bis zu 5 Dateien anhängen (PNG/JPEG/GIF/WebP, PDF, Word, Excel — je max. 10 MB); `multer`-Disk-Storage im Backend (`uploads/`); `POST /api/admin-requests` als `multipart/form-data`
+- **Dateiliste im Formular:** Dateiname, formatierte Größe und Entfernen-Button (×) pro Datei; Upload-Trigger (dashed-border) verschwindet bei 5 Dateien
+- **Anhänge im SUP-Ticket:** Jede hochgeladene Datei wird als Attachment-Objekt (id, filename, originalName, mimeType, size, url, uploadedBy, uploadedAt) im automatisch erzeugten Support-Ticket gespeichert
+- **Admin-Benachrichtigung mit Anhang-Hinweis:** Benachrichtigungstext nennt Anzahl mitgeschickter Anhänge
+
 ### v2.17.0 — Ticket-Erstellung: Planner, Pflicht-Projekt & Assignee-Suche
 - **Ticket erstellen — Planner-Dropdown:** Erstes Feld im Schnell-Erstellen-Modal; zeigt nur eigene Planner (`plannersStore.planners`); beim Wechsel werden Boards, Projekte, Teams und Sprints für den neuen Planner nachgeladen; Board-/Projekt-/Assignee-Auswahl wird zurückgesetzt
 - **Ticket erstellen — Pflicht-Projekt:** Neues Projekt-Dropdown (neben Planner in 2-Spalten-Layout); deaktiviert solange kein Planner gewählt; „Ticket erstellen"-Button und Submit-Guard blockieren ohne Projektauswahl (`*`-Pflichtfeld)
 - **Ticket erstellen — Suchfeld „Zugewiesen an":** `<select>` durch Custom-Combobox ersetzt; filtert live nach Name/E-Mail; listet nur Mitglieder des gewählten Planners; Avatar-Vorschau in der Trefferliste; × zum Zurücksetzen; Overlay schließt bei Klick außerhalb
 - **Projekt erstellen — Planner-Dropdown:** Read-only-Anzeige durch echtes `<select>` aus `plannersStore.planners` ersetzt; beim Planner-Wechsel werden Sprints des neuen Planners geladen und Sprint-Auswahl zurückgesetzt
-- **System-Support Planner:** Neuer Systemstandard-Planner (`SUP`, Farbe Indigo) in Seed-Daten; alle Nutzer mit System-Rolle `admin` sind automatisch Mitglied
+- **
+ Planner:** Neuer Systemstandard-Planner (`SUP`, Farbe Indigo) in Seed-Daten; alle Nutzer mit System-Rolle `admin` sind automatisch Mitglied
 - **Anfrage → Ticket:** `POST /api/admin-requests` legt automatisch ein Ticket im Support-Projekt des System-Support Planners an (`[Bug] / [Feature]`-Präfix, Priorität hoch/mittel, Einreicher-Info in Beschreibung); Ticket-Zähler läuft mit Planner-Präfix (`SUP-0001` …)
 - **Admin-Benachrichtigung bei Anfragen:** Alle System-Admins erhalten beim Eingang einer neuen Anfrage eine Glocken-Benachrichtigung mit Typ und Titel
 

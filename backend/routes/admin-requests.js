@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import multer from 'multer';
 import { store } from '../data/store.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 import { createNotification } from './notifications.js';
@@ -10,7 +12,33 @@ router.use(authenticateToken);
 const VALID_TYPES = ['bug', 'feature'];
 const VALID_STATUSES = ['open', 'in_progress', 'done', 'rejected'];
 
-router.post('/', (req, res) => {
+const ALLOWED_MIME = [
+  'image/png', 'image/jpeg', 'image/gif', 'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
+
+const storage = multer.diskStorage({
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Dateityp nicht erlaubt'));
+  },
+});
+
+router.post('/', upload.array('files', 5), (req, res) => {
   const { title, description, type } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
 
@@ -49,6 +77,18 @@ router.post('/', (req, res) => {
       ? `${description}\n\n---\n*Eingereicht von: ${submitterInfo}*`
       : `*Eingereicht von: ${submitterInfo}*`;
 
+    // Hochgeladene Dateien als Attachments übernehmen
+    const attachments = (req.files ?? []).map(f => ({
+      id: uuidv4(),
+      filename: f.filename,
+      originalName: f.originalname,
+      mimeType: f.mimetype,
+      size: f.size,
+      url: `/uploads/${f.filename}`,
+      uploadedBy: req.user.id,
+      uploadedAt: now,
+    }));
+
     const ticket = {
       id: uuidv4(),
       ticketNumber,
@@ -65,7 +105,7 @@ router.post('/', (req, res) => {
       teamId: null,
       checklist: [],
       dependencies: [],
-      attachments: [],
+      attachments,
       history: [],
       createdAt: now,
       updatedAt: now,
@@ -73,13 +113,16 @@ router.post('/', (req, res) => {
 
     store.tickets.push(ticket);
 
-    // Alle System-Admins über die neue Anfrage benachrichtigen
+    // Alle System-Admins benachrichtigen
+    const attachmentHint = attachments.length
+      ? ` (${attachments.length} Anhang${attachments.length > 1 ? 'anhänge' : ''})`
+      : '';
     store.users
       .filter(u => u.role === 'admin' && u.id !== req.user.id)
       .forEach(admin => {
         createNotification(admin.id, {
           title: 'Neue Support-Anfrage',
-          message: `${submitter?.username ?? 'Unbekannt'} hat eine ${resolvedType === 'bug' ? 'Bug-Meldung' : 'Feature-Anfrage'} eingereicht: „${title}"`,
+          message: `${submitter?.username ?? 'Unbekannt'} hat eine ${resolvedType === 'bug' ? 'Bug-Meldung' : 'Feature-Anfrage'} eingereicht: „${title}"${attachmentHint}`,
           type: 'info',
           meta: { ticketId: ticket.id, requestId: request.id, ticketNumber },
         });

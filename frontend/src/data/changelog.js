@@ -3,6 +3,16 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.18.0',
+    title: 'Dateianhänge im Anfrage-Formular',
+    items: [
+      'Anfrage senden: bis zu 5 Dateien anhängen (PNG/JPEG/GIF/WebP, PDF, Word, Excel — je max. 10 MB)',
+      'Dateiliste mit Dateiname, Größe und Entfernen-Button; dashed-border Upload-Trigger verschwindet bei 5 Dateien',
+      'Anhänge werden automatisch dem erzeugten SUP-Ticket im System-Support Planner zugeordnet',
+      'Admin-Benachrichtigung nennt die Anzahl der mitgeschickten Anhänge',
+    ],
+  },
+  {
     version: '2.17.0',
     title: 'Ticket-Erstellung: Planner, Pflicht-Projekt & Assignee-Suche',
     items: [

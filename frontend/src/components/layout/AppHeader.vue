@@ -119,6 +119,7 @@ async function openCreate(tab) {
     requestForm.title = ''
     requestForm.description = ''
     requestForm.type = 'feature'
+    requestFiles.value = []
   }
   showCreateModal.value = true
   if (tab !== 'request') {
@@ -171,6 +172,7 @@ async function submitProject() {
 const showDropdown = ref(false)
 const showChangelog = ref(false)
 const submittingRequest = ref(false)
+const requestFiles      = ref([])
 
 // ─── Benachrichtigungen ───────────────────────────────────────────────────────
 const notificationsStore = useNotificationsStore()
@@ -270,12 +272,35 @@ function logout() {
   router.push('/login')
 }
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+function onRequestFilePick(e) {
+  const picked = Array.from(e.target.files ?? [])
+  const combined = [...requestFiles.value, ...picked]
+  requestFiles.value = combined.slice(0, 5)
+  e.target.value = ''
+}
+
+function removeRequestFile(idx) {
+  requestFiles.value.splice(idx, 1)
+}
+
 async function submitRequest() {
   if (!requestForm.title.trim() || submittingRequest.value) return
   submittingRequest.value = true
   try {
-    await api.post('/admin-requests', { ...requestForm })
+    const fd = new FormData()
+    fd.append('title', requestForm.title)
+    fd.append('description', requestForm.description)
+    fd.append('type', requestForm.type)
+    requestFiles.value.forEach(f => fd.append('files', f))
+    await api.post('/admin-requests', fd)
     toast.success('Anfrage erfolgreich gesendet')
+    requestFiles.value = []
     showCreateModal.value = false
   } catch {
     toast.error('Anfrage konnte nicht gesendet werden')
@@ -737,7 +762,38 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Details</label>
-            <textarea v-model="requestForm.description" rows="4" class="input-field resize-none" placeholder="Was genau soll passieren? Wie reproduzierst du den Bug?" />
+            <textarea v-model="requestForm.description" rows="3" class="input-field resize-none" placeholder="Was genau soll passieren? Wie reproduzierst du den Bug?" />
+          </div>
+          <!-- Dateianhänge -->
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+              Anhänge <span class="normal-case font-normal text-gray-400">(max. 5 Dateien, je 10 MB)</span>
+            </label>
+            <!-- Datei-Liste -->
+            <ul v-if="requestFiles.length" class="mb-2 space-y-1">
+              <li v-for="(f, i) in requestFiles" :key="i"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <span class="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">{{ f.name }}</span>
+                <span class="text-xs text-gray-400 shrink-0">{{ formatFileSize(f.size) }}</span>
+                <button @click="removeRequestFile(i)" class="text-gray-400 hover:text-red-500 transition-colors shrink-0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </li>
+            </ul>
+            <!-- Upload-Trigger -->
+            <label v-if="requestFiles.length < 5"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 hover:border-primary dark:hover:border-primary-dark text-sm text-gray-500 dark:text-gray-400 cursor-pointer transition-colors">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Datei hinzufügen
+              <input type="file" class="hidden" multiple accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx" @change="onRequestFilePick" />
+            </label>
           </div>
         </div>
 
