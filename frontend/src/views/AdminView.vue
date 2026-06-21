@@ -732,10 +732,11 @@ const TICKET_PRIORITY_LABELS = {
 const supportTickets = ref([])
 const loadingSupport = ref(false)
 const supportSprints = ref([])
+const supportProjects = ref([])
 const selectedTicket = ref(null)
 const showTicketSlideOver = ref(false)
 const savingTicket = ref(false)
-const ticketEditForm = reactive({ status: '', assigneeId: null, sprintId: null })
+const ticketEditForm = reactive({ status: '', assigneeId: null, projectId: null, sprintId: null })
 const lightboxUrl = ref(null)
 
 const supportPlanner = computed(() =>
@@ -756,12 +757,14 @@ async function loadSupportTickets() {
   }
   loadingSupport.value = true
   try {
-    const [ticketsRes, sprintsRes] = await Promise.all([
+    const [ticketsRes, sprintsRes, projectsRes] = await Promise.all([
       api.get('/tickets', { params: { plannerId: supportPlanner.value.id } }),
       api.get('/sprints', { params: { plannerId: supportPlanner.value.id } }),
+      api.get('/projects', { params: { plannerId: supportPlanner.value.id } }),
     ])
     supportTickets.value = ticketsRes.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     supportSprints.value = sprintsRes.data
+    supportProjects.value = projectsRes.data
   } catch {
     toast.error('Support-Tickets konnten nicht geladen werden')
   } finally {
@@ -774,6 +777,7 @@ function openTicketSlideOver(ticket) {
   Object.assign(ticketEditForm, {
     status: ticket.status,
     assigneeId: ticket.assigneeId ?? null,
+    projectId: ticket.projectId ?? null,
     sprintId: ticket.sprintId ?? null,
   })
   showTicketSlideOver.value = true
@@ -791,6 +795,7 @@ async function saveSupportTicket() {
     const { data } = await api.put(`/tickets/${selectedTicket.value.id}`, {
       status: ticketEditForm.status,
       assigneeId: ticketEditForm.assigneeId || null,
+      projectId: ticketEditForm.projectId || null,
       sprintId: ticketEditForm.sprintId || null,
     })
     const idx = supportTickets.value.findIndex(t => t.id === data.id)
@@ -1772,6 +1777,13 @@ function formatFileSize(bytes) {
               <select v-model="ticketEditForm.assigneeId" class="input-field">
                 <option :value="null">— Nicht zugewiesen —</option>
                 <option v-for="u in supportPlannerAdmins" :key="u.id" :value="u.id">{{ u.username }}</option>
+              </select>
+            </div>
+            <div v-if="supportProjects.length">
+              <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Projekt</label>
+              <select v-model="ticketEditForm.projectId" class="input-field">
+                <option :value="null">— Kein Projekt —</option>
+                <option v-for="p in supportProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
             </div>
             <div v-if="supportSprints.length">
