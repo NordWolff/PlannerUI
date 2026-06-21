@@ -5,18 +5,28 @@ import { useTeamsStore } from '@/stores/teams'
 import { useSprintsStore } from '@/stores/sprints'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 import BaseModal from '@/components/common/BaseModal.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import api from '@/services/api'
 import { generateAvatar } from '@/utils/avatar'
 
 const route        = useRoute()
-const teamsStore   = useTeamsStore()
-const sprintsStore = useSprintsStore()
-const authStore    = useAuthStore()
-const toast        = useToast()
+const teamsStore     = useTeamsStore()
+const sprintsStore   = useSprintsStore()
+const authStore      = useAuthStore()
+const plannersStore  = usePlannersStore()
+const toast          = useToast()
 
 const canManage = computed(() => authStore.isAdmin || authStore.user?.role === 'owner')
+
+// System-Support Planner benötigt keinen Product Owner
+const isSystemSupportTeam = computed(() => {
+  const pid = teamsStore.currentTeam?.plannerId
+  if (!pid) return false
+  const all = [...plannersStore.planners, ...plannersStore.allPlanners]
+  return all.some(p => p.id === pid && p.isSystemSupport)
+})
 
 // ── Teams ─────────────────────────────────────────────────────────────────────
 const search = ref('')
@@ -459,7 +469,7 @@ async function deleteSprint(sprint) {
           <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Mitglieder</h4>
 
           <div v-if="!teamsStore.currentTeam.members?.length" class="py-6 text-center text-sm text-gray-400">
-            Noch keine Mitglieder — füge zuerst einen Product Owner hinzu.
+            {{ isSystemSupportTeam ? 'Noch keine Mitglieder.' : 'Noch keine Mitglieder — füge zuerst einen Product Owner hinzu.' }}
           </div>
 
           <div class="space-y-2">
@@ -509,7 +519,7 @@ async function deleteSprint(sprint) {
         <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
           <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Mitglied hinzufügen</h4>
 
-          <div v-if="!teamHasOwner" class="mb-3 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+          <div v-if="!teamHasOwner && !isSystemSupportTeam" class="mb-3 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
             <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
             </svg>
@@ -537,7 +547,7 @@ async function deleteSprint(sprint) {
 
             <select v-model="newMemberRole" class="input-field w-auto">
               <option value="member">Mitglied</option>
-              <option v-if="!teamHasOwner" value="owner">Product Owner</option>
+              <option v-if="!teamHasOwner && !isSystemSupportTeam" value="owner">Product Owner</option>
             </select>
 
             <button @click="addMember" :disabled="!selectedMember" class="btn-primary whitespace-nowrap">
