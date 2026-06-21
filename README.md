@@ -313,6 +313,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.24.0 — TicketDetail: Planner-Scope für Projekte, Sprints & Assignee
+- **Projekt-Dropdown:** `fetchProjects` erhält `plannerId` aus `route.params` — zeigt nur Projekte des aktiven Planners
+- **Sprint-Dropdown:** `fetchSprints` erhält `plannerId` — zeigt nur planner-eigene Sprints
+- **Assignee-Dropdown:** `plannerMembers` computed schränkt auf Planner-Mitglieder ein — konsistent mit Quick-Create in AppHeader
+
 ### v2.23.0 — Mein Team: Team-Scope & Ich-Badge im Board-Modus
 - **Team-Dropdown:** `fetchTeams` übergibt jetzt `plannerId` — Store enthält nur Teams des aktiven Planners; redundanter client-seitiger Filter entfernt
 - **Board-Modus:** „Ich"-Badge unterhalb des Avatars wenn `assigneeId === user.id` — konsistent zur Tabellen-Ansicht

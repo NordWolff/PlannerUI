@@ -3,6 +3,15 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.24.0',
+    title: 'TicketDetail: Planner-Scope für Projekte, Sprints & Assignee',
+    items: [
+      'Projekt-Dropdown zeigt nur Projekte des aktiven Planners (fetchProjects mit plannerId-Filter)',
+      'Sprint-Dropdown zeigt nur Sprints des aktiven Planners (fetchSprints mit plannerId-Filter)',
+      'Assignee-Dropdown eingeschränkt auf Mitglieder des Ticket-Planners — konsistent mit Quick-Create',
+    ],
+  },
+  {
     version: '2.23.0',
     title: 'Mein Team: Team-Scope & Ich-Badge im Board-Modus',
     items: [
