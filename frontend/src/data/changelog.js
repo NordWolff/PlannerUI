@@ -3,6 +3,14 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.23.0',
+    title: 'Mein Team: Team-Scope & Ich-Badge im Board-Modus',
+    items: [
+      'Mein Team: Team-Dropdown zeigt jetzt nur Teams des aktiven Planners (fetchTeams mit plannerId-Filter)',
+      'Board-Modus: „Ich"-Badge unterhalb des Avatars wenn das Ticket dem eingeloggten Nutzer zugewiesen ist — konsistent zur Tabellen-Ansicht',
+    ],
+  },
+  {
     version: '2.22.0',
     title: 'Ticket-Clone Planner-Präfix & Verlauf-User sichtbar',
     items: [

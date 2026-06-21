@@ -313,6 +313,10 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.23.0 — Mein Team: Team-Scope & Ich-Badge im Board-Modus
+- **Team-Dropdown:** `fetchTeams` übergibt jetzt `plannerId` — Store enthält nur Teams des aktiven Planners; redundanter client-seitiger Filter entfernt
+- **Board-Modus:** „Ich"-Badge unterhalb des Avatars wenn `assigneeId === user.id` — konsistent zur Tabellen-Ansicht
+
 ### v2.22.0 — Ticket-Clone Planner-Präfix & Verlauf-User sichtbar
 - **Ticket-Clone:** Präfix und Counter werden jetzt aus `projectId → planner` abgeleitet (identisch zur POST-Logik) — geklonte ENT-Tickets bleiben `ENT-xxxx`, kein globaler Fallback mehr
 - **Verlauf-Tab:** `changedBy` wird zum Benutzernamen aufgelöst und mit `UserAvatar` angezeigt — *„Thomas Wolff änderte Status von Geplant zu In Arbeit"* inkl. Zeitstempel
