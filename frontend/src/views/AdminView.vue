@@ -736,7 +736,7 @@ const supportProjects = ref([])
 const selectedTicket = ref(null)
 const showTicketSlideOver = ref(false)
 const savingTicket = ref(false)
-const ticketEditForm = reactive({ status: '', assigneeId: null, projectId: null, sprintId: null })
+const ticketEditForm = reactive({ status: '', priority: '', assigneeId: null, projectId: null, sprintId: null })
 const lightboxUrl = ref(null)
 
 const supportPlanner = computed(() =>
@@ -776,6 +776,7 @@ function openTicketSlideOver(ticket) {
   selectedTicket.value = ticket
   Object.assign(ticketEditForm, {
     status: ticket.status,
+    priority: ticket.priority ?? 'medium',
     assigneeId: ticket.assigneeId ?? null,
     projectId: ticket.projectId ?? null,
     sprintId: ticket.sprintId ?? null,
@@ -794,6 +795,7 @@ async function saveSupportTicket() {
   try {
     const { data } = await api.put(`/tickets/${selectedTicket.value.id}`, {
       status: ticketEditForm.status,
+      priority: ticketEditForm.priority || null,
       assigneeId: ticketEditForm.assigneeId || null,
       projectId: ticketEditForm.projectId || null,
       sprintId: ticketEditForm.sprintId || null,
@@ -1770,6 +1772,12 @@ function formatFileSize(bytes) {
               <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Status</label>
               <select v-model="ticketEditForm.status" class="input-field">
                 <option v-for="(s, key) in TICKET_STATUS_LABELS" :key="key" :value="key">{{ s.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Priorität</label>
+              <select v-model="ticketEditForm.priority" class="input-field">
+                <option v-for="(p, key) in TICKET_PRIORITY_LABELS" :key="key" :value="key">{{ p.label }}</option>
               </select>
             </div>
             <div>

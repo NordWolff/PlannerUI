@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTicketsStore } from '@/stores/tickets'
 import { useBoardsStore } from '@/stores/boards'
 import { useProjectsStore } from '@/stores/projects'
+import { useTeamsStore } from '@/stores/teams'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import TicketModal from '@/components/tickets/TicketModal.vue'
 
@@ -13,9 +14,11 @@ const router = useRouter()
 const ticketsStore = useTicketsStore()
 const boardsStore = useBoardsStore()
 const projectsStore = useProjectsStore()
+const teamsStore = useTeamsStore()
 
 const selectedBoardId = ref(null)
 const selectedProjectId = ref(null)
+const selectedTeamId = ref(null)
 const selectedTicket = ref(null)
 
 onMounted(async () => {
@@ -24,6 +27,7 @@ onMounted(async () => {
   await Promise.all([
     boardsStore.fetchBoards(filter),
     projectsStore.fetchProjects(filter),
+    teamsStore.fetchTeams(filter),
   ])
   if (boardsStore.boards.length) selectedBoardId.value = boardsStore.boards[0].id
   await loadTickets()
@@ -35,6 +39,7 @@ async function loadTickets() {
   if (plannerId) filters.plannerId = plannerId
   if (selectedBoardId.value) filters.boardId = selectedBoardId.value
   if (selectedProjectId.value) filters.projectId = selectedProjectId.value
+  if (selectedTeamId.value) filters.teamId = selectedTeamId.value
   await ticketsStore.fetchTickets(filters)
 }
 
@@ -69,6 +74,10 @@ async function handleStatusChange({ ticketId, status }) {
       <select v-model="selectedProjectId" @change="loadTickets" class="input-field w-auto">
         <option :value="null">Alle Projekte</option>
         <option v-for="project in projectsStore.projects" :key="project.id" :value="project.id">{{ project.name }}</option>
+      </select>
+      <select v-model="selectedTeamId" @change="loadTickets" class="input-field w-auto">
+        <option :value="null">Alle Teams</option>
+        <option v-for="team in teamsStore.teams" :key="team.id" :value="team.id">{{ team.name }}</option>
       </select>
     </div>
 
