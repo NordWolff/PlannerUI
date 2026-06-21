@@ -34,7 +34,9 @@ watch(
   [() => authStore.user, () => teamsStore.teams],
   ([user, teams]) => {
     if (user && teams.length && selectedTeamId.value === null) {
-      const myTeam = teams.find(t => t.members?.some(m => m.userId === user.id))
+      const plannerId = route.params.plannerId
+      const plannerTeams = plannerId ? teams.filter(t => t.plannerId === plannerId) : teams
+      const myTeam = plannerTeams.find(t => t.members?.some(m => m.userId === user.id))
       if (myTeam) {
         selectedTeamId.value = myTeam.id
         loadTickets()
@@ -46,8 +48,8 @@ watch(
 
 onMounted(async () => {
   const plannerId = route.params.plannerId
-  const filter = plannerId ? { plannerId } : {}
-  await Promise.all([teamsStore.fetchTeams(filter), sprintsStore.fetchSprints(filter), fetchUsers()])
+  const sprintFilter = plannerId ? { plannerId } : {}
+  await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints(sprintFilter), fetchUsers()])
   const current = await sprintsStore.fetchCurrentSprint(plannerId || null)
   if (current) selectedSprintId.value = current.id
   await loadTickets()
@@ -125,7 +127,7 @@ async function onDrop(e, status) {
       <div class="flex flex-wrap gap-3">
         <select v-model="selectedTeamId" @change="loadTickets" class="input-field w-auto">
           <option :value="null">Alle Teams</option>
-          <option v-for="team in teamsStore.teams" :key="team.id" :value="team.id">{{ team.name }}</option>
+          <option v-for="team in teamsStore.teams.filter(t => !route.params.plannerId || t.plannerId === route.params.plannerId)" :key="team.id" :value="team.id">{{ team.name }}</option>
         </select>
         <select v-model="selectedSprintId" @change="loadTickets" class="input-field w-auto">
           <option :value="null">Alle Sprints</option>
