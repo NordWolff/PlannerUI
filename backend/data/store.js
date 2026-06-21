@@ -224,9 +224,7 @@ export async function seedData() {
       description: 'Systemstandard-Planner für Support-Anfragen und internes Feedback. Alle System-Admins sind automatisch Mitglied.',
       createdBy: thomasWolffId,
       isSystemSupport: true,
-      members: [
-        { userId: thomasWolffId, role: 'admin' },
-      ],
+      members: store.users.filter(u => u.role === 'admin').map(u => ({ userId: u.id, role: 'admin' })),
       ticketPrefix: 'SUP',
       ticketCounter: 1,
       color: '#6366f1',

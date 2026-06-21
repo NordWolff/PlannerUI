@@ -40,7 +40,22 @@ router.put('/:id/role', requireAdmin, (req, res) => {
   }
   const user = store.users.find((u) => u.id === req.params.id);
   if (!user) return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+
+  const prevRole = user.role;
   user.role = role;
+
+  // System-Support Planner Mitgliedschaft automatisch synchronisieren
+  const supportPlanner = store.planners.find(p => p.isSystemSupport);
+  if (supportPlanner) {
+    if (role === 'admin') {
+      if (!supportPlanner.members.some(m => m.userId === user.id)) {
+        supportPlanner.members.push({ userId: user.id, role: 'admin' });
+      }
+    } else if (prevRole === 'admin') {
+      supportPlanner.members = supportPlanner.members.filter(m => m.userId !== user.id);
+    }
+  }
+
   return res.json(sanitizeUser(user));
 });
 
