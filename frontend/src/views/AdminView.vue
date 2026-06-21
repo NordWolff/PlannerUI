@@ -35,6 +35,7 @@ const tabs = computed(() => {
   if (authStore.isAdmin) {
     return [
       { key: 'requests',  label: 'Anfragen' },
+      { key: 'support',   label: 'Support-Tickets' },
       ...base,
       { key: 'users',     label: 'Benutzer' },
       { key: 'settings',  label: 'Einstellungen' },
@@ -143,6 +144,7 @@ async function loadRequests() {
 
 watch(activeTab, (tab) => {
   if (tab === 'requests') loadRequests()
+  if (tab === 'support')  loadSupportTickets()
 })
 
 async function loadSettings() {
@@ -709,6 +711,108 @@ function previewNumber(prefix, counter) {
 function formatDate(iso) {
   return new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
+
+// ─── Support-Tickets ──────────────────────────────────────────────────────────
+
+const TICKET_STATUS_LABELS = {
+  draft:       { label: 'Entwurf',   cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
+  planned:     { label: 'Geplant',   cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  in_progress: { label: 'In Arbeit', cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  review:      { label: 'Review',    cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+  done:        { label: 'Erledigt',  cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+}
+
+const TICKET_PRIORITY_LABELS = {
+  low:      { label: 'Niedrig',  cls: 'text-gray-400' },
+  medium:   { label: 'Mittel',   cls: 'text-blue-400' },
+  high:     { label: 'Hoch',     cls: 'text-orange-400' },
+  critical: { label: 'Kritisch', cls: 'text-red-500' },
+}
+
+const supportTickets = ref([])
+const loadingSupport = ref(false)
+const supportSprints = ref([])
+const selectedTicket = ref(null)
+const showTicketSlideOver = ref(false)
+const savingTicket = ref(false)
+const ticketEditForm = reactive({ status: '', assigneeId: null, sprintId: null })
+const lightboxUrl = ref(null)
+
+const supportPlanner = computed(() =>
+  plannersStore.allPlanners.find(p => p.isSystemSupport) ?? null
+)
+
+const supportPlannerAdmins = computed(() => {
+  if (!supportPlanner.value) return users.value.filter(u => u.role === 'admin')
+  return (supportPlanner.value.members ?? [])
+    .map(m => users.value.find(u => u.id === m.userId))
+    .filter(Boolean)
+})
+
+async function loadSupportTickets() {
+  if (!supportPlanner.value) {
+    toast.error('System-Support Planner nicht gefunden')
+    return
+  }
+  loadingSupport.value = true
+  try {
+    const [ticketsRes, sprintsRes] = await Promise.all([
+      api.get('/tickets', { params: { plannerId: supportPlanner.value.id } }),
+      api.get('/sprints', { params: { plannerId: supportPlanner.value.id } }),
+    ])
+    supportTickets.value = ticketsRes.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    supportSprints.value = sprintsRes.data
+  } catch {
+    toast.error('Support-Tickets konnten nicht geladen werden')
+  } finally {
+    loadingSupport.value = false
+  }
+}
+
+function openTicketSlideOver(ticket) {
+  selectedTicket.value = ticket
+  Object.assign(ticketEditForm, {
+    status: ticket.status,
+    assigneeId: ticket.assigneeId ?? null,
+    sprintId: ticket.sprintId ?? null,
+  })
+  showTicketSlideOver.value = true
+}
+
+function closeTicketSlideOver() {
+  showTicketSlideOver.value = false
+  selectedTicket.value = null
+}
+
+async function saveSupportTicket() {
+  if (!selectedTicket.value || savingTicket.value) return
+  savingTicket.value = true
+  try {
+    const { data } = await api.put(`/tickets/${selectedTicket.value.id}`, {
+      status: ticketEditForm.status,
+      assigneeId: ticketEditForm.assigneeId || null,
+      sprintId: ticketEditForm.sprintId || null,
+    })
+    const idx = supportTickets.value.findIndex(t => t.id === data.id)
+    if (idx !== -1) supportTickets.value[idx] = data
+    selectedTicket.value = data
+    toast.success('Ticket gespeichert')
+  } catch {
+    toast.error('Fehler beim Speichern')
+  } finally {
+    savingTicket.value = false
+  }
+}
+
+function isImageMime(mime) {
+  return ['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(mime)
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
 </script>
 
 <template>
@@ -788,6 +892,12 @@ function formatDate(iso) {
                     {{ REQUEST_TYPE[req.type]?.label }}
                   </span>
                   <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ req.title }}</h3>
+                  <button v-if="req.ticketNumber"
+                    @click.stop="activeTab = 'support'"
+                    class="font-mono text-xs text-primary dark:text-primary-dark hover:underline px-1.5 py-0.5 rounded bg-primary-light dark:bg-primary-active/20 transition-colors"
+                    title="Im Support-Ticket-Tab öffnen">
+                    {{ req.ticketNumber }} →
+                  </button>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   <select
@@ -837,6 +947,83 @@ function formatDate(iso) {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ── Support-Tickets ────────────────────────────────────────────────── -->
+    <div v-else-if="activeTab === 'support'">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Eingehende SUP-Tickets aus dem System-Support Planner bearbeiten.
+        </p>
+        <button @click="loadSupportTickets" :disabled="loadingSupport"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
+          <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': loadingSupport }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Aktualisieren
+        </button>
+      </div>
+
+      <p v-if="loadingSupport" class="text-gray-400 text-sm py-8 text-center">Lade Support-Tickets…</p>
+      <div v-else-if="!supportTickets.length" class="py-12 text-center">
+        <div class="text-4xl mb-3">🎫</div>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Keine Support-Tickets vorhanden</p>
+        <p class="text-gray-400 text-sm mt-1">Eingereichte Anfragen erscheinen hier als SUP-Tickets.</p>
+      </div>
+      <div v-else class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700 text-xs text-gray-400 uppercase tracking-wide">
+              <th class="text-left px-4 py-3 font-medium">Ticket</th>
+              <th class="text-left px-4 py-3 font-medium">Titel</th>
+              <th class="text-left px-4 py-3 font-medium hidden md:table-cell">Einreicher</th>
+              <th class="text-left px-4 py-3 font-medium">Status</th>
+              <th class="text-left px-4 py-3 font-medium hidden lg:table-cell">Priorität</th>
+              <th class="text-left px-4 py-3 font-medium hidden lg:table-cell">Datum</th>
+              <th class="text-left px-4 py-3 font-medium hidden md:table-cell">Zugewiesen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="ticket in supportTickets" :key="ticket.id"
+              class="border-b border-gray-100 dark:border-gray-700/50 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+              @click="openTicketSlideOver(ticket)">
+              <td class="px-4 py-3">
+                <span class="font-mono text-xs text-primary dark:text-primary-dark font-medium">{{ ticket.ticketNumber }}</span>
+              </td>
+              <td class="px-4 py-3 max-w-[220px]">
+                <span class="truncate block text-gray-900 dark:text-white font-medium">{{ ticket.title }}</span>
+                <span v-if="ticket.attachments?.length" class="text-xs text-gray-400">📎 {{ ticket.attachments.length }}</span>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <div class="flex items-center gap-2">
+                  <UserAvatar :username="users.find(u => u.id === ticket.createdBy)?.username ?? '?'" size="xs" />
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ users.find(u => u.id === ticket.createdBy)?.username ?? '—' }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                  :class="TICKET_STATUS_LABELS[ticket.status]?.cls ?? 'bg-gray-100 text-gray-600'">
+                  {{ TICKET_STATUS_LABELS[ticket.status]?.label ?? ticket.status }}
+                </span>
+              </td>
+              <td class="px-4 py-3 hidden lg:table-cell">
+                <span class="text-xs font-medium" :class="TICKET_PRIORITY_LABELS[ticket.priority]?.cls ?? 'text-gray-400'">
+                  {{ TICKET_PRIORITY_LABELS[ticket.priority]?.label ?? ticket.priority }}
+                </span>
+              </td>
+              <td class="px-4 py-3 hidden lg:table-cell">
+                <span class="text-xs text-gray-400">{{ formatDate(ticket.createdAt) }}</span>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <UserAvatar v-if="ticket.assigneeId"
+                  :username="users.find(u => u.id === ticket.assigneeId)?.username ?? '?'"
+                  size="xs" :title="users.find(u => u.id === ticket.assigneeId)?.username" />
+                <span v-else class="text-xs text-gray-400">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1540,6 +1727,122 @@ function formatDate(iso) {
           </button>
         </div>
       </div>
+    </div>
+  </Teleport>
+
+  <!-- Support Ticket Slide-Over -->
+  <Teleport to="body">
+    <div v-if="showTicketSlideOver" class="fixed inset-0 z-50 flex justify-end">
+      <div class="absolute inset-0 bg-black/40" @click="closeTicketSlideOver" />
+      <div class="relative w-full md:w-[560px] bg-gray-900 border-l border-gray-700 flex flex-col h-full shadow-2xl">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700 shrink-0">
+          <div class="min-w-0 flex-1">
+            <span class="font-mono text-xs text-primary-dark font-medium">{{ selectedTicket?.ticketNumber }}</span>
+            <h2 class="text-sm font-semibold text-white mt-0.5 truncate">{{ selectedTicket?.title }}</h2>
+          </div>
+          <button @click="closeTicketSlideOver" class="text-gray-400 hover:text-white text-2xl leading-none ml-4 shrink-0">&times;</button>
+        </div>
+
+        <!-- Body -->
+        <div v-if="selectedTicket" class="flex-1 overflow-y-auto p-6 space-y-6">
+          <!-- Einreicher & Originalnachricht -->
+          <div class="bg-gray-800 rounded-xl p-4 space-y-2">
+            <div class="flex items-center gap-2">
+              <UserAvatar :username="users.find(u => u.id === selectedTicket.createdBy)?.username ?? '?'" size="sm" />
+              <div>
+                <p class="text-sm text-white font-medium">{{ users.find(u => u.id === selectedTicket.createdBy)?.username ?? 'Unbekannt' }}</p>
+                <p class="text-xs text-gray-400">{{ users.find(u => u.id === selectedTicket.createdBy)?.email ?? '' }}</p>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400">Eingereicht: {{ formatDate(selectedTicket.createdAt) }}</p>
+            <p v-if="selectedTicket.description" class="text-sm text-gray-300 whitespace-pre-wrap mt-2 pt-2 border-t border-gray-700">{{ selectedTicket.description }}</p>
+          </div>
+
+          <!-- Bearbeitungsfelder -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Status</label>
+              <select v-model="ticketEditForm.status" class="input-field">
+                <option v-for="(s, key) in TICKET_STATUS_LABELS" :key="key" :value="key">{{ s.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Zugewiesen an</label>
+              <select v-model="ticketEditForm.assigneeId" class="input-field">
+                <option :value="null">— Nicht zugewiesen —</option>
+                <option v-for="u in supportPlannerAdmins" :key="u.id" :value="u.id">{{ u.username }}</option>
+              </select>
+            </div>
+            <div v-if="supportSprints.length">
+              <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Sprint</label>
+              <select v-model="ticketEditForm.sprintId" class="input-field">
+                <option :value="null">— Kein Sprint —</option>
+                <option v-for="s in supportSprints" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Anhänge -->
+          <div v-if="selectedTicket.attachments?.length">
+            <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+              Anhänge ({{ selectedTicket.attachments.length }})
+            </h3>
+            <div class="space-y-2">
+              <template v-for="att in selectedTicket.attachments" :key="att.id">
+                <div v-if="isImageMime(att.mimeType)" class="flex items-center gap-3">
+                  <img
+                    :src="`http://localhost:3000${att.url}`"
+                    class="w-16 h-16 object-cover rounded-lg border border-gray-700 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+                    :alt="att.originalName"
+                    @click="lightboxUrl = `http://localhost:3000${att.url}`"
+                  />
+                  <div class="min-w-0">
+                    <p class="text-sm text-gray-300 truncate">{{ att.originalName }}</p>
+                    <p class="text-xs text-gray-500">{{ formatFileSize(att.size) }}</p>
+                  </div>
+                </div>
+                <a v-else
+                  :href="`http://localhost:3000${att.url}`"
+                  target="_blank"
+                  class="flex items-center gap-3 p-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors group"
+                >
+                  <div class="w-8 h-8 rounded bg-gray-700 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm text-primary-dark group-hover:underline truncate">{{ att.originalName }}</p>
+                    <p class="text-xs text-gray-500">{{ formatFileSize(att.size) }}</p>
+                  </div>
+                  <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="shrink-0 px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+          <button @click="closeTicketSlideOver" class="btn-secondary">Schließen</button>
+          <button @click="saveSupportTicket" :disabled="savingTicket" class="btn-primary">
+            {{ savingTicket ? 'Speichern…' : 'Speichern' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Lightbox -->
+  <Teleport to="body">
+    <div v-if="lightboxUrl" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90"
+      @click="lightboxUrl = null">
+      <img :src="lightboxUrl" class="max-w-full max-h-full object-contain p-4" alt="" @click.stop />
+      <button @click="lightboxUrl = null"
+        class="absolute top-4 right-4 text-white text-3xl leading-none hover:text-gray-300">&times;</button>
     </div>
   </Teleport>
 

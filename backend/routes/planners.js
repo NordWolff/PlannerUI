@@ -30,7 +30,11 @@ router.get('/', (req, res) => {
   if (req.user.role === 'admin' && req.query.all === 'true') {
     return res.json(store.planners.map(enrich));
   }
-  return res.json(store.planners.filter(p => memberIds(p).includes(req.user.id)).map(enrich));
+  // System-Support Planner für Nicht-Admins grundsätzlich ausblenden
+  return res.json(store.planners.filter(p =>
+    memberIds(p).includes(req.user.id) &&
+    (req.user.role === 'admin' || !p.isSystemSupport)
+  ).map(enrich));
 });
 
 router.get('/:id', (req, res) => {

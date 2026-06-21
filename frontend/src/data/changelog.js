@@ -3,6 +3,18 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.19.0',
+    title: 'Support-Tickets: Verwaltung & Bearbeitung',
+    items: [
+      'Neuer Tab „Support-Tickets" im Verwaltungsbereich (nur Admins): Tabelle aller SUP-Tickets mit Nummer, Titel, Einreicher, Status, Priorität, Datum und Assignee',
+      'Slide-over Panel: Klick auf eine Zeile öffnet ein Bearbeitungs-Panel von rechts — Status, Assignee und Sprint editierbar; Originalnachricht und Einreicher-Info read-only',
+      'Anhänge im Slide-over: Bilder als anklickbare Thumbnails mit Lightbox-Vollansicht; andere Dateitypen als Download-Link mit Icon und Dateigröße',
+      'Anfragen-Tab: ticketNumber-Badge zeigt die zugehörige SUP-Ticket-Nummer — Klick wechselt direkt zum Support-Tickets-Tab',
+      'Backend: ticketId und ticketNumber werden jetzt am adminRequest-Objekt gespeichert',
+      'System-Support Planner wird für Nicht-Admins grundsätzlich aus der Planner-Auswahl ausgeblendet',
+    ],
+  },
+  {
     version: '2.18.0',
     title: 'Dateianhänge im Anfrage-Formular',
     items: [

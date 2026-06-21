@@ -313,6 +313,14 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.19.0 — Support-Tickets: Verwaltung & Bearbeitung
+- **Neuer Tab „Support-Tickets" (Admin):** Tabelle aller SUP-Tickets mit Ticket-Nummer (monospace, `text-primary`), Titel, Einreicher-Avatar, Status-Badge, Priorität, Datum und Assignee-Avatar
+- **Slide-over Panel:** Klick auf eine Tabellenzeile öffnet ein `w-[560px]`-Panel von rechts (`bg-gray-900`, `border-l border-gray-700`); zeigt Einreicher-Info und Originaltext read-only, Status-Dropdown, Assignee-Picker (Mitglieder des Support-Planners), Sprint-Dropdown
+- **Anhänge im Slide-over:** Bilder als `64×64`-Thumbnails mit Klick-Lightbox (`bg-black/90`); andere Dateitypen (PDF, Word, Excel) als Download-Link mit Datei-Icon und Größenanzeige
+- **Anfragen-Tab: SUP-Ticket-Badge:** Jede Anfrage zeigt die zugehörige `ticketNumber` als anklickbaren Badge — Klick wechselt direkt zum Support-Tickets-Tab
+- **Backend: `ticketId` und `ticketNumber` am `adminRequest`:** `POST /api/admin-requests` speichert nach Ticket-Erstellung `request.ticketId` und `request.ticketNumber` zurück
+- **System-Support Planner ausgeblendet:** `GET /api/planners` filtert den System-Support Planner grundsätzlich für Nicht-Admins aus — verhindert versehentliche Sichtbarkeit
+
 ### v2.18.0 — Dateianhänge im Anfrage-Formular
 - **Anfrage senden — Dateianhänge:** Bis zu 5 Dateien anhängen (PNG/JPEG/GIF/WebP, PDF, Word, Excel — je max. 10 MB); `multer`-Disk-Storage im Backend (`uploads/`); `POST /api/admin-requests` als `multipart/form-data`
 - **Dateiliste im Formular:** Dateiname, formatierte Größe und Entfernen-Button (×) pro Datei; Upload-Trigger (dashed-border) verschwindet bei 5 Dateien

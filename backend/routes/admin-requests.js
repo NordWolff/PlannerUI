@@ -60,6 +60,7 @@ router.post('/', upload.array('files', 5), (req, res) => {
   store.adminRequests.push(request);
 
   // Ticket im System-Support Planner anlegen
+  // (ticketId wird nach Ticket-Erstellung am Request gespeichert)
   const supportPlanner = store.planners.find(p => p.isSystemSupport);
   if (supportPlanner) {
     const supportProject = store.projects.find(p => p.plannerId === supportPlanner.id);
@@ -112,6 +113,10 @@ router.post('/', upload.array('files', 5), (req, res) => {
     };
 
     store.tickets.push(ticket);
+
+    // Rückverknüpfung: adminRequest → SUP-Ticket
+    request.ticketId = ticket.id;
+    request.ticketNumber = ticketNumber;
 
     // Alle System-Admins benachrichtigen
     const attachmentHint = attachments.length
