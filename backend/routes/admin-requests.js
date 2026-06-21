@@ -64,6 +64,7 @@ router.post('/', upload.array('files', 5), (req, res) => {
   const supportPlanner = store.planners.find(p => p.isSystemSupport);
   if (supportPlanner) {
     const supportProject = store.projects.find(p => p.plannerId === supportPlanner.id);
+    const supportTeam = store.teams.find(t => t.plannerId === supportPlanner.id && t.isSystemSupport);
     const submitter = store.users.find(u => u.id === req.user.id);
 
     const prefix = supportPlanner.ticketPrefix ?? 'SUP';
@@ -103,7 +104,7 @@ router.post('/', upload.array('files', 5), (req, res) => {
       projectId: supportProject?.id ?? null,
       boardId: null,
       sprintId: null,
-      teamId: null,
+      teamId: supportTeam?.id ?? null,
       checklist: [],
       dependencies: [],
       attachments,

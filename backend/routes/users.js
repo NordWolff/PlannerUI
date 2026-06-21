@@ -44,15 +44,22 @@ router.put('/:id/role', requireAdmin, (req, res) => {
   const prevRole = user.role;
   user.role = role;
 
-  // System-Support Planner Mitgliedschaft automatisch synchronisieren
+  // System-Support Planner + Team Mitgliedschaft automatisch synchronisieren
   const supportPlanner = store.planners.find(p => p.isSystemSupport);
+  const supportTeam = store.teams.find(t => t.plannerId === supportPlanner?.id && t.isSystemSupport);
   if (supportPlanner) {
     if (role === 'admin') {
       if (!supportPlanner.members.some(m => m.userId === user.id)) {
         supportPlanner.members.push({ userId: user.id, role: 'admin' });
       }
+      if (supportTeam && !supportTeam.members.some(m => m.userId === user.id)) {
+        supportTeam.members.push({ userId: user.id, role: 'user' });
+      }
     } else if (prevRole === 'admin') {
       supportPlanner.members = supportPlanner.members.filter(m => m.userId !== user.id);
+      if (supportTeam) {
+        supportTeam.members = supportTeam.members.filter(m => m.userId !== user.id);
+      }
     }
   }
 

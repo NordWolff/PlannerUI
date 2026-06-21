@@ -107,6 +107,7 @@ export async function seedData() {
   const team2Id = uuidv4(); // Design
   const team3Id = uuidv4(); // Management
   const team4Id = uuidv4(); // QA & Testing
+  const systemSupportTeamId = uuidv4(); // System-Support Team
 
   store.teams.push(
     {
@@ -164,6 +165,16 @@ export async function seedData() {
         { userId: thomasWId,      role: 'user' },
         { userId: felixId,        role: 'user' },
       ],
+      createdAt: now,
+    },
+    {
+      id: systemSupportTeamId,
+      name: 'System-Support',
+      description: 'Das Support-Team — alle System-Admins sind automatisch Mitglied.',
+      plannerId: systemSupportPlannerId,
+      isSystemSupport: true,
+      boardId: null,
+      members: store.users.filter(u => u.role === 'admin').map(u => ({ userId: u.id, role: 'user' })),
       createdAt: now,
     },
   );
@@ -607,6 +618,7 @@ export async function seedData() {
       description: 'Erster Sprint des System-Support Planners',
       status: 'active',
       plannerId: systemSupportPlannerId,
+      teamId: systemSupportTeamId,
       startDate: sprintStart.toISOString(),
       endDate: sprintEnd.toISOString(),
       projectIds: [supportProjectId],
