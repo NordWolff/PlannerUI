@@ -49,7 +49,7 @@ const allUsers = ref([])
 onMounted(async () => {
   const plannerId = route.params.plannerId
   const filter = plannerId ? { plannerId } : {}
-  await Promise.all([teamsStore.fetchTeams(filter), sprintsStore.fetchSprints(filter)])
+  await Promise.all([teamsStore.fetchTeams(filter), sprintsStore.fetchSprints(filter), plannersStore.fetchPlanners()])
   try {
     const { data } = await api.get('/users')
     allUsers.value = data

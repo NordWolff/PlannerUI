@@ -45,8 +45,10 @@ watch(
 )
 
 onMounted(async () => {
-  await Promise.all([teamsStore.fetchTeams(), sprintsStore.fetchSprints(), fetchUsers()])
-  const current = await sprintsStore.fetchCurrentSprint()
+  const plannerId = route.params.plannerId
+  const filter = plannerId ? { plannerId } : {}
+  await Promise.all([teamsStore.fetchTeams(filter), sprintsStore.fetchSprints(filter), fetchUsers()])
+  const current = await sprintsStore.fetchCurrentSprint(plannerId || null)
   if (current) selectedSprintId.value = current.id
   await loadTickets()
 })

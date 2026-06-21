@@ -601,6 +601,18 @@ export async function seedData() {
       ticketIds: [],
       createdAt: now,
     },
+    {
+      id: uuidv4(),
+      name: 'Support Sprint 1',
+      description: 'Erster Sprint des System-Support Planners',
+      status: 'active',
+      plannerId: systemSupportPlannerId,
+      startDate: sprintStart.toISOString(),
+      endDate: sprintEnd.toISOString(),
+      projectIds: [supportProjectId],
+      ticketIds: [],
+      createdAt: now,
+    },
   );
 
   console.log(`Seed-Daten angelegt: ${store.users.length} Benutzer, ${store.teams.length} Teams, ${store.planners.length} Planner, ${store.projects.length} Projekte, ${store.tickets.length} Tickets`);

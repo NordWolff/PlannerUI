@@ -16,7 +16,11 @@ router.get('/', (req, res) => {
 
 // /current muss VOR /:id registriert sein
 router.get('/current', (req, res) => {
-  const current = store.sprints.find(s => s.status === 'active');
+  let sprints = store.sprints;
+  if (req.query.plannerId) {
+    sprints = sprints.filter(s => s.plannerId === req.query.plannerId);
+  }
+  const current = sprints.find(s => s.status === 'active');
   if (!current) return res.status(404).json({ error: 'No active sprint found' });
   return res.json(current);
 });

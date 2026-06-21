@@ -17,9 +17,9 @@ export const useSprintsStore = defineStore('sprints', () => {
     }
   }
 
-  async function fetchCurrentSprint() {
+  async function fetchCurrentSprint(plannerId = null) {
     try {
-      const { data } = await api.get('/sprints/current')
+      const { data } = await api.get('/sprints/current', { params: plannerId ? { plannerId } : {} })
       currentSprint.value = data
       return data
     } catch {
