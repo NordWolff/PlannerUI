@@ -190,7 +190,7 @@ async function confirmTransfer() {
 // ── Sprints ───────────────────────────────────────────────────────────────────
 const showSprintModal = ref(false)
 const editingSprint   = ref(null)
-const sprintForm = reactive({ name: '', description: '', startDate: '', endDate: '' })
+const sprintForm = reactive({ name: '', description: '', startDate: '', endDate: '', plannerId: '' })
 
 const STATUS_LABEL = { planning: 'Planung', active: 'Aktiv', completed: 'Abgeschlossen' }
 const STATUS_CLASS = {
@@ -206,7 +206,10 @@ function fmtDate(iso) {
 
 function openCreateSprint() {
   editingSprint.value = null
-  Object.assign(sprintForm, { name: '', description: '', startDate: '', endDate: '' })
+  Object.assign(sprintForm, {
+    name: '', description: '', startDate: '', endDate: '',
+    plannerId: route.params.plannerId || '',
+  })
   showSprintModal.value = true
 }
 
@@ -217,6 +220,7 @@ function openEditSprint(sprint) {
     description: sprint.description || '',
     startDate: sprint.startDate ? sprint.startDate.slice(0, 10) : '',
     endDate:   sprint.endDate   ? sprint.endDate.slice(0, 10)   : '',
+    plannerId: sprint.plannerId || '',
   })
   showSprintModal.value = true
 }
@@ -227,6 +231,7 @@ async function saveSprint() {
     description: sprintForm.description,
     startDate: sprintForm.startDate || null,
     endDate:   sprintForm.endDate   || null,
+    plannerId: sprintForm.plannerId || null,
   }
   try {
     if (editingSprint.value) {
@@ -572,6 +577,13 @@ async function deleteSprint(sprint) {
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
           <textarea v-model="sprintForm.description" rows="2" class="input-field resize-none" placeholder="Optional…" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planner</label>
+          <select v-model="sprintForm.plannerId" class="input-field">
+            <option value="">— Kein Planner —</option>
+            <option v-for="p in plannersStore.planners" :key="p.id" :value="p.id">{{ p.name }}</option>
+          </select>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
