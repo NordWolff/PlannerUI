@@ -1786,7 +1786,7 @@ function formatFileSize(bytes) {
                 <option v-for="p in supportProjects" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
             </div>
-            <div v-if="supportSprints.length">
+            <div>
               <label class="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Sprint</label>
               <select v-model="ticketEditForm.sprintId" class="input-field">
                 <option :value="null">— Kein Sprint —</option>
