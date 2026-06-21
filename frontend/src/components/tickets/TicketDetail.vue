@@ -3,6 +3,7 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
+import { useTeamsStore } from '@/stores/teams'
 import { useAuthStore } from '@/stores/auth'
 import { useUsers } from '@/composables/useUsers'
 import { generateAvatar } from '@/utils/avatar'
@@ -18,6 +19,7 @@ const emit = defineEmits(['back', 'saved', 'deleted'])
 const ticketsStore = useTicketsStore()
 const projectsStore = useProjectsStore()
 const sprintsStore = useSprintsStore()
+const teamsStore = useTeamsStore()
 const authStore = useAuthStore()
 const { users: allUsers, fetchUsers, getUser, avatarUrl } = useUsers()
 
@@ -31,6 +33,7 @@ const form = reactive({
   assigneeId: props.ticket.assigneeId ?? null,
   projectId: props.ticket.projectId || null,
   sprintId: props.ticket.sprintId || null,
+  teamId: props.ticket.teamId ?? null,
 })
 
 // Track last saved values so cancel reverts to them (not the original prop)
@@ -81,6 +84,12 @@ const filteredSprints = computed(() => {
   const pid = ticketPlannerId.value
   if (!pid) return sprintsStore.sprints
   return sprintsStore.sprints.filter(s => s.plannerId === pid)
+})
+
+const filteredTeams = computed(() => {
+  const pid = ticketPlannerId.value
+  if (!pid) return teamsStore.teams
+  return teamsStore.teams.filter(t => t.plannerId === pid)
 })
 
 // ── Options ───────────────────────────────────────────────────────────
@@ -245,6 +254,10 @@ const tabs = computed(() => [
 // ── Lifecycle ───────────────────────────────────────────────────────────
 onMounted(async () => {
   await Promise.all([fetchUsers(), projectsStore.fetchProjects(), sprintsStore.fetchSprints()])
+  if (!teamsStore.teams.length) {
+    const pid = ticketPlannerId.value
+    await teamsStore.fetchTeams(pid ? { plannerId: pid } : {})
+  }
   const [hist, cmts, atts] = await Promise.all([
     ticketsStore.fetchHistory(props.ticket.id),
     ticketsStore.fetchComments(props.ticket.id),
@@ -461,6 +474,34 @@ onMounted(async () => {
             >
               <option :value="null">— Kein Sprint —</option>
               <option v-for="s in filteredSprints" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+
+          <span class="text-gray-200 dark:text-gray-600 select-none px-1">|</span>
+
+          <!-- Team -->
+          <div class="group relative" @click="startEdit('teamId')">
+            <div
+              v-if="editingField !== 'teamId'"
+              class="flex items-center gap-1 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span class="text-xs text-gray-600 dark:text-gray-400">
+                {{ teamsStore.teams.find(t => t.id === form.teamId)?.name || 'Kein Team' }}
+              </span>
+            </div>
+            <select
+              v-else
+              v-model="form.teamId"
+              autofocus
+              @change="saveSelect('teamId')"
+              @blur="cancelEdit('teamId')"
+              class="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option :value="null">— Kein Team —</option>
+              <option v-for="t in filteredTeams" :key="t.id" :value="t.id">{{ t.name }}</option>
             </select>
           </div>
         </div>

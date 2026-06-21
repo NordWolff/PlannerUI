@@ -64,9 +64,7 @@ async function loadTickets() {
   await ticketsStore.fetchTickets(filters)
 }
 
-const myTickets = computed(() =>
-  ticketsStore.tickets.filter(t => t.assigneeId === authStore.user?.id)
-)
+const myTickets = computed(() => ticketsStore.tickets)
 
 const allStatuses = ['draft', 'planned', 'in_progress', 'review', 'done']
 const statusLabels = { draft: 'Draft', planned: 'Geplant', in_progress: 'In Arbeit', review: 'Review', done: 'Abschluss' }
@@ -122,7 +120,7 @@ async function onDrop(e, status) {
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Mein Team</h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">Deine zugewiesenen Tickets</p>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Tickets deines Teams</p>
       </div>
       <div class="flex flex-wrap gap-3">
         <select v-model="selectedTeamId" @change="loadTickets" class="input-field w-auto">
@@ -162,12 +160,15 @@ async function onDrop(e, status) {
               <td class="px-6 py-3"><StatusBadge :status="ticket.status" /></td>
               <td class="px-6 py-3"><PriorityBadge v-if="ticket.priority" :priority="ticket.priority" /></td>
               <td class="px-6 py-3">
-                <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="md" />
-                <div v-else class="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500" title="Nicht zugewiesen" />
+                <div class="flex items-center gap-1.5">
+                  <UserAvatar v-if="ticket.assigneeId" :user-id="ticket.assigneeId" size="md" />
+                  <div v-else class="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-500" title="Nicht zugewiesen" />
+                  <span v-if="ticket.assigneeId === authStore.user?.id" class="text-[10px] font-medium text-primary dark:text-primary-dark bg-primary-light dark:bg-primary-active/20 px-1.5 py-0.5 rounded-full">Ich</span>
+                </div>
               </td>
             </tr>
             <tr v-if="!myTickets.length">
-              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets zugewiesen</td>
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets vorhanden</td>
             </tr>
           </tbody>
         </table>

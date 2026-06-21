@@ -55,7 +55,7 @@ onUnmounted(() => {
 const createTab          = ref('ticket')
 const creatingItem       = ref(false)
 
-const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null, plannerId: null, projectId: null })
+const ticketForm  = reactive({ title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: null, plannerId: null, projectId: null, teamId: null })
 const projectForm = reactive({ name: '', description: '', status: 'active', plannerId: null, sprintIds: [] })
 
 const ticketAssigneeSearch  = ref('')
@@ -90,6 +90,7 @@ watch(() => ticketForm.plannerId, async (pid) => {
   ticketForm.boardId = null
   ticketForm.projectId = null
   ticketForm.assigneeId = null
+  ticketForm.teamId = null
   ticketAssigneeSearch.value = ''
   if (pid) {
     const f = { plannerId: pid }
@@ -133,7 +134,7 @@ async function openCreate(tab) {
 }
 
 function resetTicketForm() {
-  Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null, plannerId: plannersStore.activePlannerId, projectId: null })
+  Object.assign(ticketForm, { title: '', description: '', priority: 'medium', type: 'task', assigneeId: null, boardId: boardsStore.boards[0]?.id || null, plannerId: plannersStore.activePlannerId, projectId: null, teamId: null })
   ticketAssigneeSearch.value = ''
   showAssigneeDropdown.value = false
 }
@@ -696,6 +697,13 @@ const avatarUrl = (user) => generateAvatar(user?.username)
               <select v-model="ticketForm.boardId" class="input-field">
                 <option :value="null">— Kein Board —</option>
                 <option v-for="b in boardsStore.boards" :key="b.id" :value="b.id">{{ b.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Team <span class="normal-case font-normal text-gray-400">(optional)</span></label>
+              <select v-model="ticketForm.teamId" class="input-field" :disabled="!ticketForm.plannerId">
+                <option :value="null">— Kein Team —</option>
+                <option v-for="team in teamsStore.teams.filter(t => !ticketForm.plannerId || t.plannerId === ticketForm.plannerId)" :key="team.id" :value="team.id">{{ team.name }}</option>
               </select>
             </div>
           </div>
