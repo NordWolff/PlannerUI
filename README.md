@@ -313,6 +313,15 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.21.0 — Kernfluss-Fixes: Team-Tickets, teamId & Kanban-Teamfilter
+- **Mein Team:** zeigt jetzt alle Tickets des Teams (nicht mehr nur persönlich zugewiesene); eigene Tickets per „Ich"-Badge in der Zugewiesen-Spalte hervorgehoben
+- **TicketDetail:** Team-Dropdown in der Options-Leiste (planner-gefiltert, sofort speichernd); `teamId` im Form, `filteredTeams` computed
+- **Quick-Create:** `teamId`-Feld im Ticket-Formular — Team aus dem gewählten Planner wählbar
+- **Kanban:** Teamfilter-Dropdown ergänzt (`teamsStore` planner-gefiltert, `teamId` an Backend übergeben)
+- **Support-Slide-Over:** Priorität editierbar (zwischen Status und Zugewiesen; wird geladen und gespeichert)
+- **System-Support Team:** eigenes Team `isSystemSupport: true` im Seed; alle Admins automatisch Mitglied; neue SUP-Tickets erhalten `teamId` des Support-Teams; Rollenwechsel synchronisiert Planner **und** Team
+- **Sprint-Scoping:** `GET /sprints/current?plannerId=` filtert nach Planner; `fetchCurrentSprint(plannerId)` gibt korrekten Sprint zurück — verhindert leere Ticket-Liste in Mein Team
+
 ### v2.20.0 — Dashboard: Meine Tickets — Liste & Vollansicht
 - **„Meine Tickets"-Abschnitt:** Zeigt alle Tickets des angemeldeten Benutzers (Ersteller oder Assignee) für den aktiven Planner; Backend: neuer Filter `?myTickets=true` auf `GET /api/tickets`
 - **Status-Filter-Tabs:** Alle / Entwurf / Geplant / In Arbeit / Review / Erledigt — mit Anzahl-Badge pro Status; aktiver Tab mit Magenta-Unterrand

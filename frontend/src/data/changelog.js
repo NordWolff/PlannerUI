@@ -3,6 +3,19 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.21.0',
+    title: 'Kernfluss-Fixes: Team-Tickets, teamId & Kanban-Teamfilter',
+    items: [
+      'Mein Team: zeigt jetzt alle Tickets des Teams (nicht mehr nur persönlich zugewiesene) — eigene Tickets per „Ich"-Badge hervorgehoben',
+      'TicketDetail: Team-Dropdown in der Options-Leiste hinzugefügt — planner-gefiltert, sofort speichernd wie Projekt und Sprint',
+      'Quick-Create (Ticket erstellen): teamId-Feld ergänzt — Team aus dem gewählten Planner wählbar',
+      'Kanban: Teamfilter-Dropdown ergänzt — filtert Tickets nach Team innerhalb des aktuellen Planners',
+      'Support-Slide-Over: Priorität jetzt editierbar (zwischen Status und Zugewiesen)',
+      'System-Support: eigenes Team „System-Support" angelegt — alle Admins automatisch Mitglied; neue SUP-Tickets erhalten teamId des Support-Teams',
+      'Sprints planner-aware: /sprints/current filtert nach plannerId — verhindert Anzeige falscher Sprints in Mein Team',
+    ],
+  },
+  {
     version: '2.20.0',
     title: 'Dashboard: Meine Tickets — Liste & Vollansicht',
     items: [
