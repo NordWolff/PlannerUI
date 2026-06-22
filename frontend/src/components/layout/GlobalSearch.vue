@@ -68,7 +68,10 @@ function openProject(project) {
 }
 
 function onKeydown(e) {
-  if (e.key === 'Escape') close()
+  if (e.key === 'Escape') {
+    close()
+    e.stopPropagation()
+  }
 }
 
 function close() {
