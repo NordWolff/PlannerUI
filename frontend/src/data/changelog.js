@@ -3,6 +3,16 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.26.0',
+    title: 'Backlog: Teamrollen, Status-Labels, Tickettyp Test & rollenbasierte Navigation',
+    items: [
+      'Fachliche Teamrollen: Mitglieder können jetzt als Entwickler, Organisator oder Gast zugewiesen werden — Anzeige als Badge in der Mitgliederliste',
+      'Verlauf-Tab: Status-Keys werden jetzt als deutsche Labels angezeigt (z. B. „in_progress" → „In Arbeit")',
+      'Neuer Tickettyp „Test" in Ticket erstellen und TicketDetail verfügbar',
+      'Navigation: Admins sehen „Verwaltung", alle anderen Nutzer sehen „Anfragen" — gleiche Zielseite, klare Rollentrennung',
+    ],
+  },
+  {
     version: '2.25.0',
     title: 'Bugfixes: MIME-Typen, Verlauf, Ticket-Nr & Header-Scope',
     items: [

@@ -262,7 +262,8 @@ const baseLinks = computed(() => {
 const navLinks = computed(() => {
   const pid = plannersStore.activePlannerId
   if (!pid) return []
-  return [...baseLinks.value, { to: `/planner/${pid}/admin`, label: 'Verwaltung' }]
+  const adminLink = { to: `/planner/${pid}/admin`, label: authStore.isAdmin ? 'Verwaltung' : 'Anfragen' }
+  return [...baseLinks.value, adminLink]
 })
 
 function isActive(path) {
@@ -549,7 +550,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/admin` : '/planners'"
           @click="showDropdown = false"
           class="flex items-center gap-2 px-4 py-2 text-sm text-primary dark:text-primary-dark hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
-          Verwaltung
+          {{ authStore.isAdmin ? 'Verwaltung' : 'Anfragen' }}
         </router-link>
         <button @click="showChangelog = true; showDropdown = false"
           class="flex items-center justify-between gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -640,6 +641,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
                 <option value="improvement">Verbesserung</option>
                 <option value="question">Frage</option>
                 <option value="epic">Epic</option>
+                <option value="test">Test</option>
               </select>
             </div>
             <div>

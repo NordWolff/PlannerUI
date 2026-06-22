@@ -144,8 +144,8 @@ router.put('/:id/members/:userId/role', (req, res) => {
   if (index === -1) return res.status(404).json({ error: 'Team not found' });
 
   const { role } = req.body;
-  if (!role || !['owner', 'member'].includes(role)) {
-    return res.status(400).json({ error: 'role muss "owner" oder "member" sein' });
+  if (!role || !['owner', 'member', 'entwickler', 'organisator', 'gast'].includes(role)) {
+    return res.status(400).json({ error: 'Ungültige Rolle' });
   }
 
   const team = store.teams[index];

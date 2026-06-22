@@ -114,6 +114,8 @@ const STATUS_OPTIONS = [
   { value: 'done', label: 'Abschluss' },
 ]
 
+const STATUS_LABELS = Object.fromEntries(STATUS_OPTIONS.map(o => [o.value, o.label]))
+
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Niedrig' },
   { value: 'medium', label: 'Mittel' },
@@ -128,6 +130,7 @@ const TYPE_OPTIONS = [
   { value: 'improvement', label: 'Verbesserung' },
   { value: 'question', label: 'Frage' },
   { value: 'epic', label: 'Epic' },
+  { value: 'test', label: 'Test' },
 ]
 
 // ── Checklist ──────────────────────────────────────────────────────────
@@ -722,8 +725,8 @@ onMounted(async () => {
                 <p v-else class="text-sm text-gray-700 dark:text-gray-300">
                   <span class="font-medium">{{ getUser(entry.changedBy)?.username || 'Unbekannt' }}</span>
                   änderte <span class="font-medium">Status</span> von
-                  <span class="font-medium">{{ entry.from }}</span> zu
-                  <span class="font-medium text-primary dark:text-primary-dark">{{ entry.to }}</span>
+                  <span class="font-medium">{{ STATUS_LABELS[entry.from] || entry.from }}</span> zu
+                  <span class="font-medium text-primary dark:text-primary-dark">{{ STATUS_LABELS[entry.to] || entry.to }}</span>
                 </p>
                 <p class="text-xs text-gray-400 mt-0.5">{{ new Date(entry.changedAt).toLocaleString('de-DE') }}</p>
               </div>

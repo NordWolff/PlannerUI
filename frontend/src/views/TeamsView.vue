@@ -32,6 +32,8 @@ const isSystemSupportTeam = computed(() => {
 const search = ref('')
 const showCreateModal  = ref(false)
 const showDetailModal  = ref(false)
+const TEAM_ROLE_LABELS = { owner: 'Product Owner', member: 'Mitglied', entwickler: 'Entwickler', organisator: 'Organisator', gast: 'Gast' }
+
 const teamForm = reactive({ name: '', description: '' })
 const editingTeam = ref(null)
 
@@ -498,13 +500,17 @@ async function deleteSprint(sprint) {
                       </svg>
                       Product Owner
                     </span>
+                    <span v-else-if="member.role && member.role !== 'member'"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                      {{ TEAM_ROLE_LABELS[member.role] || member.role }}
+                    </span>
                   </div>
                   <p class="text-xs text-gray-400">{{ getUser(member.userId)?.email }}</p>
                 </div>
               </div>
 
               <div class="flex items-center gap-2 shrink-0">
-                <button v-if="authStore.isAdmin && member.role === 'member'"
+                <button v-if="authStore.isAdmin && member.role !== 'owner'"
                   @click="openTransfer(member)"
                   class="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium whitespace-nowrap"
                   title="Als Product Owner setzen">
@@ -552,6 +558,9 @@ async function deleteSprint(sprint) {
 
             <select v-model="newMemberRole" class="input-field w-auto">
               <option value="member">Mitglied</option>
+              <option value="entwickler">Entwickler</option>
+              <option value="organisator">Organisator</option>
+              <option value="gast">Gast</option>
               <option v-if="!teamHasOwner && !isSystemSupportTeam" value="owner">Product Owner</option>
             </select>
 
