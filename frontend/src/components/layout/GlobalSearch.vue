@@ -67,7 +67,7 @@ function openProject(project) {
   close()
 }
 
-function openUser(user) {
+function openUser() {
   const pid = plannersStore.activePlannerId
   if (pid) router.push(`/planner/${pid}/teams`)
   emit('navigate')
@@ -188,7 +188,7 @@ onUnmounted(() => {
           Benutzer ({{ results.users.length }})
         </div>
         <button v-for="user in results.users" :key="user.id"
-          @click="openUser(user)"
+          @click="openUser()"
           class="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-left transition-colors">
           <img :src="generateAvatar(user.username)" class="w-7 h-7 rounded-full shrink-0" alt="" />
           <div class="flex-1 min-w-0">

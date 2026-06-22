@@ -314,7 +314,7 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
 ### v2.30.0 — Globalsuche: Overlays, Benutzer-Navigation & Description-Snippet
-- **Escape-Taste:** schließt jetzt alle offenen Header-Overlays (User-Menü, Notifications, Team-Dropdown, Erstellen-Dropdown) — `onGlobalKeydown` in `AppHeader.vue` erweitert
+- **Escape-Taste:** schließt jetzt alle offenen Header-Overlays (User-Menü, Notifications, Team-Dropdown, Erstellen-Dropdown, Erstellen-Modal, Changelog-Modal) — `onGlobalKeydown` in `AppHeader.vue` erweitert
 - **Benutzer-Navigation:** Benutzer-Ergebnisse in der Suche sind jetzt klickbar (Button mit Hover-State) — Klick navigiert zur Teams-Seite des aktiven Planners; `openUser()` emittiert `navigate`-Event für Mobile-Panel-Schließung
 - **Description-Snippet:** Backend `GET /api/search` gibt `descriptionSnippet` (max. 120 Zeichen der Beschreibung) in Ticket-Ergebnissen zurück; Frontend zeigt Snippet unterhalb des Titels wenn vorhanden
 

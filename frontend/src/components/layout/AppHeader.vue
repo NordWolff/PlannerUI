@@ -51,6 +51,8 @@ function onGlobalKeydown(e) {
     showTeamDropdown.value = false
     showNotifications.value = false
     showCreateDropdown.value = false
+    showCreateModal.value = false
+    showChangelog.value = false
   }
 }
 onMounted(() => {
