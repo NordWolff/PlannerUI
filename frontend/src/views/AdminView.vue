@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTeamsStore } from '@/stores/teams'
 import { useBoardsStore } from '@/stores/boards'
@@ -11,13 +11,17 @@ import { generateAvatar } from '@/utils/avatar'
 import BaseModal from '@/components/common/BaseModal.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import PlannerOnboardingModal from '@/components/common/PlannerOnboardingModal.vue'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const teamsStore = useTeamsStore()
 const boardsStore = useBoardsStore()
 const plannersStore = usePlannersStore()
 const toast = useToast()
+
+const onboardingPlanner = ref(null)
 
 const activeTab = ref(null) // wird in onMounted gesetzt
 const users = ref([])
@@ -269,7 +273,7 @@ function paAutoPrefix() {
 async function paSaveCreate() {
   if (!paCreateForm.name.trim()) return
   try {
-    await plannersStore.createPlanner({
+    const newPlanner = await plannersStore.createPlanner({
       name: paCreateForm.name,
       description: paCreateForm.description,
       ticketPrefix: paCreateForm.ticketPrefix || undefined,
@@ -278,7 +282,14 @@ async function paSaveCreate() {
     toast.success('Planner erstellt')
     paShowCreateModal.value = false
     Object.assign(paCreateForm, { name: '', description: '', ticketPrefix: '', color: '#E20074' })
+    onboardingPlanner.value = newPlanner
   } catch { toast.error('Fehler beim Erstellen') }
+}
+
+function onOnboardingDone({ planner }) {
+  onboardingPlanner.value = null
+  plannersStore.setActivePlanner(planner.id)
+  router.push(`/planner/${planner.id}/dashboard`)
 }
 
 const paDetailPlanner = ref(null)
@@ -1919,5 +1930,14 @@ function formatFileSize(bytes) {
         </div>
       </div>
     </div>
+  </Teleport>
+
+  <!-- Onboarding-Wizard nach Planner-Erstellung -->
+  <Teleport to="body">
+    <PlannerOnboardingModal
+      v-if="onboardingPlanner"
+      :planner="onboardingPlanner"
+      @done="onOnboardingDone"
+    />
   </Teleport>
 </template>
