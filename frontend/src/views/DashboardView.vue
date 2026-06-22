@@ -302,22 +302,37 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Filter-Zeile: Status + Priorität -->
-      <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-wrap gap-3">
-        <select v-model="statusFilter"
-          class="text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary">
-          <option v-for="f in STATUS_FILTERS" :key="f.key" :value="f.key">{{ f.label }}</option>
-        </select>
+      <!-- Prioritäts-Filter + Zähler -->
+      <div class="px-4 pt-3 flex items-center gap-3">
         <select v-model="priorityFilter"
           class="text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary">
           <option v-for="f in PRIORITY_FILTERS" :key="f.key" :value="f.key">{{ f.label }}</option>
         </select>
-        <button v-if="statusFilter !== 'all' || priorityFilter !== 'all'"
-          @click="statusFilter = 'all'; priorityFilter = 'all'"
-          class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors px-2 py-1.5">
-          Filter zurücksetzen
+        <button v-if="priorityFilter !== 'all'"
+          @click="priorityFilter = 'all'"
+          class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+          zurücksetzen
         </button>
-        <span class="ml-auto text-xs text-gray-400 self-center">{{ filteredMyTickets.length }} Ticket{{ filteredMyTickets.length !== 1 ? 's' : '' }}</span>
+        <span class="ml-auto text-xs text-gray-400">{{ filteredMyTickets.length }} Ticket{{ filteredMyTickets.length !== 1 ? 's' : '' }}</span>
+      </div>
+
+      <!-- Status-Filter Tabs -->
+      <div class="px-4 pt-2 pb-0 border-b border-gray-100 dark:border-gray-700">
+        <div class="flex gap-0.5 overflow-x-auto">
+          <button
+            v-for="f in STATUS_FILTERS" :key="f.key"
+            @click="statusFilter = f.key"
+            class="px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors border-b-2"
+            :class="statusFilter === f.key
+              ? 'border-primary text-primary dark:text-primary-dark'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
+            {{ f.label }}
+            <span v-if="f.key !== 'all' && statusCountMap[f.key]"
+              class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+              {{ statusCountMap[f.key] }}
+            </span>
+          </button>
+        </div>
       </div>
 
       <!-- Ticket-Tabelle -->
