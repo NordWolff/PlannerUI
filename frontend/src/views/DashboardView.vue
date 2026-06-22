@@ -136,6 +136,40 @@ const kpiCards = [
 
 const statusLabels = { draft: 'Entwurf', planned: 'Geplant', in_progress: 'In Arbeit', review: 'Review', done: 'Erledigt' }
 
+// ── Statusverteilung Chart ────────────────────────────────────────────────────
+const statusChartMode = ref('bar')
+
+const STATUS_COLORS = {
+  draft:       '#9ca3af',
+  planned:     '#3b82f6',
+  in_progress: '#eab308',
+  review:      '#a855f7',
+  done:        '#22c55e',
+}
+
+const pieSegments = computed(() => {
+  const byStatus = dashboardStore.stats.byStatus ?? {}
+  const total = Object.values(byStatus).reduce((s, v) => s + v, 0)
+  if (!total) return []
+  const r = 40
+  const circ = 2 * Math.PI * r
+  let cum = 0
+  return Object.entries(byStatus).map(([status, count]) => {
+    const len = (count / total) * circ
+    const seg = {
+      status,
+      count,
+      color: STATUS_COLORS[status] ?? '#6b7280',
+      dasharray: `${len} ${circ}`,
+      dashoffset: circ / 4 - cum,
+      label: statusLabels[status] || status,
+      percent: Math.round((count / total) * 100),
+    }
+    cum += len
+    return seg
+  })
+})
+
 // ── Board ─────────────────────────────────────────────────────────────────────
 function openCreateBoard() {
   editingBoard.value = null
@@ -268,22 +302,72 @@ onMounted(async () => {
       </BaseCard>
 
       <!-- Statusverteilung -->
-      <BaseCard title="Ticket-Statusverteilung">
-        <div class="space-y-3">
-          <div v-for="(count, status) in dashboardStore.stats.byStatus" :key="status">
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-gray-600 dark:text-gray-400">{{ statusLabels[status] || status }}</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ count }}</span>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">Ticket-Statusverteilung</h3>
+          <div class="flex gap-1">
+            <button @click="statusChartMode = 'bar'" :title="'Balkendiagramm'"
+              class="p-1.5 rounded-lg transition-colors"
+              :class="statusChartMode === 'bar' ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </button>
+            <button @click="statusChartMode = 'pie'" :title="'Tortendiagramm'"
+              class="p-1.5 rounded-lg transition-colors"
+              :class="statusChartMode === 'pie' ? 'bg-primary text-white' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="p-6">
+          <!-- Balkendiagramm -->
+          <div v-if="statusChartMode === 'bar'" class="space-y-3">
+            <div v-for="(count, status) in dashboardStore.stats.byStatus" :key="status">
+              <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-600 dark:text-gray-400">{{ statusLabels[status] || status }}</span>
+                <span class="font-medium text-gray-900 dark:text-white">{{ count }}</span>
+              </div>
+              <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500"
+                  :style="{ width: `${(count / (dashboardStore.stats.tickets || 1)) * 100}%`, backgroundColor: STATUS_COLORS[status] ?? '#E20074' }" />
+              </div>
             </div>
-            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div class="h-full bg-primary rounded-full"
-                :style="{ width: `${(count / (dashboardStore.stats.tickets || 1)) * 100}%` }" />
+            <div v-if="!dashboardStore.stats.byStatus || !Object.keys(dashboardStore.stats.byStatus).length"
+              class="py-4 text-center text-sm text-gray-400">Keine Tickets</div>
+          </div>
+
+          <!-- Tortendiagramm -->
+          <div v-else>
+            <div v-if="!pieSegments.length" class="py-4 text-center text-sm text-gray-400">Keine Tickets</div>
+            <div v-else class="flex flex-col sm:flex-row items-center gap-6">
+              <svg viewBox="0 0 100 100" class="w-36 h-36 shrink-0 -rotate-90">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" stroke-width="20" class="dark:stroke-gray-700" />
+                <circle
+                  v-for="seg in pieSegments" :key="seg.status"
+                  cx="50" cy="50" r="40" fill="none"
+                  :stroke="seg.color"
+                  stroke-width="20"
+                  :stroke-dasharray="seg.dasharray"
+                  :stroke-dashoffset="seg.dashoffset"
+                  class="transition-all duration-500"
+                />
+              </svg>
+              <ul class="space-y-2 min-w-0">
+                <li v-for="seg in pieSegments" :key="seg.status" class="flex items-center gap-2 text-sm">
+                  <span class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: seg.color }" />
+                  <span class="text-gray-700 dark:text-gray-300">{{ seg.label }}</span>
+                  <span class="ml-auto pl-4 font-medium text-gray-900 dark:text-white tabular-nums">{{ seg.count }}</span>
+                  <span class="text-xs text-gray-400 w-8 text-right tabular-nums">{{ seg.percent }}%</span>
+                </li>
+              </ul>
             </div>
           </div>
-          <div v-if="!dashboardStore.stats.byStatus || !Object.keys(dashboardStore.stats.byStatus).length"
-            class="py-4 text-center text-sm text-gray-400">Keine Tickets</div>
         </div>
-      </BaseCard>
+      </div>
     </div>
 
     <!-- ── Meine Tickets ───────────────────────────────────────────────────── -->
