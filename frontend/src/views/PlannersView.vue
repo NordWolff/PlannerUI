@@ -193,6 +193,15 @@
       </div>
     </Teleport>
 
+    <!-- Onboarding-Wizard nach Planner-Erstellung -->
+    <Teleport to="body">
+      <PlannerOnboardingModal
+        v-if="onboardingPlanner"
+        :planner="onboardingPlanner"
+        @done="onOnboardingDone"
+      />
+    </Teleport>
+
     <!-- Lösch-Dialog -->
     <Teleport to="body">
       <div v-if="deletingPlanner" class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -227,6 +236,7 @@ import { useRouter } from 'vue-router'
 import { usePlannersStore } from '@/stores/planners'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import PlannerOnboardingModal from '@/components/common/PlannerOnboardingModal.vue'
 
 const router = useRouter()
 const plannersStore = usePlannersStore()
@@ -239,6 +249,7 @@ const modalError = ref('')
 const editingPlanner = ref(null)
 const deletingPlanner = ref(null)
 const deleting = ref(false)
+const onboardingPlanner = ref(null)
 
 const colors = ['#E20074', '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b']
 
@@ -311,7 +322,7 @@ async function save() {
       const created = await plannersStore.createPlanner(form.value)
       toastSuccess('Planner erstellt')
       closeModal()
-      if (created?.id) openPlanner(created.id)
+      onboardingPlanner.value = created
       return
     }
     closeModal()
@@ -343,5 +354,10 @@ async function doDelete() {
 function openPlanner(id) {
   plannersStore.setActivePlanner(id)
   router.push(`/planner/${id}/dashboard`)
+}
+
+function onOnboardingDone({ planner }) {
+  onboardingPlanner.value = null
+  openPlanner(planner.id)
 }
 </script>
