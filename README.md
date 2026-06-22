@@ -313,6 +313,12 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.25.0 — Bugfixes: MIME-Typen, Verlauf, Ticket-Nr & Header-Scope
+- **Anhänge:** `image/gif` + `image/webp` in `ALLOWED_MIME` von `tickets.js` ergänzt — Frontend und Backend akzeptieren nun dieselben Dateitypen
+- **Verlauf-Tab:** Kommentar-Einträge (`field: 'comment'`) zeigen „hat einen Kommentar hinzugefügt" statt `null → UUID`
+- **MyTeamView Tabelle:** Ticket-Nummer als erste Spalte (`colspan` auf 6 angepasst) — konsistent mit Board-Modus
+- **Header-Dropdown:** `/tickets/recent` filtert nach `plannerId`; `AppHeader` übergibt `activePlannerId` — nur Tickets des aktiven Planners sichtbar
+
 ### v2.24.0 — TicketDetail: Planner-Scope für Projekte, Sprints & Assignee
 - **Projekt-Dropdown:** `fetchProjects` erhält `plannerId` aus `route.params` — zeigt nur Projekte des aktiven Planners
 - **Sprint-Dropdown:** `fetchSprints` erhält `plannerId` — zeigt nur planner-eigene Sprints

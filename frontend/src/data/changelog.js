@@ -3,6 +3,16 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.25.0',
+    title: 'Bugfixes: MIME-Typen, Verlauf, Ticket-Nr & Header-Scope',
+    items: [
+      'Anhänge: GIF und WebP werden jetzt auch in Ticket-Anhängen akzeptiert (waren nur in Anfragen erlaubt)',
+      'Verlauf-Tab: Kommentar-Einträge erscheinen als „hat einen Kommentar hinzugefügt" statt als rohe UUID-Werte',
+      'Mein Team (Listenansicht): Ticket-Nummer als erste Spalte ergänzt — konsistent mit der Board-Ansicht',
+      'Header-Dropdown „Zuletzt bearbeitet": zeigt jetzt nur Tickets des aktiven Planners (plannerId-Filter)',
+    ],
+  },
+  {
     version: '2.24.0',
     title: 'TicketDetail: Planner-Scope für Projekte, Sprints & Assignee',
     items: [
