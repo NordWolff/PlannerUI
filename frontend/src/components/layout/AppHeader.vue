@@ -259,7 +259,7 @@ function goToMyTeam() {
 
 const requestForm = reactive({ title: '', description: '', type: 'feature' })
 
-const baseLinks = computed(() => {
+const navLinks = computed(() => {
   const pid = plannersStore.activePlannerId
   if (!pid) return []
   return [
@@ -268,16 +268,10 @@ const baseLinks = computed(() => {
     { to: `/planner/${pid}/teams`,     label: 'Teams' },
     { to: `/planner/${pid}/projects`,  label: 'Projekte' },
     { to: `/planner/${pid}/kanban`,    label: 'Kanban' },
-    { to: `/planner/${pid}/gantt`,     label: 'Zeitstrahl' },
     { to: `/planner/${pid}/reports`,   label: 'Reports' },
     { to: `/planner/${pid}/chat`,      label: 'Chat' },
+    { to: `/planner/${pid}/admin`,     label: 'Mein Bereich', hideOnSmall: true },
   ]
-})
-
-const navLinks = computed(() => {
-  const pid = plannersStore.activePlannerId
-  if (!pid) return []
-  return [...baseLinks.value, { to: `/planner/${pid}/admin`, label: 'Mein Bereich' }]
 })
 
 function isActive(path) {
@@ -332,11 +326,11 @@ const avatarUrl = (user) => generateAvatar(user?.username)
 <template>
   <header class="app-header fixed top-0 left-0 right-0 z-40 h-16 bg-white/70 dark:bg-[#0e0d14]/60 backdrop-blur-xl flex items-center px-4 sm:px-6">
     <!-- Logo + Planner-Kontext -->
-    <div class="flex-none flex items-center gap-3 mr-6">
+    <div class="flex-none flex items-center gap-2 mr-4">
       <span class="text-lg font-bold brand-gradient">T-Compass</span>
       <template v-if="plannersStore.activePlanner">
-        <span class="text-gray-300 dark:text-gray-600">|</span>
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[140px] truncate">
+        <span class="text-gray-300 dark:text-gray-600 hidden lg:inline">|</span>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[120px] truncate hidden lg:inline">
           {{ plannersStore.activePlanner.name }}
         </span>
         <button
@@ -351,15 +345,15 @@ const avatarUrl = (user) => generateAvatar(user?.username)
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 flex justify-center">
-      <div class="flex gap-1">
+    <nav class="flex-1 min-w-0 flex justify-center overflow-x-auto" style="scrollbar-width:none">
+      <div class="flex gap-0.5 shrink-0">
         <template v-for="link in navLinks" :key="link.to">
 
           <!-- Mein Team: Dropdown -->
           <div v-if="link.isTeam" class="relative">
             <button
               @click="toggleTeamDropdown"
-              class="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150"
+              class="flex items-center gap-1 px-2 py-2 text-sm font-medium rounded-lg transition-all duration-150"
               :class="isActive('/my-team') || showTeamDropdown
                 ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
@@ -411,10 +405,13 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           <router-link
             v-else
             :to="link.to"
-            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150"
-            :class="isActive(link.to)
-              ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
+            class="px-2 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap"
+            :class="[
+              isActive(link.to)
+                ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]',
+              link.hideOnSmall ? 'hidden xl:inline-flex' : ''
+            ]"
           >
             {{ link.label }}
           </router-link>
