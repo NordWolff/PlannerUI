@@ -113,6 +113,18 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = data
   }
 
+  async function uploadAvatar(file) {
+    const fd = new FormData()
+    fd.append('avatar', file)
+    const { data } = await api.post('/auth/me/avatar', fd)
+    user.value = data
+  }
+
+  async function removeAvatar() {
+    const { data } = await api.delete('/auth/me/avatar')
+    user.value = data
+  }
+
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const isAdmin         = computed(() => user.value?.role === 'admin')
   const favoritePlannerId = computed(() => user.value?.favorites?.plannerId ?? null)
@@ -121,6 +133,6 @@ export const useAuthStore = defineStore('auth', () => {
     user, token, loading, error,
     isAuthenticated, isAdmin, favoritePlannerId,
     savedEmail, savedRemember,
-    login, register, logout, fetchMe, updateProfile, setFavoritePlanner,
+    login, register, logout, fetchMe, updateProfile, setFavoritePlanner, uploadAvatar, removeAvatar,
   }
 })

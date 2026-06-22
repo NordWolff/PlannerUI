@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseCard from '@/components/common/BaseCard.vue'
 import ChangelogModal from '@/components/common/ChangelogModal.vue'
-import { generateAvatar } from '@/utils/avatar'
+import { generateAvatar, getUserAvatar } from '@/utils/avatar'
 import { currentVersion } from '@/data/changelog'
 import api from '@/services/api'
 
@@ -28,7 +28,32 @@ function setLanguage(lang) {
   toast.success('Sprache gespeichert')
 }
 
-const myAvatar = computed(() => generateAvatar(authStore.user?.username))
+const myAvatar = computed(() => getUserAvatar(authStore.user))
+const avatarUploading = ref(false)
+
+async function onAvatarPick(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  avatarUploading.value = true
+  try {
+    await authStore.uploadAvatar(file)
+    toast.success('Profilbild gespeichert')
+  } catch {
+    toast.error('Bild konnte nicht hochgeladen werden')
+  } finally {
+    avatarUploading.value = false
+    e.target.value = ''
+  }
+}
+
+async function removeAvatar() {
+  try {
+    await authStore.removeAvatar()
+    toast.success('Profilbild entfernt')
+  } catch {
+    toast.error('Fehler beim Entfernen')
+  }
+}
 
 // Online-Datenschutz
 const privacyHideOnline = ref(authStore.user?.privacyHideOnline ?? false)
@@ -52,11 +77,13 @@ function setMyTeamViewMode(mode) {
   toast.success('Standard-Ansicht gespeichert')
 }
 
-const profileForm = ref({ username: '', email: '' })
+const profileForm = ref({ username: '', email: '', displayName: '', orgUnit: '' })
 
 onMounted(() => {
   profileForm.value.username = authStore.user?.username || ''
   profileForm.value.email = authStore.user?.email || ''
+  profileForm.value.displayName = authStore.user?.displayName || ''
+  profileForm.value.orgUnit = authStore.user?.orgUnit || ''
 })
 
 async function saveProfile() {
@@ -161,27 +188,54 @@ async function saveProfile() {
       </div>
     </BaseCard>
 
-    <BaseCard title="Avatar">
+    <BaseCard title="Profilbild">
       <div class="flex items-center gap-4">
-        <img :src="myAvatar" class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 shrink-0" alt="Mein Avatar" />
-        <div>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">Avataaars</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Wird automatisch aus deinem Benutzernamen generiert.
+        <div class="relative shrink-0">
+          <img :src="myAvatar" class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 object-cover" alt="Mein Avatar" />
+          <div v-if="avatarUploading" class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+            <svg class="w-5 h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+          </div>
+        </div>
+        <div class="flex-1 space-y-2">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ authStore.user?.avatarCustomUrl ? 'Eigenes Profilbild aktiv.' : 'Automatisch aus Benutzernamen generiert.' }}
           </p>
+          <div class="flex gap-2 flex-wrap">
+            <label class="btn-secondary text-sm cursor-pointer">
+              <span>{{ authStore.user?.avatarCustomUrl ? 'Bild ersetzen' : 'Bild hochladen' }}</span>
+              <input type="file" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" @change="onAvatarPick" />
+            </label>
+            <button v-if="authStore.user?.avatarCustomUrl" @click="removeAvatar"
+              class="text-sm text-red-500 hover:text-red-600 dark:hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              Entfernen
+            </button>
+          </div>
         </div>
       </div>
     </BaseCard>
 
     <BaseCard title="Profil">
       <form @submit.prevent="saveProfile" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Benutzername</label>
-          <input v-model="profileForm.username" type="text" class="input-field" />
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Benutzername</label>
+            <input v-model="profileForm.username" type="text" class="input-field" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anzeigename</label>
+            <input v-model="profileForm.displayName" type="text" class="input-field" placeholder="Vollständiger Name…" />
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-Mail-Adresse</label>
           <input v-model="profileForm.email" type="email" class="input-field" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organisationseinheit</label>
+          <input v-model="profileForm.orgUnit" type="text" class="input-field" placeholder="z. B. Engineering, Design, Vertrieb…" />
         </div>
         <button type="submit" :disabled="authStore.loading" class="btn-primary">
           {{ authStore.loading ? 'Speichern...' : 'Profil speichern' }}

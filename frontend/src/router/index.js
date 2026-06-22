@@ -32,6 +32,12 @@ const routes = [
       { path: 'admin',      component: () => import('@/views/AdminView.vue') },
     ]
   },
+  // Benutzerprofile (kein Planner-Kontext nötig)
+  {
+    path: '/profile/:userId',
+    component: () => import('@/components/layout/AppLayout.vue'),
+    children: [{ path: '', component: () => import('@/views/UserProfileView.vue') }],
+  },
   // Fallback: / leitet zu /planners (Planner-Auswahl)
   { path: '/', redirect: '/planners' },
 ]

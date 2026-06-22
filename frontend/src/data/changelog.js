@@ -3,6 +3,18 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.32.0',
+    title: 'Benutzerprofile — Profilseite, Anzeigename, OrgEinheit & Avatar-Upload',
+    items: [
+      'Neue Profilseite /profile/:userId — Avatar, Anzeigename, Organisationseinheit, Rolle, Mitglied-seit',
+      'Globalsuche: Benutzer-Klick öffnet jetzt die echte Profilseite',
+      'Einstellungen: Anzeigename und Organisationseinheit editierbar',
+      'Einstellungen: Eigenes Profilbild hochladen (JPEG/PNG/GIF/WebP, max. 5 MB) oder entfernen',
+      'Backend: POST /api/auth/me/avatar und DELETE /api/auth/me/avatar für Avatar-Verwaltung',
+      'getUserAvatar() — gibt eigenes Profilbild zurück wenn vorhanden, sonst generiertes Avataar',
+    ],
+  },
+  {
     version: '2.31.0',
     title: 'TicketModal angleichen, Favorit-Redirect & Suche-Navigation',
     items: [

@@ -313,6 +313,13 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.32.0 — Benutzerprofile: Profilseite, Anzeigename, OrgEinheit & Avatar-Upload
+- **Profilseite** `/profile/:userId` — Avatar (groß), Anzeigename, Benutzername, Organisationseinheit, Rolle-Badge, Mitglied-seit; eigenes Profil zeigt „Profil bearbeiten"-Button
+- **Globalsuche:** Benutzer-Klick navigiert jetzt zu `/profile/:id` statt zur Teams-Seite
+- **Einstellungen — Profilbild:** Avatar-Karte mit Upload-Button (JPEG/PNG/GIF/WebP, max. 5 MB); bei eigenem Bild: Ersetzen oder Entfernen möglich; `getUserAvatar(user)` prüft `avatarCustomUrl` vor generiertem Avataar
+- **Einstellungen — Profil:** Felder `Anzeigename` und `Organisationseinheit` ergänzt; werden auf der Profilseite angezeigt
+- **Backend:** `POST /api/auth/me/avatar` (Multer, speichert in `uploads/avatars/`) und `DELETE /api/auth/me/avatar`; `PUT /api/auth/me` akzeptiert `displayName` und `orgUnit`; User-Modell um `displayName`, `orgUnit`, `avatarCustomUrl` erweitert
+
 ### v2.31.0 — TicketModal angleichen, Favorit-Redirect & Suche-Navigation
 - **TicketModal — Test-Typ:** `test` in `TICKET_TYPES` ergänzt — konsistent zu TicketDetail und Quick-Create
 - **TicketModal — Assignee-Filter:** Dropdown zeigt nur Planner-Mitglieder (abgeleitet aus `form.projectId → plannerId → planner.members`), nicht mehr alle Benutzer

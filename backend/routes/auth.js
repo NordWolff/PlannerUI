@@ -2,8 +2,30 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { store, sanitizeUser, setUserOnline, setUserOffline } from '../data/store.js';
 import { authenticateToken } from '../middleware/auth.js';
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/avatars';
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `${req.user.id}${ext}`);
+  },
+});
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    cb(null, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype));
+  },
+});
 
 const router = Router();
 
@@ -94,7 +116,7 @@ router.get('/me', authenticateToken, (req, res) => {
 
 router.put('/me', authenticateToken, async (req, res) => {
   try {
-    const { username, email, password, avatar, language, theme } = req.body;
+    const { username, email, password, avatar, language, theme, displayName, orgUnit } = req.body;
     const userIndex = store.users.findIndex((u) => u.id === req.user.id);
 
     if (userIndex === -1) {
@@ -108,6 +130,8 @@ router.put('/me', authenticateToken, async (req, res) => {
     if (avatar !== undefined) user.avatar = avatar;
     if (language) user.language = language;
     if (theme) user.theme = theme;
+    if (displayName !== undefined) user.displayName = displayName || null;
+    if (orgUnit !== undefined) user.orgUnit = orgUnit || null;
     if (password) {
       user.passwordHash = await bcrypt.hash(password, 10);
     }
@@ -117,6 +141,21 @@ router.put('/me', authenticateToken, async (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+router.post('/me/avatar', authenticateToken, avatarUpload.single('avatar'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Kein Bild übermittelt' });
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  user.avatarCustomUrl = `/uploads/avatars/${req.file.filename}`;
+  return res.json(sanitizeUser(user));
+});
+
+router.delete('/me/avatar', authenticateToken, (req, res) => {
+  const user = store.users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  user.avatarCustomUrl = null;
+  return res.json(sanitizeUser(user));
 });
 
 router.put('/me/privacy', authenticateToken, (req, res) => {
