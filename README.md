@@ -313,11 +313,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
-### v2.26.0 — Backlog: Teamrollen, Status-Labels, Tickettyp Test & rollenbasierte Navigation
-- **Fachliche Teamrollen:** Team-Mitglieder können jetzt als `entwickler`, `organisator` oder `gast` zugewiesen werden — Auswahl im Hinzufügen-Dropdown, Badge-Anzeige in der Mitgliederliste; „PO setzen"-Button für alle Nicht-Owner sichtbar
-- **Verlauf-Tab Status-Labels:** Statuswerte werden als deutsche Bezeichnungen angezeigt (`in_progress` → „In Arbeit", `draft` → „Draft" etc.) statt als rohe Keys — nutzt `STATUS_LABELS` aus `STATUS_OPTIONS`
-- **Tickettyp „Test":** Neues `{ value: 'test', label: 'Test' }` in `TYPE_OPTIONS` (`TicketDetail.vue`) und Quick-Create (`AppHeader.vue`)
-- **Navigation:** Link heißt jetzt einheitlich „Mein Bereich" für alle Nutzer (Nav + User-Dropdown)
+### v2.26.0 — Backlog: Teamrollen, Status-Labels, Tickettyp Test & Navigation
+- **Fachliche Teamrollen:** Team-Mitglieder können als `entwickler`, `organisator` oder `gast` zugewiesen werden — Auswahl im Hinzufügen-Dropdown, Badge-Anzeige in der Mitgliederliste, Rolle nachträglich per Dropdown änderbar (Admin); Backend-Whitelist in `POST /teams/:id/members` schließt beliebige Rollenwerte aus
+- **Verlauf-Tab Status-Labels:** Statuswerte werden als deutsche Bezeichnungen angezeigt (`in_progress` → „In Arbeit", `draft` → „Draft" etc.) statt als rohe Keys — `STATUS_LABELS` wird aus `STATUS_OPTIONS` abgeleitet (`TicketDetail.vue`)
+- **Tickettyp „Test":** Eintrag in `TYPE_OPTIONS` (`TicketDetail.vue`) und Quick-Create (`AppHeader.vue`); eigenes Teal-Icon (`bi-patch-check`) in `TicketTypeIcon.vue`
+- **Navigation:** Link heißt einheitlich „Mein Bereich" für alle Nutzer (Hauptnavigation + User-Dropdown)
 
 ### v2.25.0 — Bugfixes: MIME-Typen, Verlauf, Ticket-Nr & Header-Scope
 - **Anhänge:** `image/gif` + `image/webp` in `ALLOWED_MIME` von `tickets.js` ergänzt — Frontend und Backend akzeptieren nun dieselben Dateitypen
