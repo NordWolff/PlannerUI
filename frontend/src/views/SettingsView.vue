@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 import { useToast } from '@/composables/useToast'
 import BaseCard from '@/components/common/BaseCard.vue'
 import ChangelogModal from '@/components/common/ChangelogModal.vue'
@@ -11,7 +12,19 @@ import api from '@/services/api'
 const showChangelog = ref(false)
 
 const authStore = useAuthStore()
+const plannersStore = usePlannersStore()
 const toast = useToast()
+
+const SYSTEM_ROLE_LABELS = { admin: 'Administrator', user: 'Benutzer' }
+const PLANNER_ROLE_LABELS = { owner: 'Product Owner', member: 'Mitglied' }
+
+const myPlannerRoles = computed(() =>
+  plannersStore.planners.map(p => ({
+    id: p.id,
+    name: p.name,
+    role: p.members?.find(m => m.userId === authStore.user?.id)?.role ?? 'member',
+  }))
+)
 
 const darkMode = ref(localStorage.getItem('darkMode') !== 'false')
 function toggleDarkMode() {
@@ -79,11 +92,12 @@ function setMyTeamViewMode(mode) {
 
 const profileForm = ref({ username: '', email: '', displayName: '', orgUnit: '' })
 
-onMounted(() => {
+onMounted(async () => {
   profileForm.value.username = authStore.user?.username || ''
   profileForm.value.email = authStore.user?.email || ''
   profileForm.value.displayName = authStore.user?.displayName || ''
   profileForm.value.orgUnit = authStore.user?.orgUnit || ''
+  if (!plannersStore.planners.length) await plannersStore.fetchPlanners()
 })
 
 async function saveProfile() {
@@ -241,6 +255,42 @@ async function saveProfile() {
           {{ authStore.loading ? 'Speichern...' : 'Profil speichern' }}
         </button>
       </form>
+    </BaseCard>
+
+    <!-- Meine Rollen -->
+    <BaseCard title="Meine Rollen">
+      <div class="space-y-4">
+        <!-- Systemrolle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Systemrolle</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Gilt app-weit, wird vom Administrator vergeben</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+            :class="authStore.user?.role === 'admin'
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'">
+            {{ SYSTEM_ROLE_LABELS[authStore.user?.role] ?? authStore.user?.role }}
+          </span>
+        </div>
+
+        <!-- Planner-Rollen -->
+        <div v-if="myPlannerRoles.length">
+          <p class="text-sm font-medium text-gray-900 dark:text-white mb-2">Planner-Rollen</p>
+          <div class="space-y-2">
+            <div v-for="p in myPlannerRoles" :key="p.id"
+              class="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+              <span class="text-sm text-gray-700 dark:text-gray-300 truncate mr-3">{{ p.name }}</span>
+              <span class="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="p.role === 'owner'
+                  ? 'bg-primary-light text-primary dark:bg-primary-active/30 dark:text-primary-dark'
+                  : 'bg-gray-100 text-gray-500 dark:bg-gray-600 dark:text-gray-300'">
+                {{ PLANNER_ROLE_LABELS[p.role] ?? p.role }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </BaseCard>
 
     <BaseCard title="Über T-Compass">
