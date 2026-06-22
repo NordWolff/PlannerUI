@@ -313,6 +313,15 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.31.0 — TicketModal angleichen, Favorit-Redirect & Suche-Navigation
+- **TicketModal — Test-Typ:** `test` in `TICKET_TYPES` ergänzt — konsistent zu TicketDetail und Quick-Create
+- **TicketModal — Assignee-Filter:** Dropdown zeigt nur Planner-Mitglieder (abgeleitet aus `form.projectId → plannerId → planner.members`), nicht mehr alle Benutzer
+- **TicketModal — Team-Feld:** Team-Dropdown (planner-gefiltert via `teamsStore`) ergänzt; `teamId` wird beim Speichern übergeben
+- **TicketModal — Sprint-Scope:** `sprintsStore.fetchSprints({ plannerId })` wird auf den Ticket-Planner beschränkt
+- **TicketModal — Verlauf:** `STATUS_LABELS`-Map ergänzt; Verlauf-Tab zeigt übersetzte Werte (`In Arbeit` statt `in_progress`) — konsistent zu TicketDetail
+- **Favorit-Planner Autoredirect:** `PlannersView.onMounted` prüft nach `fetchPlanners()` ob ein Favorit gesetzt ist und leitet direkt zu dessen Dashboard weiter
+- **Globalsuche Projekt-Klick:** `openProject()` navigiert zu `/planner/:id/projects` statt `/kanban`
+
 ### v2.30.0 — Globalsuche: Overlays, Benutzer-Navigation & Description-Snippet
 - **Escape-Taste:** schließt jetzt alle offenen Header-Overlays (User-Menü, Notifications, Team-Dropdown, Erstellen-Dropdown, Erstellen-Modal, Changelog-Modal) — `onGlobalKeydown` in `AppHeader.vue` erweitert
 - **Benutzer-Navigation:** Benutzer-Ergebnisse in der Suche sind jetzt klickbar (Button mit Hover-State) — Klick navigiert zur Teams-Seite des aktiven Planners; `openUser()` emittiert `navigate`-Event für Mobile-Panel-Schließung

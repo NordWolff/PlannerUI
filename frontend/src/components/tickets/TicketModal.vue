@@ -3,7 +3,9 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useTicketsStore } from '@/stores/tickets'
 import { useProjectsStore } from '@/stores/projects'
 import { useSprintsStore } from '@/stores/sprints'
+import { useTeamsStore } from '@/stores/teams'
 import { useAuthStore } from '@/stores/auth'
+import { usePlannersStore } from '@/stores/planners'
 import BaseModal from '@/components/common/BaseModal.vue'
 import ChecklistItem from './ChecklistItem.vue'
 import { useUsers } from '@/composables/useUsers'
@@ -15,7 +17,9 @@ const emit = defineEmits(['close', 'saved', 'deleted'])
 const ticketsStore = useTicketsStore()
 const projectsStore = useProjectsStore()
 const sprintsStore = useSprintsStore()
+const teamsStore = useTeamsStore()
 const authStore = useAuthStore()
+const plannersStore = usePlannersStore()
 const { users: allUsers, fetchUsers, getUser, avatarUrl } = useUsers()
 
 const activeTab = ref('details')
@@ -30,6 +34,8 @@ const isDragOver = ref(false)
 
 const REACTIONS = ['👍', '👎', '❤️']
 
+const STATUS_LABELS = { draft: 'Draft', planned: 'Geplant', in_progress: 'In Arbeit', review: 'Review', done: 'Abschluss' }
+
 const TICKET_TYPES = [
   { id: 'task',        label: 'Aufgabe',       color: 'text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-300' },
   { id: 'bug',         label: 'Bug',           color: 'text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400' },
@@ -37,6 +43,7 @@ const TICKET_TYPES = [
   { id: 'improvement', label: 'Verbesserung',  color: 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400' },
   { id: 'question',    label: 'Frage',         color: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400' },
   { id: 'epic',        label: 'Epic',          color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400' },
+  { id: 'test',        label: 'Test',          color: 'text-teal-600 bg-teal-50 dark:bg-teal-900/30 dark:text-teal-400' },
 ]
 
 const form = reactive({
@@ -48,6 +55,7 @@ const form = reactive({
   assigneeId: props.ticket.assigneeId ?? null,
   projectId: props.ticket.projectId || null,
   sprintId: props.ticket.sprintId || null,
+  teamId: props.ticket.teamId ?? null,
 })
 
 const localChecklist = ref([...(props.ticket.checklist || [])])
@@ -68,7 +76,15 @@ const priorities = [
 ]
 
 onMounted(async () => {
-  await Promise.all([projectsStore.fetchProjects(), sprintsStore.fetchSprints(), fetchUsers()])
+  await projectsStore.fetchProjects()
+  const proj = projectsStore.projects.find(p => p.id === form.projectId)
+  const pid = proj?.plannerId ?? plannersStore.activePlannerId ?? null
+  const plannerFilter = pid ? { plannerId: pid } : {}
+  await Promise.all([
+    sprintsStore.fetchSprints(plannerFilter),
+    teamsStore.fetchTeams(plannerFilter),
+    fetchUsers(),
+  ])
   const [hist, cmts, atts] = await Promise.all([
     ticketsStore.fetchHistory(props.ticket.id),
     ticketsStore.fetchComments(props.ticket.id),
@@ -77,6 +93,16 @@ onMounted(async () => {
   history.value = hist
   comments.value = cmts
   attachments.value = atts
+})
+
+const plannerMembers = computed(() => {
+  const proj = projectsStore.projects.find(p => p.id === form.projectId)
+  const pid = proj?.plannerId ?? null
+  if (!pid) return allUsers.value
+  const planner = plannersStore.planners.find(p => p.id === pid)
+  if (!planner) return allUsers.value
+  const ids = new Set((planner.members ?? []).map(m => m.userId))
+  return allUsers.value.filter(u => ids.has(u.id))
 })
 
 async function handleFileUpload(files) {
@@ -263,7 +289,7 @@ const checklistProgress = computed(() => {
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Zugewiesen an</label>
           <select v-model="form.assigneeId" class="input-field">
             <option :value="null">— Nicht zugewiesen —</option>
-            <option v-for="u in allUsers" :key="u.id" :value="u.id">{{ u.username }}</option>
+            <option v-for="u in plannerMembers" :key="u.id" :value="u.id">{{ u.username }}</option>
           </select>
           <!-- Vorschau des zugewiesenen Benutzers -->
           <div v-if="form.assigneeId" class="flex items-center gap-2 mt-1.5">
@@ -285,6 +311,13 @@ const checklistProgress = computed(() => {
             <select v-model="form.sprintId" class="input-field">
               <option :value="null">— Kein Sprint —</option>
               <option v-for="s in sprintsStore.sprints" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Team</label>
+            <select v-model="form.teamId" class="input-field">
+              <option :value="null">— Kein Team —</option>
+              <option v-for="t in teamsStore.teams" :key="t.id" :value="t.id">{{ t.name }}</option>
             </select>
           </div>
         </div>
@@ -460,8 +493,8 @@ const checklistProgress = computed(() => {
           <div>
             <p class="text-sm text-gray-700 dark:text-gray-300">
               <span class="font-medium">Status</span> geändert von
-              <span class="font-medium">{{ entry.from }}</span> zu
-              <span class="font-medium text-primary dark:text-primary-dark">{{ entry.to }}</span>
+              <span class="font-medium">{{ STATUS_LABELS[entry.from] || entry.from }}</span> zu
+              <span class="font-medium text-primary dark:text-primary-dark">{{ STATUS_LABELS[entry.to] || entry.to }}</span>
             </p>
             <p class="text-xs text-gray-400 mt-0.5">{{ new Date(entry.changedAt).toLocaleString('de-DE') }}</p>
           </div>

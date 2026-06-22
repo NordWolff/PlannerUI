@@ -245,7 +245,13 @@ const colors = ['#E20074', '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'
 const emptyForm = () => ({ name: '', description: '', ticketPrefix: '', color: '#E20074' })
 const form = ref(emptyForm())
 
-onMounted(() => plannersStore.fetchPlanners())
+onMounted(async () => {
+  await plannersStore.fetchPlanners()
+  const fav = authStore.favoritePlannerId
+  if (fav && plannersStore.planners.find(p => p.id === fav)) {
+    router.push(`/planner/${fav}/dashboard`)
+  }
+})
 
 const ownedPlanners = computed(() =>
   plannersStore.planners.filter(p => p.createdBy === authStore.user?.id)

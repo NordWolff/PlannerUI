@@ -3,6 +3,19 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.31.0',
+    title: 'TicketModal angleichen, Favorit-Redirect & Suche-Navigation',
+    items: [
+      'TicketModal: Tickettyp „Test" ergänzt — konsistent zu TicketDetail',
+      'TicketModal: Assignee-Dropdown zeigt nur Planner-Mitglieder statt alle Benutzer',
+      'TicketModal: Team-Feld ergänzt — planner-gefiltert, wird beim Speichern übertragen',
+      'TicketModal: Sprint-Dropdown lädt nur Sprints des Ticket-Planners',
+      'TicketModal: Verlauf-Tab zeigt übersetzte Status-Labels (In Arbeit statt in_progress)',
+      'Planner-Auswahl: Favorit-Planner leitet nach Laden automatisch zum Dashboard weiter',
+      'Globalsuche: Projekt-Klick navigiert zur Projektansicht statt zum Kanban',
+    ],
+  },
+  {
     version: '2.30.0',
     title: 'Globalsuche: Overlays, Benutzer-Navigation & Description-Snippet',
     items: [

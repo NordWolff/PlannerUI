@@ -62,7 +62,7 @@ function openTicket(ticket) {
 }
 
 function openProject(project) {
-  router.push(`/planner/${project.plannerId}/kanban`)
+  router.push(`/planner/${project.plannerId}/projects`)
   emit('navigate')
   close()
 }
