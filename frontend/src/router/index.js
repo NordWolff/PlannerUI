@@ -26,7 +26,6 @@ const routes = [
       { path: 'projects',   component: () => import('@/views/ProjectsView.vue') },
       { path: 'kanban',     component: () => import('@/views/KanbanView.vue') },
       { path: 'gantt',      component: () => import('@/views/GanttView.vue') },
-      { path: 'reports',    component: () => import('@/views/ReportsView.vue') },
       { path: 'settings',   component: () => import('@/views/SettingsView.vue') },
       { path: 'chat',       component: () => import('@/views/ChatView.vue') },
       { path: 'admin',      component: () => import('@/views/AdminView.vue') },

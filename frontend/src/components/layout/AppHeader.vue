@@ -268,7 +268,6 @@ const navLinks = computed(() => {
     { to: `/planner/${pid}/teams`,     label: 'Teams' },
     { to: `/planner/${pid}/projects`,  label: 'Projekte' },
     { to: `/planner/${pid}/kanban`,    label: 'Kanban' },
-    { to: `/planner/${pid}/reports`,   label: 'Reports' },
     { to: `/planner/${pid}/chat`,      label: 'Chat' },
   ]
 })

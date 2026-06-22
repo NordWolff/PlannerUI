@@ -35,6 +35,9 @@ const myTickets = ref([])
 const loadingMyTickets = ref(false)
 const selectedTicket = ref(null)
 const statusFilter = ref('all')
+const priorityFilter = ref('all')
+const sortBy = ref('updatedAt')
+const sortDir = ref('desc')
 
 const STATUS_FILTERS = [
   { key: 'all',         label: 'Alle' },
@@ -45,9 +48,40 @@ const STATUS_FILTERS = [
   { key: 'done',        label: 'Erledigt' },
 ]
 
+const PRIORITY_FILTERS = [
+  { key: 'all',      label: 'Alle Prioritäten' },
+  { key: 'critical', label: 'Kritisch' },
+  { key: 'high',     label: 'Hoch' },
+  { key: 'medium',   label: 'Mittel' },
+  { key: 'low',      label: 'Niedrig' },
+]
+
+const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 }
+
+function toggleSort(col) {
+  if (sortBy.value === col) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = col
+    sortDir.value = col === 'updatedAt' ? 'desc' : 'asc'
+  }
+}
+
 const filteredMyTickets = computed(() => {
-  if (statusFilter.value === 'all') return myTickets.value
-  return myTickets.value.filter(t => t.status === statusFilter.value)
+  let list = myTickets.value
+  if (statusFilter.value !== 'all') list = list.filter(t => t.status === statusFilter.value)
+  if (priorityFilter.value !== 'all') list = list.filter(t => t.priority === priorityFilter.value)
+  return [...list].sort((a, b) => {
+    let cmp = 0
+    if (sortBy.value === 'priority') {
+      cmp = (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99)
+    } else if (sortBy.value === 'status') {
+      cmp = (a.status ?? '').localeCompare(b.status ?? '')
+    } else {
+      cmp = new Date(b.updatedAt) - new Date(a.updatedAt)
+    }
+    return sortDir.value === 'asc' ? cmp : -cmp
+  })
 })
 
 const statusCountMap = computed(() => {
@@ -268,23 +302,22 @@ onMounted(async () => {
         </button>
       </div>
 
-      <!-- Status-Filter Tabs -->
-      <div class="px-4 pt-3 pb-0 border-b border-gray-100 dark:border-gray-700">
-        <div class="flex gap-0.5 overflow-x-auto">
-          <button
-            v-for="f in STATUS_FILTERS" :key="f.key"
-            @click="statusFilter = f.key"
-            class="px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors border-b-2"
-            :class="statusFilter === f.key
-              ? 'border-primary text-primary dark:text-primary-dark'
-              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'">
-            {{ f.label }}
-            <span v-if="f.key !== 'all' && statusCountMap[f.key]"
-              class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-              {{ statusCountMap[f.key] }}
-            </span>
-          </button>
-        </div>
+      <!-- Filter-Zeile: Status + Priorität -->
+      <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-wrap gap-3">
+        <select v-model="statusFilter"
+          class="text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary">
+          <option v-for="f in STATUS_FILTERS" :key="f.key" :value="f.key">{{ f.label }}</option>
+        </select>
+        <select v-model="priorityFilter"
+          class="text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary">
+          <option v-for="f in PRIORITY_FILTERS" :key="f.key" :value="f.key">{{ f.label }}</option>
+        </select>
+        <button v-if="statusFilter !== 'all' || priorityFilter !== 'all'"
+          @click="statusFilter = 'all'; priorityFilter = 'all'"
+          class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors px-2 py-1.5">
+          Filter zurücksetzen
+        </button>
+        <span class="ml-auto text-xs text-gray-400 self-center">{{ filteredMyTickets.length }} Ticket{{ filteredMyTickets.length !== 1 ? 's' : '' }}</span>
       </div>
 
       <!-- Ticket-Tabelle -->
@@ -295,9 +328,30 @@ onMounted(async () => {
             <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               <th class="px-4 py-3">Nr.</th>
               <th class="px-4 py-3">Titel</th>
-              <th class="px-4 py-3">Status</th>
-              <th class="px-4 py-3 hidden sm:table-cell">Priorität</th>
-              <th class="px-4 py-3 hidden md:table-cell">Aktualisiert</th>
+              <th class="px-4 py-3 cursor-pointer select-none group" @click="toggleSort('status')">
+                <span class="flex items-center gap-1">
+                  Status
+                  <svg class="w-3 h-3 transition-opacity" :class="sortBy === 'status' ? 'opacity-100 text-primary dark:text-primary-dark' : 'opacity-30 group-hover:opacity-60'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortBy === 'status' && sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-3 hidden sm:table-cell cursor-pointer select-none group" @click="toggleSort('priority')">
+                <span class="flex items-center gap-1">
+                  Priorität
+                  <svg class="w-3 h-3 transition-opacity" :class="sortBy === 'priority' ? 'opacity-100 text-primary dark:text-primary-dark' : 'opacity-30 group-hover:opacity-60'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortBy === 'priority' && sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-3 hidden md:table-cell cursor-pointer select-none group" @click="toggleSort('updatedAt')">
+                <span class="flex items-center gap-1">
+                  Aktualisiert
+                  <svg class="w-3 h-3 transition-opacity" :class="sortBy === 'updatedAt' ? 'opacity-100 text-primary dark:text-primary-dark' : 'opacity-30 group-hover:opacity-60'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortBy === 'updatedAt' && sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                  </svg>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">

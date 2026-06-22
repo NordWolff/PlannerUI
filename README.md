@@ -313,6 +313,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.33.0 — Dashboard erweitert: Filter, Sortierung & Reports entfernt
+- **Reports entfernt:** Menüpunkt und Route `/planner/:id/reports` vollständig entfernt — keine separate Reports-Ansicht mehr
+- **Dashboard „Meine Tickets" — Filterzeile:** Separate Filter-Zeile über den Status-Tabs mit Status-Dropdown + Prioritäts-Dropdown (kombinierbar); Ticket-Zähler zeigt Trefferzahl in Echtzeit; „Filter zurücksetzen"-Link bei aktiven Filtern
+- **Sortierbare Spalten:** Spaltenköpfe Priorität, Status und Aktualisiert sind klickbar — Auf-/Absteigend umschaltbar, aktiver Sort mit Magenta-Pfeil markiert
+
 ### v2.32.0 — Benutzerprofile: Profilseite, Anzeigename, OrgEinheit & Avatar-Upload
 - **Profilseite** `/profile/:userId` — Avatar (groß), Anzeigename, Benutzername, Organisationseinheit, Rolle-Badge, Mitglied-seit; eigenes Profil zeigt „Profil bearbeiten"-Button
 - **Globalsuche:** Benutzer-Klick navigiert jetzt zu `/profile/:id` statt zur Teams-Seite

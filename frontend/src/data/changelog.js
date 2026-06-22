@@ -3,6 +3,17 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.33.0',
+    title: 'Dashboard erweitert — Filter, Sortierung & Reports entfernt',
+    items: [
+      'Reports-Menüpunkt und Route entfernt — kein eigener Reports-Bereich mehr',
+      'Dashboard „Meine Tickets": Filter-Zeile über den Status-Tabs — Status- und Prioritäts-Dropdown kombinierbar',
+      'Spaltenköpfe Priorität, Status und Aktualisiert sind sortierbar (Pfeil-Icon, auf-/absteigend umschaltbar)',
+      'Filter-Zähler zeigt Anzahl der gefilterten Tickets in Echtzeit',
+      'Schaltfläche „Filter zurücksetzen" erscheint bei aktiven Filtern',
+    ],
+  },
+  {
     version: '2.32.0',
     title: 'Benutzerprofile — Profilseite, Anzeigename, OrgEinheit & Avatar-Upload',
     items: [
