@@ -169,7 +169,7 @@ const usersNotInPlanner = computed(() => {
   return users.value.filter(u => u.role !== 'admin' && !existing.includes(u.id))
 })
 
-const newPlannerMember = reactive({ userId: '', role: 'user' })
+const newPlannerMember = reactive({ userId: '', role: 'member' })
 
 async function addPlannerMember() {
   if (!newPlannerMember.userId || !activePlanner.value) return
@@ -177,7 +177,7 @@ async function addPlannerMember() {
   try {
     await plannersStore.updateMembers(activePlanner.value.id, updated)
     newPlannerMember.userId = ''
-    newPlannerMember.role = 'user'
+    newPlannerMember.role = 'member'
     toast.success('Mitglied hinzugefügt')
   } catch { toast.error('Fehler beim Hinzufügen') }
 }
@@ -232,7 +232,7 @@ function paUserCanManage(planner) {
   if (authStore.isAdmin) return true
   const uid = authStore.user?.id
   const member = (planner.members ?? []).find(m => m.userId === uid)
-  return member?.role === 'admin'
+  return member?.role === 'owner'
 }
 
 function paUserRole(planner) {
@@ -285,7 +285,7 @@ const paDetailPlanner = ref(null)
 const paActiveTab = ref('info')
 const paInfoForm = reactive({ name: '', description: '', color: '#E20074' })
 const paInfoColors = ['#E20074', '#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b']
-const paNewMember = reactive({ userId: '', role: 'user' })
+const paNewMember = reactive({ userId: '', role: 'member' })
 const paExpandedTeamId = ref(null)
 const paEditingTeam = ref(null)
 const paEditTeamForm = reactive({ name: '', description: '' })
@@ -323,13 +323,13 @@ async function paSaveInfo() {
 const paPlannerMembers = computed(() => paDetailPlanner.value?.members ?? [])
 
 // Darf der aktuelle User Rollen in diesem Planner verwalten?
-// Ja wenn: System-Admin ODER Ersteller des Planners ODER Planner-Mitglied mit Rolle 'admin'
+// Ja wenn: System-Admin ODER Planner-Mitglied mit Rolle 'owner' (Product Owner)
 const paCanManageRoles = computed(() => {
   if (authStore.isAdmin) return true
   if (!paDetailPlanner.value) return false
   const uid = authStore.user?.id
   const member = (paDetailPlanner.value.members ?? []).find(m => m.userId === uid)
-  return member?.role === 'admin'
+  return member?.role === 'owner'
 })
 
 const canManageActivePlannerRoles = computed(() => {
@@ -337,7 +337,7 @@ const canManageActivePlannerRoles = computed(() => {
   if (!activePlanner.value) return false
   const uid = authStore.user?.id
   const member = (activePlanner.value.members ?? []).find(m => m.userId === uid)
-  return member?.role === 'admin'
+  return member?.role === 'owner'
 })
 
 const paAvailableUsersToAdd = computed(() => {
@@ -345,14 +345,23 @@ const paAvailableUsersToAdd = computed(() => {
   return users.value.filter(u => u.role !== 'admin' && !existing.includes(u.id))
 })
 
+function paSyncDetailPlanner() {
+  const pid = paDetailPlanner.value?.id
+  if (!pid) return
+  paDetailPlanner.value =
+    plannersStore.allPlanners.find(p => p.id === pid) ??
+    plannersStore.planners.find(p => p.id === pid) ??
+    paDetailPlanner.value
+}
+
 async function paAddMember() {
   if (!paNewMember.userId) return
   const updated = [...paPlannerMembers.value, { userId: paNewMember.userId, role: paNewMember.role }]
   try {
     await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
-    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    paSyncDetailPlanner()
     paNewMember.userId = ''
-    paNewMember.role = 'user'
+    paNewMember.role = 'member'
     toast.success('Mitglied hinzugefügt')
   } catch { toast.error('Fehler') }
 }
@@ -361,7 +370,7 @@ async function paRemoveMember(userId) {
   const updated = paPlannerMembers.value.filter(m => m.userId !== userId)
   try {
     await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
-    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    paSyncDetailPlanner()
     toast.info('Mitglied entfernt')
   } catch { toast.error('Fehler') }
 }
@@ -370,7 +379,7 @@ async function paChangeMemberRole(userId, role) {
   const updated = paPlannerMembers.value.map(m => m.userId === userId ? { ...m, role } : m)
   try {
     await plannersStore.updateMembers(paDetailPlanner.value.id, updated)
-    paDetailPlanner.value = plannersStore.allPlanners.find(p => p.id === paDetailPlanner.value.id)
+    paSyncDetailPlanner()
   } catch { toast.error('Fehler') }
 }
 
@@ -1060,9 +1069,9 @@ function formatFileSize(bytes) {
                 <span v-else-if="paUserRole(planner)"
                   class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
                   :class="{
-                    'bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark': paUserRole(planner) === 'admin',
-                    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': paUserRole(planner) === 'owner',
-                    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': paUserRole(planner) === 'user',
+                    'bg-primary-light text-primary dark:bg-primary-active/30 dark:text-primary-dark': paUserRole(planner) === 'owner',
+                    
+                    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': paUserRole(planner) === 'member',
                   }">
                   {{ PA_ROLE_LABELS[paUserRole(planner)] ?? paUserRole(planner) }}
                 </span>
@@ -1241,9 +1250,9 @@ function formatFileSize(bytes) {
               <span v-else
                 class="text-xs px-2.5 py-1 rounded-full font-medium"
                 :class="{
-                  'bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark': m.role === 'admin',
-                  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': m.role === 'owner',
-                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': m.role === 'user' || m.role === 'member',
+                  
+                  'bg-primary-light text-primary dark:bg-primary-active/30 dark:text-primary-dark': m.role === 'owner',
+                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': m.role === 'member',
                 }">
                 {{ PA_ROLE_LABELS[m.role] ?? m.role }}
               </span>
@@ -1465,9 +1474,9 @@ function formatFileSize(bytes) {
                   <span v-else
                     class="text-xs px-2.5 py-1 rounded-full font-medium"
                     :class="{
-                      'bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark': m.role === 'admin',
-                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': m.role === 'owner',
-                      'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': m.role === 'user' || m.role === 'member',
+                      
+                      'bg-primary-light text-primary dark:bg-primary-active/30 dark:text-primary-dark': m.role === 'owner',
+                      'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300': m.role === 'member',
                     }">
                     {{ PA_ROLE_LABELS[m.role] ?? m.role }}
                   </span>
