@@ -168,6 +168,25 @@ function openTransfer(member) {
   showTransferModal.value = true
 }
 
+async function changeRole(member, newRole) {
+  if (member.role === newRole) return
+  try {
+    await api.put(
+      `/teams/${teamsStore.currentTeam.id}/members/${member.userId}/role`,
+      { role: newRole }
+    )
+    const team = teamsStore.teams.find(t => t.id === teamsStore.currentTeam.id)
+    if (team) {
+      const m = team.members.find(m => m.userId === member.userId)
+      if (m) m.role = newRole
+      teamsStore.setCurrentTeam({ ...team })
+    }
+    toast.success('Rolle geändert')
+  } catch (e) {
+    toast.error(e.response?.data?.error || 'Fehler beim Ändern der Rolle')
+  }
+}
+
 async function confirmTransfer() {
   if (!transferTarget.value) return
   try {
@@ -510,6 +529,15 @@ async function deleteSprint(sprint) {
               </div>
 
               <div class="flex items-center gap-2 shrink-0">
+                <select v-if="authStore.isAdmin && member.role !== 'owner' && !isSystemSupportTeam"
+                  :value="member.role"
+                  @change="changeRole(member, $event.target.value)"
+                  class="text-xs input-field py-0.5 px-2 h-7 w-auto">
+                  <option value="member">Mitglied</option>
+                  <option value="entwickler">Entwickler</option>
+                  <option value="organisator">Organisator</option>
+                  <option value="gast">Gast</option>
+                </select>
                 <button v-if="authStore.isAdmin && member.role !== 'owner'"
                   @click="openTransfer(member)"
                   class="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium whitespace-nowrap"

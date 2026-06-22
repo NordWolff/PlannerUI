@@ -6,9 +6,9 @@ export const changelog = [
     version: '2.26.0',
     title: 'Backlog: Teamrollen, Status-Labels, Tickettyp Test & rollenbasierte Navigation',
     items: [
-      'Fachliche Teamrollen: Mitglieder können jetzt als Entwickler, Organisator oder Gast zugewiesen werden — Anzeige als Badge in der Mitgliederliste',
+      'Fachliche Teamrollen: Mitglieder können als Entwickler, Organisator oder Gast zugewiesen werden — Badge in der Mitgliederliste, Rolle nachträglich per Dropdown änderbar',
       'Verlauf-Tab: Status-Keys werden jetzt als deutsche Labels angezeigt (z. B. „in_progress" → „In Arbeit")',
-      'Neuer Tickettyp „Test" in Ticket erstellen und TicketDetail verfügbar',
+      'Neuer Tickettyp „Test" in Ticket erstellen und TicketDetail verfügbar — eigenes Teal-Icon (Patch-Check)',
       'Navigation: Link heißt jetzt einheitlich „Mein Bereich" für alle Nutzer',
     ],
   },

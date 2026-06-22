@@ -126,7 +126,8 @@ router.post('/:id/members', (req, res) => {
     return res.status(409).json({ error: 'Benutzer ist bereits Mitglied dieses Teams' });
   }
 
-  const memberRole = role || 'member';
+  const VALID_MEMBER_ROLES = ['owner', 'member', 'entwickler', 'organisator', 'gast'];
+  const memberRole = role && VALID_MEMBER_ROLES.includes(role) ? role : 'member';
 
   // Nur ein Owner pro Team
   if (memberRole === 'owner' && team.members.some((m) => m.role === 'owner')) {
