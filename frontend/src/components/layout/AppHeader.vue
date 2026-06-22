@@ -272,6 +272,19 @@ const navLinks = computed(() => {
   ]
 })
 
+// Nav wird in drei Blöcke aufgeteilt, damit der Mein-Team-Dropdown nicht vom
+// overflow-x-auto Container weggeclippt wird (overflow:auto gilt implizit
+// für beide Achsen und schneidet absolut positionierte Kinder weg).
+const teamNavLink = computed(() => navLinks.value.find(l => l.isTeam) ?? null)
+const preTeamLinks = computed(() => {
+  const idx = navLinks.value.findIndex(l => l.isTeam)
+  return idx <= 0 ? [] : navLinks.value.slice(0, idx)
+})
+const postTeamLinks = computed(() => {
+  const idx = navLinks.value.findIndex(l => l.isTeam)
+  return idx === -1 ? navLinks.value : navLinks.value.slice(idx + 1)
+})
+
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
 }
@@ -342,77 +355,94 @@ const avatarUrl = (user) => generateAvatar(user?.username)
       </template>
     </div>
 
-    <!-- Navigation -->
-    <nav class="flex-1 min-w-0 flex justify-center overflow-x-auto" style="scrollbar-width:none">
-      <div class="flex gap-0.5 shrink-0">
-        <template v-for="link in navLinks" :key="link.to">
+    <!-- Navigation:
+         "Mein Team" liegt NICHT im overflow-x-auto Container, damit sein
+         absolut positioniertes Dropdown nicht weggeclippt wird. Daher wird die
+         Nav in drei Blöcke aufgeteilt: [pre-Scroll | Mein Team | post-Scroll]. -->
+    <nav class="flex-1 min-w-0 flex justify-center items-center">
 
-          <!-- Mein Team: Dropdown -->
-          <div v-if="link.isTeam" class="relative">
-            <button
-              @click="toggleTeamDropdown"
-              class="flex items-center gap-1 px-2 py-2 text-sm font-medium rounded-lg transition-all duration-150"
-              :class="isActive('/my-team') || showTeamDropdown
-                ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
-            >
-              Mein Team
-              <svg class="w-3.5 h-3.5 transition-transform" :class="showTeamDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <!-- Team-Dropdown-Panel -->
-            <div v-if="showTeamDropdown"
-              class="absolute left-0 top-full mt-1 w-80 bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 dark:border-white/[0.06] ring-1 ring-black/[0.05] dark:ring-white/[0.08] z-50 overflow-hidden">
-
-              <!-- Header -->
-              <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Zuletzt bearbeitet</span>
-                <button @click="goToMyTeam" class="text-xs text-primary dark:text-primary-dark hover:underline font-medium">
-                  Alle anzeigen →
-                </button>
-              </div>
-
-              <!-- Ticket-Liste -->
-              <div v-if="loadingRecent" class="py-6 text-center text-xs text-gray-400">Laden…</div>
-              <div v-else-if="!recentTickets.length" class="py-6 text-center text-xs text-gray-400">Keine kürzlich bearbeiteten Tickets</div>
-              <ul v-else class="divide-y divide-gray-100 dark:divide-gray-700/50 max-h-72 overflow-y-auto">
-                <li
-                  v-for="ticket in recentTickets"
-                  :key="ticket.id"
-                  @click="openHeaderTicket(ticket)"
-                  class="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer group transition-colors"
-                >
-                  <span class="font-mono text-xs text-primary dark:text-primary-dark w-20 shrink-0">{{ ticket.ticketNumber || '—' }}</span>
-                  <span class="flex-1 text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary dark:group-hover:text-primary-dark transition-colors">{{ ticket.title }}</span>
-                  <span class="text-xs text-gray-400 shrink-0">{{ formatRecent(ticket.updatedAt) }}</span>
-                </li>
-              </ul>
-
-              <!-- Footer -->
-              <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-700">
-                <button @click="goToMyTeam" class="w-full text-center text-xs text-primary dark:text-primary-dark hover:underline py-0.5">
-                  Mein-Team-Seite öffnen
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Alle anderen Links -->
+      <!-- Links vor "Mein Team" (= Dashboard) -->
+      <div v-if="preTeamLinks.length" class="overflow-x-auto shrink-0" style="scrollbar-width:none">
+        <div class="flex gap-0.5 shrink-0">
           <router-link
-            v-else
+            v-for="link in preTeamLinks"
+            :key="link.to"
             :to="link.to"
             class="px-2 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap"
             :class="isActive(link.to)
               ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
-          >
-            {{ link.label }}
-          </router-link>
-
-        </template>
+          >{{ link.label }}</router-link>
+        </div>
       </div>
+
+      <!-- Mein Team: AUSSERHALB jedes overflow-Containers → Dropdown wird nicht geclippt -->
+      <div v-if="teamNavLink" class="relative shrink-0">
+        <button
+          @click="toggleTeamDropdown"
+          class="flex items-center gap-1 px-2 py-2 text-sm font-medium rounded-lg transition-all duration-150"
+          :class="isActive(teamNavLink.to) || showTeamDropdown
+            ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
+        >
+          Mein Team
+          <svg class="w-3.5 h-3.5 transition-transform" :class="showTeamDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- Team-Dropdown-Panel -->
+        <div v-if="showTeamDropdown"
+          class="absolute left-0 top-full mt-1 w-80 bg-white/80 dark:bg-[#1a1825]/85 backdrop-blur-xl rounded-xl shadow-xl border border-white/60 dark:border-white/[0.06] ring-1 ring-black/[0.05] dark:ring-white/[0.08] z-50 overflow-hidden">
+
+          <!-- Header -->
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Zuletzt bearbeitet</span>
+            <button @click="goToMyTeam" class="text-xs text-primary dark:text-primary-dark hover:underline font-medium">
+              Alle anzeigen →
+            </button>
+          </div>
+
+          <!-- Ticket-Liste -->
+          <div v-if="loadingRecent" class="py-6 text-center text-xs text-gray-400">Laden…</div>
+          <div v-else-if="!recentTickets.length" class="py-6 text-center text-xs text-gray-400">Keine kürzlich bearbeiteten Tickets</div>
+          <ul v-else class="divide-y divide-gray-100 dark:divide-gray-700/50 max-h-72 overflow-y-auto">
+            <li
+              v-for="ticket in recentTickets"
+              :key="ticket.id"
+              @click="openHeaderTicket(ticket)"
+              class="flex items-center gap-3 px-4 py-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer group transition-colors"
+            >
+              <span class="font-mono text-xs text-primary dark:text-primary-dark w-20 shrink-0">{{ ticket.ticketNumber || '—' }}</span>
+              <span class="flex-1 text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary dark:group-hover:text-primary-dark transition-colors">{{ ticket.title }}</span>
+              <span class="text-xs text-gray-400 shrink-0">{{ formatRecent(ticket.updatedAt) }}</span>
+            </li>
+          </ul>
+
+          <!-- Footer -->
+          <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-700">
+            <button @click="goToMyTeam" class="w-full text-center text-xs text-primary dark:text-primary-dark hover:underline py-0.5">
+              Mein-Team-Seite öffnen
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Links nach "Mein Team" (Teams, Projekte, Kanban, Chat) -->
+      <div v-if="postTeamLinks.length" class="overflow-x-auto min-w-0 shrink" style="scrollbar-width:none">
+        <div class="flex gap-0.5 shrink-0">
+          <router-link
+            v-for="link in postTeamLinks"
+            :key="link.to"
+            :to="link.to"
+            class="px-2 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap"
+            :class="isActive(link.to)
+              ? 'text-gray-900 dark:text-white bg-gradient-to-r from-violet-500/10 to-pink-500/10 dark:from-violet-500/15 dark:to-pink-500/15 ring-1 ring-inset ring-pink-400/20 dark:ring-pink-400/25'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.06]'"
+          >{{ link.label }}</router-link>
+        </div>
+      </div>
+
     </nav>
 
     <!-- Suche: Lupe-Button (alle Breakpoints) -->
