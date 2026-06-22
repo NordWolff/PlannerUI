@@ -18,7 +18,11 @@ const authStore      = useAuthStore()
 const plannersStore  = usePlannersStore()
 const toast          = useToast()
 
-const canManage = computed(() => authStore.isAdmin || authStore.user?.role === 'owner')
+const canManage = computed(() => {
+  if (authStore.isAdmin) return true
+  const uid = authStore.user?.id
+  return plannersStore.activePlanner?.members?.find(m => m.userId === uid)?.role === 'owner'
+})
 const canStartOrComplete = computed(() => canManage.value || !!plannersStore.activePlannerId)
 
 // System-Support Planner benötigt keinen Product Owner

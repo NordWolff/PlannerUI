@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { store, sanitizeUser, getUserOnlineStatus } from '../data/store.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
-const VALID_ROLES = ['admin', 'owner', 'user'];
+const VALID_ROLES = ['admin', 'user'];
 
 const router = Router();
 router.use(authenticateToken);
@@ -50,7 +50,7 @@ router.put('/:id/role', requireAdmin, (req, res) => {
   if (supportPlanner) {
     if (role === 'admin') {
       if (!supportPlanner.members.some(m => m.userId === user.id)) {
-        supportPlanner.members.push({ userId: user.id, role: 'admin' });
+        supportPlanner.members.push({ userId: user.id, role: 'owner' });
       }
       if (supportTeam && !supportTeam.members.some(m => m.userId === user.id)) {
         supportTeam.members.push({ userId: user.id, role: 'user' });

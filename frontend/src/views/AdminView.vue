@@ -45,16 +45,14 @@ const tabs = computed(() => {
 })
 
 const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Admin',           desc: 'Vollzugriff auf alle Bereiche' },
-  { value: 'owner', label: 'Owner',           desc: 'Kann Teams und Projekte verwalten' },
-  { value: 'user',  label: 'Benutzer',        desc: 'Standardzugriff' },
+  { value: 'admin', label: 'Admin',    desc: 'Vollzugriff auf alle Bereiche (Systemrolle)' },
+  { value: 'user',  label: 'Benutzer', desc: 'Standardzugriff (Systemrolle)' },
 ]
 
-// Rollen für Planner-Mitgliedschaft (planner-level, unabhängig von globaler Rolle)
+// Rollen für Planner-Mitgliedschaft (planner-level, unabhängig von globaler Systemrolle)
 const PLANNER_MEMBER_ROLE_OPTIONS = [
-  { value: 'owner', label: 'Verantwortlicher', desc: 'Kann den Planner vollständig verwalten' },
-  { value: 'admin', label: 'Admin',            desc: 'Kann Mitglieder und Einstellungen verwalten' },
-  { value: 'user',  label: 'Mitglied',         desc: 'Standardzugriff auf den Planner' },
+  { value: 'owner',  label: 'Product Owner', desc: 'Verantwortlich für den Planner, kann Sprints und Einstellungen verwalten' },
+  { value: 'member', label: 'Mitglied',      desc: 'Standardzugriff auf den Planner' },
 ]
 
 const ROLE_COLORS = {
@@ -460,7 +458,7 @@ async function paDeletePlanner(planner) {
   } catch { toast.error('Fehler') }
 }
 
-const PA_ROLE_LABELS = { owner: 'Verantwortlicher', admin: 'Admin', user: 'Mitglied', member: 'Mitglied' }
+const PA_ROLE_LABELS = { owner: 'Product Owner', member: 'Mitglied', user: 'Mitglied' }
 
 function paUserName(id) { return users.value.find(u => u.id === id)?.username ?? id }
 

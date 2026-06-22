@@ -21,10 +21,9 @@ const avatarSrc = computed(() =>
   profileUser.value ? getUserAvatar(profileUser.value) : generateAvatar('default')
 )
 
-const ROLE_LABELS = { admin: 'Administrator', owner: 'Product Owner', user: 'Mitglied' }
+const ROLE_LABELS = { admin: 'Administrator', user: 'Benutzer' }
 const ROLE_COLORS = {
   admin: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
-  owner: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
   user:  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
 }
 

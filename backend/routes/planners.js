@@ -22,7 +22,7 @@ function canManagePlanner(user, planner) {
   if (user.role === 'admin') return true
   if (planner.createdBy === user.id) return true
   const member = (planner.members ?? []).find(m => m.userId === user.id)
-  return member?.role === 'admin'
+  return member?.role === 'owner'
 }
 
 // GET /api/planners — nur eigene Planner (Mitglied). ?all=true → Admin: alle.
@@ -60,7 +60,7 @@ router.post('/', (req, res) => {
     name: name.trim(),
     description: description || '',
     color: color || '#E20074',
-    members: [{ userId: req.user.id, role: 'admin' }],
+    members: [{ userId: req.user.id, role: 'owner' }],
     ticketPrefix: prefix,
     ticketCounter: 1,
     createdBy: req.user.id,
@@ -109,7 +109,7 @@ router.put('/:id/members', (req, res) => {
   planner.members = members;
 
   // Benachrichtigung für neu hinzugefügte Mitglieder
-  const roleLabels = { admin: 'Admin', owner: 'Verantwortlicher', user: 'Mitglied', member: 'Mitglied' };
+  const roleLabels = { owner: 'Product Owner', member: 'Mitglied' };
   members.forEach(m => {
     if (!existingIds.has(m.userId) && m.userId !== req.user.id) {
       const roleName = roleLabels[m.role] ?? m.role;

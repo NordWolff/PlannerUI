@@ -195,7 +195,7 @@ onUnmounted(() => {
             <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
           </div>
           <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium">
-            {{ { admin: 'Admin', owner: 'Owner', user: 'Mitglied' }[user.role] || user.role }}
+            {{ { admin: 'Admin', user: 'Benutzer' }[user.role] || user.role }}
           </span>
         </button>
       </template>
