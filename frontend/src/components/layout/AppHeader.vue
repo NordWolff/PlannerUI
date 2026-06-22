@@ -16,6 +16,7 @@ import { useSprintsStore } from '@/stores/sprints'
 import { useUsers } from '@/composables/useUsers'
 import { generateAvatar } from '@/utils/avatar'
 import { useNotificationsStore } from '@/stores/notifications'
+import GlobalSearch from '@/components/layout/GlobalSearch.vue'
 
 const authStore     = useAuthStore()
 const plannersStore = usePlannersStore()
@@ -407,6 +408,9 @@ const avatarUrl = (user) => generateAvatar(user?.username)
         </template>
       </div>
     </nav>
+
+    <!-- Globalsuche -->
+    <GlobalSearch class="mx-3 hidden md:block" @open-ticket="headerTicket = $event" />
 
     <!-- Erstellen-Button -->
     <div class="relative mr-2" ref="createDropdownRef">

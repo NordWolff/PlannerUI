@@ -16,6 +16,7 @@ import chatRoutes from './routes/chat.js';
 import settingsRoutes from './routes/settings.js';
 import adminRequestsRoutes from './routes/admin-requests.js';
 import notificationsRoutes from './routes/notifications.js';
+import searchRoutes from './routes/search.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,6 +43,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin-requests', adminRequestsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/search',       searchRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

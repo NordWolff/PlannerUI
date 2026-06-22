@@ -313,6 +313,13 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.27.0 — Globalsuche im Header — Tickets, Projekte & Benutzer
+- **Globalsuche:** Neues `GlobalSearch.vue` im App-Header (zwischen Navigation und Erstellen-Button) — findet Tickets per Ticket-Nr., Titel und Beschreibung, Projekte per Name/Beschreibung und Planner-Mitglieder per Username/E-Mail
+- **Ergebnis-Dropdown:** erscheint direkt unterhalb des Suchfelds, gruppiert nach Kategorie (Tickets / Projekte / Benutzer) mit Trefferanzahl; 300ms Debounce, Mindestlänge 2 Zeichen, Escape schließt
+- **Navigation aus der Suche:** Ticket-Klick öffnet das TicketModal, Projekt-Klick navigiert zur Kanban-Ansicht des jeweiligen Planners
+- **Backend:** neuer `GET /api/search?q=&plannerId=` Endpunkt in `backend/routes/search.js` — planner-gescoped, max. 20 Treffer, inkl. abgeschlossener Tickets
+- **Bugfix (P2):** `'test'` in `VALID_TYPES` (`backend/routes/tickets.js`) — Tickets mit Typ „Test" wurden bisher auf „Aufgabe" normalisiert
+
 ### v2.26.0 — Backlog: Teamrollen, Status-Labels, Tickettyp Test & Navigation
 - **Fachliche Teamrollen:** Team-Mitglieder können als `entwickler`, `organisator` oder `gast` zugewiesen werden — Auswahl im Hinzufügen-Dropdown, Badge-Anzeige in der Mitgliederliste, Rolle nachträglich per Dropdown änderbar (Admin); Backend-Whitelist in `POST /teams/:id/members` schließt beliebige Rollenwerte aus
 - **Verlauf-Tab Status-Labels:** Statuswerte werden als deutsche Bezeichnungen angezeigt (`in_progress` → „In Arbeit", `draft` → „Draft" etc.) statt als rohe Keys — `STATUS_LABELS` wird aus `STATUS_OPTIONS` abgeleitet (`TicketDetail.vue`)

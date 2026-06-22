@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticateToken);
 
 const VALID_STATUSES = ['draft', 'planned', 'in_progress', 'review', 'done'];
-const VALID_TYPES = ['task', 'bug', 'feature', 'improvement', 'question', 'epic'];
+const VALID_TYPES = ['task', 'bug', 'feature', 'improvement', 'question', 'epic', 'test'];
 
 const ALLOWED_MIME = [
   'image/png', 'image/jpeg', 'image/gif', 'image/webp',

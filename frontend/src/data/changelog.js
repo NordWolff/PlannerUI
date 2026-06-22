@@ -3,6 +3,18 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.27.0',
+    title: 'Globalsuche im Header — Tickets, Projekte & Benutzer',
+    items: [
+      'Neue Globalsuche im App-Header: findet Tickets (Nr., Titel, Beschreibung), Projekte und Planner-Mitglieder per Freitextsuche',
+      'Ergebnisse erscheinen direkt unterhalb des Suchfelds, gruppiert nach Kategorie mit Trefferzahl',
+      'Ticket-Klick öffnet das TicketModal, Projekt-Klick navigiert zur Kanban-Ansicht',
+      'Planner-Scope: die Suche durchsucht ausschließlich Daten des aktiven Planners',
+      '300ms Debounce, Mindestlänge 2 Zeichen, Escape schließt das Dropdown',
+      'Bugfix: Tickettyp „Test" wird vom Backend jetzt korrekt gespeichert (VALID_TYPES ergänzt)',
+    ],
+  },
+  {
     version: '2.26.0',
     title: 'Backlog: Teamrollen, Status-Labels, Tickettyp Test & rollenbasierte Navigation',
     items: [
