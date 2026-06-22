@@ -319,6 +319,7 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 - **Navigation aus der Suche:** Ticket-Klick öffnet das TicketModal, Projekt-Klick navigiert zur Kanban-Ansicht des jeweiligen Planners
 - **Backend:** neuer `GET /api/search?q=&plannerId=` Endpunkt in `backend/routes/search.js` — planner-gescoped, max. 20 Treffer, inkl. abgeschlossener Tickets
 - **Bugfix (P2):** `'test'` in `VALID_TYPES` (`backend/routes/tickets.js`) — Tickets mit Typ „Test" wurden bisher auf „Aufgabe" normalisiert
+- **Bugfix:** Favorit-Stern in „Eigene Planner"-Karten ergänzt — war bisher nur in „Mitgliedschaften" sichtbar (`PlannersView.vue`)
 
 ### v2.26.0 — Backlog: Teamrollen, Status-Labels, Tickettyp Test & Navigation
 - **Fachliche Teamrollen:** Team-Mitglieder können als `entwickler`, `organisator` oder `gast` zugewiesen werden — Auswahl im Hinzufügen-Dropdown, Badge-Anzeige in der Mitgliederliste, Rolle nachträglich per Dropdown änderbar (Admin); Backend-Whitelist in `POST /teams/:id/members` schließt beliebige Rollenwerte aus
