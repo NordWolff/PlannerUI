@@ -3,6 +3,20 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.34.0',
+    title: 'Planner-Onboarding-Wizard: Projekt, Sprint & Team',
+    items: [
+      'Nach dem Erstellen eines neuen Planners startet automatisch ein 3-stufiger Onboarding-Wizard',
+      'Schritt 1 — Erstes Projekt anlegen: Name (Pflicht) + optionale Beschreibung; plannerId wird automatisch gesetzt',
+      'Schritt 2 — Sprint erstellen (optional): Name, Start- und Enddatum (vorausgefüllt: heute + 14 Tage), status = planned; überspringbar',
+      'Schritt 3 — Team erstellen (optional): Name + optionale Beschreibung; aktueller User wird automatisch als Team-Owner eingetragen; überspringbar',
+      'Step-Indikator mit 3 nummerierten Dots und Magenta-Verbindungslinie; Slide-Animation zwischen Schritten',
+      'Wizard gilt für beide Einstiegspunkte: Admin-Bereich „Alle Planner" und Planner-Übersicht (/planners)',
+      'Nach Abschluss: Planner wird als aktiv gesetzt, direkte Weiterleitung zum Dashboard',
+      'Bug: Mein-Team-Dropdown im Header war durch overflow-x-auto auf der Nav weggeclippt — Nav in drei Segmente aufgeteilt (pre-scroll | Mein Team | post-scroll)',
+    ],
+  },
+  {
     version: '2.33.0',
     title: 'Dashboard erweitert — Filter, Sortierung & Reports entfernt',
     items: [

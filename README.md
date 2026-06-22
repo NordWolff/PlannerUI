@@ -313,6 +313,14 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.34.0 — Planner-Onboarding-Wizard: Projekt, Sprint & Team
+- **Onboarding-Wizard:** Nach dem Erstellen eines neuen Planners startet automatisch ein 3-stufiger Modal-Wizard (gilt für Admin-Bereich und Planner-Übersicht `/planners`)
+- **Schritt 1 — Projekt:** Name (Pflicht) + optionale Beschreibung; `plannerId` wird automatisch gesetzt
+- **Schritt 2 — Sprint (optional):** Name, Start- und Enddatum (vorausgefüllt: heute + 14 Tage), `status = planned`; überspringbar per „Jetzt überspringen"
+- **Schritt 3 — Team (optional):** Name + optionale Beschreibung; aktueller User wird automatisch als Team-Owner eingetragen; überspringbar
+- **Design:** 3 nummerierte Step-Dots mit Magenta-Verbindungslinie, Slide-Animation zwischen Schritten, kein X-Close-Button
+- **Bugfix:** Mein-Team-Dropdown im Header war durch `overflow-x-auto` auf der `<nav>` weggeclippt — Nav in drei Segmente aufgeteilt (`[Dashboard] | [Mein Team] | [Teams … Chat]`)
+
 ### v2.33.0 — Dashboard erweitert: Filter, Sortierung & Reports entfernt
 - **Reports entfernt:** Menüpunkt und Route `/planner/:id/reports` vollständig entfernt — keine separate Reports-Ansicht mehr
 - **Dashboard „Meine Tickets" — Filterzeile:** Separate Filter-Zeile über den Status-Tabs mit Status-Dropdown + Prioritäts-Dropdown (kombinierbar); Ticket-Zähler zeigt Trefferzahl in Echtzeit; „Filter zurücksetzen"-Link bei aktiven Filtern
