@@ -170,7 +170,7 @@ async function onDrop(e, status) {
               </td>
             </tr>
             <tr v-if="!myTickets.length">
-              <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets vorhanden</td>
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets vorhanden</td>
             </tr>
           </tbody>
         </table>
