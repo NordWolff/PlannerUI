@@ -607,7 +607,7 @@ export async function seedData() {
       id: sprint3Id,
       name: 'Sprint 1 – Management',
       description: 'Kick-off Sprint für den Management-Planner',
-      status: 'planned',
+      status: 'planning',
       plannerId: planner3Id,
       startDate: sprint3Start.toISOString(),
       endDate: sprint3End.toISOString(),
