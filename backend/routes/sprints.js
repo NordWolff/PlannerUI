@@ -71,21 +71,33 @@ router.put('/:id', requireAdminOrOwner, (req, res) => {
   return res.json(sprint);
 });
 
-router.post('/:id/start', requireAdminOrOwner, (req, res) => {
+router.post('/:id/start', (req, res) => {
   const sprint = store.sprints.find(s => s.id === req.params.id);
   if (!sprint) return res.status(404).json({ error: 'Sprint not found' });
-  if (sprint.status === 'completed') return res.status(400).json({ error: 'Abgeschlossene Sprints können nicht gestartet werden' });
 
+  if (req.user.role !== 'admin' && req.user.role !== 'owner') {
+    const planner = store.planners.find(p => p.id === sprint.plannerId);
+    const isMember = planner?.members?.some(m => m.userId === req.user.id);
+    if (!isMember) return res.status(403).json({ error: 'Kein Zugriff auf diesen Sprint' });
+  }
+
+  if (sprint.status === 'completed') return res.status(400).json({ error: 'Abgeschlossene Sprints können nicht gestartet werden' });
   sprint.status = 'active';
   if (!sprint.startDate) sprint.startDate = new Date().toISOString();
   return res.json(sprint);
 });
 
-router.post('/:id/complete', requireAdminOrOwner, (req, res) => {
+router.post('/:id/complete', (req, res) => {
   const sprint = store.sprints.find(s => s.id === req.params.id);
   if (!sprint) return res.status(404).json({ error: 'Sprint not found' });
-  if (sprint.status === 'planning') return res.status(400).json({ error: 'Sprint wurde noch nicht gestartet' });
 
+  if (req.user.role !== 'admin' && req.user.role !== 'owner') {
+    const planner = store.planners.find(p => p.id === sprint.plannerId);
+    const isMember = planner?.members?.some(m => m.userId === req.user.id);
+    if (!isMember) return res.status(403).json({ error: 'Kein Zugriff auf diesen Sprint' });
+  }
+
+  if (sprint.status === 'planning') return res.status(400).json({ error: 'Sprint wurde noch nicht gestartet' });
   sprint.status = 'completed';
   if (!sprint.endDate) sprint.endDate = new Date().toISOString();
   return res.json(sprint);

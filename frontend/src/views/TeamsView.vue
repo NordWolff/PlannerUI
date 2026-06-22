@@ -19,6 +19,7 @@ const plannersStore  = usePlannersStore()
 const toast          = useToast()
 
 const canManage = computed(() => authStore.isAdmin || authStore.user?.role === 'owner')
+const canStartOrComplete = computed(() => canManage.value || !!plannersStore.activePlannerId)
 
 // System-Support Planner benötigt keinen Product Owner
 const isSystemSupportTeam = computed(() => {
@@ -424,8 +425,8 @@ async function deleteSprint(sprint) {
           </div>
 
           <!-- Aktions-Buttons -->
-          <div v-if="canManage" class="flex flex-wrap items-center gap-2 shrink-0">
-            <!-- Starten -->
+          <div v-if="canStartOrComplete" class="flex flex-wrap items-center gap-2 shrink-0">
+            <!-- Starten (alle Planner-Mitglieder) -->
             <button v-if="sprint.status === 'planning'"
               @click="startSprint(sprint)"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 transition-colors">
@@ -435,7 +436,7 @@ async function deleteSprint(sprint) {
               Starten
             </button>
 
-            <!-- Abschließen -->
+            <!-- Abschließen (alle Planner-Mitglieder) -->
             <button v-if="sprint.status === 'active'"
               @click="completeSprint(sprint)"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-colors">
@@ -445,8 +446,8 @@ async function deleteSprint(sprint) {
               Abschließen
             </button>
 
-            <!-- Bearbeiten (nicht wenn completed) -->
-            <button v-if="sprint.status !== 'completed'"
+            <!-- Bearbeiten — nur Admin/Owner, nicht wenn completed -->
+            <button v-if="canManage && sprint.status !== 'completed'"
               @click="openEditSprint(sprint)"
               class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
               title="Bearbeiten">
@@ -455,8 +456,8 @@ async function deleteSprint(sprint) {
               </svg>
             </button>
 
-            <!-- Löschen (nicht wenn active) -->
-            <button v-if="sprint.status !== 'active'"
+            <!-- Löschen — nur Admin/Owner, nicht wenn active -->
+            <button v-if="canManage && sprint.status !== 'active'"
               @click="deleteSprint(sprint)"
               class="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
               title="Löschen">
