@@ -45,7 +45,13 @@ function onCreateDropdownDocClick(e) {
   }
 }
 function onGlobalKeydown(e) {
-  if (e.key === 'Escape') showMobileSearch.value = false
+  if (e.key === 'Escape') {
+    showMobileSearch.value = false
+    showDropdown.value = false
+    showTeamDropdown.value = false
+    showNotifications.value = false
+    showCreateDropdown.value = false
+  }
 }
 onMounted(() => {
   document.addEventListener('click', onCreateDropdownDocClick)

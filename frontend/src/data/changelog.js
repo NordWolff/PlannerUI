@@ -3,6 +3,15 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.30.0',
+    title: 'Globalsuche: Overlays, Benutzer-Navigation & Description-Snippet',
+    items: [
+      'Escape-Taste schließt jetzt alle offenen Header-Overlays (User-Menü, Notifications, Team-Dropdown, Erstellen-Dropdown)',
+      'Benutzer in der Suche sind jetzt klickbar und navigieren zur Teams-Seite des aktiven Planners',
+      'Ticket-Suchergebnisse zeigen einen Description-Snippet (bis 120 Zeichen) wenn die Beschreibung auf den Suchbegriff matched',
+    ],
+  },
+  {
     version: '2.29.0',
     title: 'Globalsuche: Design & UX-Feinschliff',
     items: [

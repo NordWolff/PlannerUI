@@ -33,8 +33,9 @@ router.get('/', authenticateToken, (req, res) => {
       (t.description || '').toLowerCase().includes(term)
     )
     .slice(0, limit)
-    .map(({ id, ticketNumber, title, status, type, priority, projectId, assigneeId, teamId }) =>
-      ({ id, ticketNumber, title, status, type, priority, projectId, assigneeId, teamId }));
+    .map(({ id, ticketNumber, title, status, type, priority, projectId, assigneeId, teamId, description }) =>
+      ({ id, ticketNumber, title, status, type, priority, projectId, assigneeId, teamId,
+         descriptionSnippet: description ? description.slice(0, 120) : null }));
 
   const projects = plannerProjects
     .filter(p =>

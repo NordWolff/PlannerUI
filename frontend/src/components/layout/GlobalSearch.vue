@@ -67,6 +67,13 @@ function openProject(project) {
   close()
 }
 
+function openUser(user) {
+  const pid = plannersStore.activePlannerId
+  if (pid) router.push(`/planner/${pid}/teams`)
+  emit('navigate')
+  close()
+}
+
 function onKeydown(e) {
   if (e.key === 'Escape') {
     close()
@@ -143,9 +150,14 @@ onUnmounted(() => {
         <button v-for="ticket in results.tickets" :key="ticket.id"
           @click="openTicket(ticket)"
           class="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-left transition-colors">
-          <TicketTypeIcon :type="ticket.type || 'task'" class="shrink-0" />
-          <span class="font-mono text-xs text-primary dark:text-primary-dark shrink-0">{{ ticket.ticketNumber }}</span>
-          <span class="text-sm text-gray-900 dark:text-white truncate flex-1">{{ ticket.title }}</span>
+          <TicketTypeIcon :type="ticket.type || 'task'" class="shrink-0 mt-0.5" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs text-primary dark:text-primary-dark shrink-0">{{ ticket.ticketNumber }}</span>
+              <span class="text-sm text-gray-900 dark:text-white truncate">{{ ticket.title }}</span>
+            </div>
+            <p v-if="ticket.descriptionSnippet" class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{{ ticket.descriptionSnippet }}</p>
+          </div>
           <span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full font-medium" :class="STATUS_COLORS[ticket.status]">
             {{ STATUS_LABELS[ticket.status] || ticket.status }}
           </span>
@@ -175,8 +187,9 @@ onUnmounted(() => {
           :class="(results.tickets.length || results.projects.length) ? 'pt-2 mt-1 border-t border-gray-100 dark:border-gray-700' : 'pt-3'">
           Benutzer ({{ results.users.length }})
         </div>
-        <div v-for="user in results.users" :key="user.id"
-          class="flex items-center gap-2.5 px-3 py-2.5 cursor-default select-none">
+        <button v-for="user in results.users" :key="user.id"
+          @click="openUser(user)"
+          class="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-left transition-colors">
           <img :src="generateAvatar(user.username)" class="w-7 h-7 rounded-full shrink-0" alt="" />
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-900 dark:text-white">{{ user.username }}</p>
@@ -185,7 +198,7 @@ onUnmounted(() => {
           <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium">
             {{ { admin: 'Admin', owner: 'Owner', user: 'Mitglied' }[user.role] || user.role }}
           </span>
-        </div>
+        </button>
       </template>
 
       <div class="h-1" />

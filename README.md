@@ -313,6 +313,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.30.0 — Globalsuche: Overlays, Benutzer-Navigation & Description-Snippet
+- **Escape-Taste:** schließt jetzt alle offenen Header-Overlays (User-Menü, Notifications, Team-Dropdown, Erstellen-Dropdown) — `onGlobalKeydown` in `AppHeader.vue` erweitert
+- **Benutzer-Navigation:** Benutzer-Ergebnisse in der Suche sind jetzt klickbar (Button mit Hover-State) — Klick navigiert zur Teams-Seite des aktiven Planners; `openUser()` emittiert `navigate`-Event für Mobile-Panel-Schließung
+- **Description-Snippet:** Backend `GET /api/search` gibt `descriptionSnippet` (max. 120 Zeichen der Beschreibung) in Ticket-Ergebnissen zurück; Frontend zeigt Snippet unterhalb des Titels wenn vorhanden
+
 ### v2.29.0 — Globalsuche: Design & UX-Feinschliff
 - **Mobile Suchpanel:** schließt jetzt auch bei Projekt-Klick zuverlässig (`navigate`-Event aus `GlobalSearch.vue`, `AppHeader` setzt `showMobileSearch = false`)
 - **Escape-Taste:** schließt das mobile Suchpanel im Header (document-level `keydown`-Handler in `AppHeader`) — zusätzlich zum internen Dropdown-Escape
