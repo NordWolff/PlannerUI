@@ -17,6 +17,11 @@ router.get('/', authenticateToken, (req, res) => {
   const planner = store.planners.find(p => p.id === plannerId);
   if (!planner) return res.json({ tickets: [], projects: [], users: [] });
 
+  const isMember = (planner.members || []).some(m => m.userId === req.user.id);
+  if (!isMember && req.user.role !== 'admin') {
+    return res.json({ tickets: [], projects: [], users: [] });
+  }
+
   const plannerProjects = store.projects.filter(p => p.plannerId === plannerId);
   const plannerProjectIds = new Set(plannerProjects.map(p => p.id));
 
@@ -27,7 +32,9 @@ router.get('/', authenticateToken, (req, res) => {
       (t.title || '').toLowerCase().includes(term) ||
       (t.description || '').toLowerCase().includes(term)
     )
-    .slice(0, limit);
+    .slice(0, limit)
+    .map(({ id, ticketNumber, title, status, type, priority, projectId, assigneeId, teamId }) =>
+      ({ id, ticketNumber, title, status, type, priority, projectId, assigneeId, teamId }));
 
   const projects = plannerProjects
     .filter(p =>

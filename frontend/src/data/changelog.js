@@ -3,6 +3,17 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.28.0',
+    title: 'Suche & Planner-Fixes: Autorisierung, Mobile, Konsistenz',
+    items: [
+      'Globalsuche: Mitgliedschaftsprüfung im Backend — fremde Planner-Daten sind nicht mehr abrufbar',
+      'Globalsuche: Mobile-Suche per Icon-Button im Header — öffnet vollbreites Suchfeld unterhalb der Navigation',
+      'Globalsuche: Benutzer-Einträge als nicht-klickbar markiert (cursor-default)',
+      'Globalsuche: Ticket-Ergebnisse geben nur benötigte Felder zurück — keine internen Daten (history, comments)',
+      'Favorit-Stern: In Mitgliedschafts-Karten dauerhaft sichtbar — konsistent zu eigenen Plannern',
+    ],
+  },
+  {
     version: '2.27.0',
     title: 'Globalsuche im Header — Tickets, Projekte & Benutzer',
     items: [

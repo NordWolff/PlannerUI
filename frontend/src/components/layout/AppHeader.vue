@@ -172,6 +172,7 @@ async function submitProject() {
 }
 
 const showDropdown = ref(false)
+const showMobileSearch = ref(false)
 const showChangelog = ref(false)
 const submittingRequest = ref(false)
 const requestFiles      = ref([])
@@ -409,8 +410,18 @@ const avatarUrl = (user) => generateAvatar(user?.username)
       </div>
     </nav>
 
-    <!-- Globalsuche -->
+    <!-- Globalsuche Desktop -->
     <GlobalSearch class="mx-3 hidden md:block" @open-ticket="headerTicket = $event" />
+
+    <!-- Globalsuche Mobile: Icon-Toggle -->
+    <button @click="showMobileSearch = !showMobileSearch"
+      class="block md:hidden p-2 mr-1 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+      :class="showMobileSearch ? 'text-primary dark:text-primary-dark' : ''"
+      title="Suche">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
+      </svg>
+    </button>
 
     <!-- Erstellen-Button -->
     <div class="relative mr-2" ref="createDropdownRef">
@@ -573,6 +584,12 @@ const avatarUrl = (user) => generateAvatar(user?.username)
     <div v-if="showTeamDropdown" class="fixed inset-0 z-30" @click="showTeamDropdown = false" />
     <div v-if="showNotifications" class="fixed inset-0 z-30" @click="showNotifications = false" />
   </header>
+
+  <!-- Mobile Suchpanel -->
+  <div v-if="showMobileSearch"
+    class="fixed top-16 left-0 right-0 z-40 md:hidden bg-white/95 dark:bg-[#0e0d14]/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+    <GlobalSearch class="w-full" @open-ticket="headerTicket = $event; showMobileSearch = false" />
+  </div>
 
   <!-- Ticket-Modal aus Header-Dropdown -->
   <TicketModal

@@ -172,7 +172,7 @@ onUnmounted(() => {
           Benutzer ({{ results.users.length }})
         </div>
         <div v-for="user in results.users" :key="user.id"
-          class="flex items-center gap-2.5 px-3 py-2.5">
+          class="flex items-center gap-2.5 px-3 py-2.5 cursor-default select-none">
           <img :src="generateAvatar(user.username)" class="w-7 h-7 rounded-full shrink-0" alt="" />
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-900 dark:text-white">{{ user.username }}</p>
