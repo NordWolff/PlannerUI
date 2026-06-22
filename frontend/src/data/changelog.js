@@ -9,7 +9,7 @@ export const changelog = [
       'Fachliche Teamrollen: Mitglieder können jetzt als Entwickler, Organisator oder Gast zugewiesen werden — Anzeige als Badge in der Mitgliederliste',
       'Verlauf-Tab: Status-Keys werden jetzt als deutsche Labels angezeigt (z. B. „in_progress" → „In Arbeit")',
       'Neuer Tickettyp „Test" in Ticket erstellen und TicketDetail verfügbar',
-      'Navigation: Admins sehen „Verwaltung", alle anderen Nutzer sehen „Anfragen" — gleiche Zielseite, klare Rollentrennung',
+      'Navigation: Link heißt jetzt einheitlich „Mein Bereich" für alle Nutzer',
     ],
   },
   {

@@ -262,8 +262,7 @@ const baseLinks = computed(() => {
 const navLinks = computed(() => {
   const pid = plannersStore.activePlannerId
   if (!pid) return []
-  const adminLink = { to: `/planner/${pid}/admin`, label: authStore.isAdmin ? 'Verwaltung' : 'Anfragen' }
-  return [...baseLinks.value, adminLink]
+  return [...baseLinks.value, { to: `/planner/${pid}/admin`, label: 'Mein Bereich' }]
 })
 
 function isActive(path) {
@@ -550,7 +549,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
           :to="plannersStore.activePlannerId ? `/planner/${plannersStore.activePlannerId}/admin` : '/planners'"
           @click="showDropdown = false"
           class="flex items-center gap-2 px-4 py-2 text-sm text-primary dark:text-primary-dark hover:bg-black/[0.05] dark:hover:bg-white/[0.07] transition-colors">
-          {{ authStore.isAdmin ? 'Verwaltung' : 'Anfragen' }}
+          Mein Bereich
         </router-link>
         <button @click="showChangelog = true; showDropdown = false"
           class="flex items-center justify-between gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/[0.05] dark:hover:bg-white/[0.07] hover:text-gray-900 dark:hover:text-white transition-colors">
