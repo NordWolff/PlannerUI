@@ -12,7 +12,7 @@ const VALID_STATUSES = ['draft', 'planned', 'in_progress', 'review', 'done'];
 const VALID_TYPES = ['task', 'bug', 'feature', 'improvement', 'question', 'epic'];
 
 const ALLOWED_MIME = [
-  'image/png', 'image/jpeg',
+  'image/png', 'image/jpeg', 'image/gif', 'image/webp',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -65,8 +65,15 @@ router.get('/', (req, res) => {
 router.get('/recent', (req, res) => {
   const userId = req.user.id;
   const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+  const { plannerId } = req.query;
 
-  const recent = store.tickets
+  let tickets = store.tickets;
+  if (plannerId) {
+    const plannerProjectIds = new Set(store.projects.filter(p => p.plannerId === plannerId).map(p => p.id));
+    tickets = tickets.filter(t => plannerProjectIds.has(t.projectId));
+  }
+
+  const recent = tickets
     .filter((t) =>
       t.createdBy === userId ||
       t.assigneeId === userId ||

@@ -715,7 +715,11 @@ onMounted(async () => {
               <UserAvatar v-if="entry.changedBy" :user-id="entry.changedBy" size="sm" class="flex-none mt-0.5" />
               <div v-else class="w-6 h-6 flex-none" />
               <div>
-                <p class="text-sm text-gray-700 dark:text-gray-300">
+                <p v-if="entry.field === 'comment'" class="text-sm text-gray-700 dark:text-gray-300">
+                  <span class="font-medium">{{ getUser(entry.changedBy)?.username || 'Unbekannt' }}</span>
+                  hat einen <span class="font-medium">Kommentar</span> hinzugefügt
+                </p>
+                <p v-else class="text-sm text-gray-700 dark:text-gray-300">
                   <span class="font-medium">{{ getUser(entry.changedBy)?.username || 'Unbekannt' }}</span>
                   änderte <span class="font-medium">Status</span> von
                   <span class="font-medium">{{ entry.from }}</span> zu

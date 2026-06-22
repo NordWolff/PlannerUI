@@ -148,6 +148,7 @@ async function onDrop(e, status) {
         <table class="w-full">
           <thead class="bg-gray-50 dark:bg-gray-700/50">
             <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th class="px-6 py-3">Nr.</th>
               <th class="px-6 py-3">Titel</th>
               <th class="px-6 py-3">Status</th>
               <th class="px-6 py-3">Priorität</th>
@@ -156,6 +157,7 @@ async function onDrop(e, status) {
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
             <tr v-for="ticket in myTickets" :key="ticket.id" @click="selectedTicket = ticket" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+              <td class="px-6 py-3 font-mono text-xs text-primary dark:text-primary-dark whitespace-nowrap">{{ ticket.ticketNumber }}</td>
               <td class="px-6 py-3 text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">{{ ticket.title }}</td>
               <td class="px-6 py-3"><StatusBadge :status="ticket.status" /></td>
               <td class="px-6 py-3"><PriorityBadge v-if="ticket.priority" :priority="ticket.priority" /></td>
@@ -168,7 +170,7 @@ async function onDrop(e, status) {
               </td>
             </tr>
             <tr v-if="!myTickets.length">
-              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets vorhanden</td>
+              <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-400">Keine Tickets vorhanden</td>
             </tr>
           </tbody>
         </table>

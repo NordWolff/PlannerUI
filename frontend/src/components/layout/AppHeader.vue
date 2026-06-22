@@ -209,7 +209,8 @@ async function toggleTeamDropdown() {
   if (showTeamDropdown.value) {
     loadingRecent.value = true
     try {
-      const { data } = await api.get('/tickets/recent', { params: { limit: 8 } })
+      const pid = plannersStore.activePlannerId
+      const { data } = await api.get('/tickets/recent', { params: { limit: 8, ...(pid ? { plannerId: pid } : {}) } })
       recentTickets.value = data
     } catch { /* */ } finally {
       loadingRecent.value = false
