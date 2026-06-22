@@ -6,7 +6,7 @@ import { usePlannersStore } from '@/stores/planners'
 import { generateAvatar } from '@/utils/avatar'
 import TicketTypeIcon from '@/components/common/TicketTypeIcon.vue'
 
-const emit = defineEmits(['open-ticket'])
+const emit = defineEmits(['open-ticket', 'navigate'])
 const router = useRouter()
 const plannersStore = usePlannersStore()
 
@@ -63,6 +63,7 @@ function openTicket(ticket) {
 
 function openProject(project) {
   router.push(`/planner/${project.plannerId}/kanban`)
+  emit('navigate')
   close()
 }
 
@@ -157,7 +158,7 @@ onUnmounted(() => {
         <button v-for="project in results.projects" :key="project.id"
           @click="openProject(project)"
           class="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-left transition-colors">
-          <svg class="w-3.5 h-3.5 shrink-0 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-3.5 h-3.5 shrink-0 text-primary dark:text-primary-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
           <span class="text-sm text-gray-900 dark:text-white truncate flex-1">{{ project.name }}</span>

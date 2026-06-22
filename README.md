@@ -313,6 +313,11 @@ Alle weiteren Benutzer (Passwort `user123`): `harald.huebner`, `mirco.martin`, `
 
 > Dieser Abschnitt wird auch im UI angezeigt: **Benutzermenü → „Changelog"** (Datenquelle `frontend/src/data/changelog.js`, synchron zu diesem Abschnitt gepflegt).
 
+### v2.29.0 — Globalsuche: Design & UX-Feinschliff
+- **Mobile Suchpanel:** schließt jetzt auch bei Projekt-Klick zuverlässig (`navigate`-Event aus `GlobalSearch.vue`, `AppHeader` setzt `showMobileSearch = false`)
+- **Escape-Taste:** schließt das mobile Suchpanel im Header (document-level `keydown`-Handler in `AppHeader`) — zusätzlich zum internen Dropdown-Escape
+- **Projekt-Icon:** nutzt jetzt `text-primary dark:text-primary-dark` statt `text-indigo-400` — konsistent zum Telekom-Magenta Design-System
+
 ### v2.28.0 — Suche & Planner-Fixes: Autorisierung, Mobile, Konsistenz
 - **Sicherheit:** `GET /api/search` prüft jetzt Planner-Mitgliedschaft des anfragenden Benutzers — unautorisierte Planner-Daten werden nicht zurückgegeben (`backend/routes/search.js`)
 - **Mobile Suche:** Such-Icon im Header (nur mobile, `md:hidden`) öffnet vollbreites Suchpanel unterhalb des Headers — Globalsuche ist nun auf allen Bildschirmgrößen erreichbar

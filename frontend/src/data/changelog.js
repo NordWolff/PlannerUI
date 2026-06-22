@@ -3,6 +3,15 @@
 // Eintrag mit Versionsnummer, der im Benutzermenü ("Changelog") angezeigt wird.
 export const changelog = [
   {
+    version: '2.29.0',
+    title: 'Globalsuche: Design & UX-Feinschliff',
+    items: [
+      'Mobiles Suchpanel schließt jetzt auch bei Projekt-Klick zuverlässig',
+      'Escape-Taste schließt das mobile Suchpanel im Header (zusätzlich zum internen Dropdown)',
+      'Projekt-Icon in der Globalsuche verwendet jetzt Telekom-Magenta statt Indigo — konsistent zum Design-System',
+    ],
+  },
+  {
     version: '2.28.0',
     title: 'Suche & Planner-Fixes: Autorisierung, Mobile, Konsistenz',
     items: [

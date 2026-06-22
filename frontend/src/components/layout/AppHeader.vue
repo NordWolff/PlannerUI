@@ -44,13 +44,18 @@ function onCreateDropdownDocClick(e) {
     showCreateDropdown.value = false
   }
 }
+function onGlobalKeydown(e) {
+  if (e.key === 'Escape') showMobileSearch.value = false
+}
 onMounted(() => {
   document.addEventListener('click', onCreateDropdownDocClick)
+  document.addEventListener('keydown', onGlobalKeydown)
   notificationsStore.fetchNotifications()
   notificationPollInterval = setInterval(() => notificationsStore.fetchNotifications(), 30000)
 })
 onUnmounted(() => {
   document.removeEventListener('click', onCreateDropdownDocClick)
+  document.removeEventListener('keydown', onGlobalKeydown)
   clearInterval(notificationPollInterval)
 })
 const createTab          = ref('ticket')
@@ -588,7 +593,7 @@ const avatarUrl = (user) => generateAvatar(user?.username)
   <!-- Mobile Suchpanel -->
   <div v-if="showMobileSearch"
     class="fixed top-16 left-0 right-0 z-40 md:hidden bg-white/95 dark:bg-[#0e0d14]/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-    <GlobalSearch class="w-full" @open-ticket="headerTicket = $event; showMobileSearch = false" />
+    <GlobalSearch class="w-full" @open-ticket="headerTicket = $event; showMobileSearch = false" @navigate="showMobileSearch = false" />
   </div>
 
   <!-- Ticket-Modal aus Header-Dropdown -->
